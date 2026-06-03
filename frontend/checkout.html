@@ -30,6 +30,17 @@
                     <form id="checkout-form">
                         <div class="row g-3">
                             <div class="col-sm-8">
+                                <!-- Cajas para Nombre Completo y DNI -->
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-bold">Nombre Completo</label>
+                                <!-- Se utiliza type="text" para permitir letras y espacios -->
+                                <input type="text" class="form-control bg-light border-0 py-2" id="fullName" required>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-bold">DNI</label>
+                                <!-- Se utiliza type="number" para abrir el teclado numérico en celulares -->
+                                <input type="number" class="form-control bg-light border-0 py-2" id="dni" required>
+                            </div>
                                 <label class="form-label small fw-bold">Calle</label>
                                 <input type="text" class="form-control bg-light border-0 py-2" id="street" required>
                             </div>

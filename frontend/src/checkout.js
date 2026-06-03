@@ -132,6 +132,10 @@ if (checkoutForm) {
 
         const orderProducts = cart.map(item => ({ product: item.id, quantity: item.quantity, price: item.price }));
 
+        // EXTRAEMOS EL NOMBRE Y DNI QUE EL CLIENTE ESCRIBIÓ EN EL HTML
+        const fullName = document.getElementById('fullName').value.trim();
+        const dni = document.getElementById('dni').value.trim();
+
         const orderData = {
             products: orderProducts,
             shippingAddress: {
@@ -141,7 +145,7 @@ if (checkoutForm) {
                 province: document.getElementById('province').value,
                 zipCode: document.getElementById('zipCode').value.trim()
             },
-            shippingCost: 0, // Mandamos 0 al backend para evitar errores
+            shippingCost: 0, 
             pointsToUse: pointsToDeduct 
         };
 
@@ -155,25 +159,29 @@ if (checkoutForm) {
             const data = await response.json();
 
             if (response.ok) {
-                // Mensaje de Whatsapp
-                const phoneNumber = "5493885759258"; // <--- Numero de telefono
+                const phoneNumber = "5493885759258"; 
                 
                 let wspText = `*¡Hola Onda Basquete! Acabo de realizar un pedido.*\n`;
                 wspText += `Identificador: #${data.orderId || Math.floor(Math.random() * 10000)}\n\n`;
+                
+                // INYECTAMOS EL NOMBRE Y DNI EN EL MENSAJE
+                wspText += `👤 *Cliente:* ${fullName}\n`;
+                wspText += `🆔 *DNI:* ${dni}\n\n`;
+
                 wspText += `*Detalles de mi orden:*\n`;
                 
                 cart.forEach(item => {
-                    wspText += `${item.model} (Talle: ${item.size}) - Cant: ${item.quantity} - $${(item.price * item.quantity).toLocaleString('es-AR')}\n`;
+                    wspText += `📦 ${item.model} (Talle: ${item.size}) - Cant: ${item.quantity} - $${(item.price * item.quantity).toLocaleString('es-AR')}\n`;
                 });
 
-                wspText += `\n *Mis datos para el envío:*\n`;
+                wspText += `\n📍 *Mis datos para el envío:*\n`;
                 wspText += `${orderData.shippingAddress.street} ${orderData.shippingAddress.number}, ${orderData.shippingAddress.city}, ${orderData.shippingAddress.province} (CP: ${orderData.shippingAddress.zipCode})\n\n`;
                 
                 if (discountAmount > 0) {
-                    wspText += `*Descuento:* -$${discountAmount.toLocaleString('es-AR')}\n`;
+                    wspText += `🎟️ *Descuento:* -$${discountAmount.toLocaleString('es-AR')}\n`;
                 }
                 
-                wspText += `*TOTAL DE PRODUCTOS: $${finalTotalAmount.toLocaleString('es-AR')}*\n\n`;
+                wspText += `💰 *TOTAL DE PRODUCTOS: $${finalTotalAmount.toLocaleString('es-AR')}*\n\n`;
                 wspText += `_Quedo a la espera de que coordinemos el método/costo de envío y me pasen los datos para transferir._ ¡Gracias!`;
 
                 const encodedText = encodeURIComponent(wspText);
