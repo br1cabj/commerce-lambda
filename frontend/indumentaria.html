@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catálogo de Indumentaria | Onda Basquete</title>
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+    <nav class="navbar navbar-expand-lg custom-navbar shadow-sm sticky-top bg-white">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/index.html">
+                <img src="/logo.jpeg" alt="Logo" class="nav-logo me-2">
+                <span class="logo-text">ONDA BASQUETE</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link text-dark" href="/index.html">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="/zapatillas.html">Zapatillas</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/indumentaria.html">Indumentaria</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="/accesorios.html">Accesorios</a></li>
+                    <li class="nav-item"><a class="nav-link" id="login-btn" href="/login.html">Ingresar</a></li>
+                    <li class="nav-item">
+                    <a class="nav-link cart-btn" href="/cart.html">Carrito <span id="cart-count" class="badge text-bg-warning">0</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5 flex-grow-1">
+        
+        <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
+            <h2 class="fw-bold mb-0 text-uppercase" style="letter-spacing: -1px;">Indumentaria</h2>
+            <span class="text-muted small" id="products-counter">0 Productos</span>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-12 col-lg-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 position-sticky bg-white" style="top: 100px;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="fw-bold mb-0 text-uppercase">Filtros</h6>
+                        <button class="btn btn-link text-muted p-0 text-decoration-none small" id="clear-filters" style="font-size: 0.8rem;">Limpiar</button>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold small mb-3">MARCA</h6>
+                        <div class="d-flex flex-column gap-2" id="brand-filters">
+                            <div class="form-check">
+                                <input class="form-check-input filter-brand" type="radio" name="brand" value="Nike" id="brand-nike">
+                                <label class="form-check-label" for="brand-nike">Nike</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-brand" type="radio" name="brand" value="Jordan" id="brand-jordan">
+                                <label class="form-check-label" for="brand-jordan">Jordan</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-brand" type="radio" name="brand" value="Adidas" id="brand-adidas">
+                                <label class="form-check-label" for="brand-adidas">Adidas</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-brand" type="radio" name="brand" value="Puma" id="brand-puma">
+                                <label class="form-check-label" for="brand-puma">Puma</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-brand" type="radio" name="brand" value="UnderArmour" id="brand-under-armour">
+                                <label class="form-check-label" for="brand-under-armour">Under Armour</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary opacity-25">
+
+                    <div>
+                        <h6 class="fw-bold small mb-3">TALLE</h6>
+                        <div class="row g-2" id="size-filters">
+                            <div class="col-4"><input type="radio" class="btn-check filter-size" name="size" id="size-XS" value="XS"><label class="btn btn-outline-dark w-100 rounded-3 py-2 fw-bold small" for="size-XS">XS</label></div>
+                            <div class="col-4"><input type="radio" class="btn-check filter-size" name="size" id="size-S" value="S"><label class="btn btn-outline-dark w-100 rounded-3 py-2 fw-bold small" for="size-S">S</label></div>
+                            <div class="col-4"><input type="radio" class="btn-check filter-size" name="size" id="size-M" value="M"><label class="btn btn-outline-dark w-100 rounded-3 py-2 fw-bold small" for="size-M">M</label></div>
+                            <div class="col-4"><input type="radio" class="btn-check filter-size" name="size" id="size-L" value="L"><label class="btn btn-outline-dark w-100 rounded-3 py-2 fw-bold small" for="size-L">L</label></div>
+                            <div class="col-4"><input type="radio" class="btn-check filter-size" name="size" id="size-XL" value="XL"><label class="btn btn-outline-dark w-100 rounded-3 py-2 fw-bold small" for="size-XL">XL</label></div>
+                            <div class="col-4"><input type="radio" class="btn-check filter-size" name="size" id="size-XXL" value="XXL"><label class="btn btn-outline-dark w-100 rounded-3 py-2 fw-bold small" for="size-XXL">XXL</label></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-9">
+                <div id="catalog-products-container" class="row g-4"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white pt-5 pb-3 mt-auto border-top border-4" style="border-color: var(--accent-color) !important;">
+        <div class="container text-center small text-white-50">
+            <p class="mb-0">&copy; 2026 Onda Basquete. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script type="module" src="/src/catalog.js"></script>
+</body>
+</html>

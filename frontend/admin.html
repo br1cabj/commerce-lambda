@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Control Premium | Onda Basquete</title>
+</head>
+<body class="bg-light">
+    
+    <nav class="navbar custom-navbar shadow-sm mb-4">
+        <div class="container d-flex justify-content-between">
+            <a class="navbar-brand d-flex align-items-center" href="/index.html">
+                <img src="/logo.jpeg" alt="Logo" class="nav-logo me-2">
+                <span class="logo-text text-white">PANEL DEL ADMINISTRADOR</span>
+            </a>
+            <a href="/index.html" class="btn btn-dark btn-sm fw-bold">Volver a la Tienda</a>
+        </div>
+    </nav>
+
+    <main class="container mb-5">
+        
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-dark text-white p-3 rounded-top-4">
+                        <h5 class="mb-0 fw-bold" style="color: var(--accent-color);" id="form-title">Subir Nuevo Producto</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="product-form" autocomplete="off">
+                            <input type="hidden" id="edit-id" value="">
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold small text-muted">Modelo</label>
+                                    <input type="text" class="form-control custom-input shadow-none" id="name" placeholder="Ej. Ja 3 o Buzo NBA" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold small text-muted">Marca</label>
+                                    <input type="text" class="form-control custom-input shadow-none" id="brand" placeholder="Ej. Nike" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold small text-muted">Categoría</label>
+                                    <select class="form-select custom-input shadow-none" id="category" required>
+                                        <option value="Zapatillas" selected>Zapatillas</option>
+                                        <option value="Indumentaria">Indumentaria</option>
+                                        <option value="Accesorios">Accesorios</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold small text-muted">Precio ($)</label>
+                                    <input type="number" class="form-control custom-input shadow-none" id="price" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold small text-muted">Descuento (%)</label>
+                                    <input type="number" class="form-control custom-input shadow-none" id="discount" value="0">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold small text-muted">Puntos Otorga</label>
+                                    <input type="number" class="form-control custom-input shadow-none" id="earnedPoints" value="0">
+                                </div>
+                            </div>
+
+                            <div class="row bg-light p-3 rounded-3 mb-4 border mx-0">
+                                <h6 class="fw-bold small text-primary mb-3">Gestión de Talles y Stock</h6>
+                                <div id="sizes-container">
+                                    </div>
+                                <div class="col-12 mt-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm fw-bold" id="add-size-btn">+ Agregar Talle</button>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-muted">Imágenes (Selecciona varias juntas)</label>
+                                <input class="form-control custom-input shadow-none" type="file" id="images" accept="image/*" multiple>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn hero-btn w-100 fw-bold" id="submit-btn">Publicar Producto</button>
+                                <button type="button" class="btn btn-secondary w-100 d-none fw-bold" id="cancel-edit-btn">Cancelar Edición</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mb-3" style="color: var(--primary-color);">Inventario Actual</h5>
+                <div class="table-responsive bg-white rounded-4 shadow-sm p-3">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>IMG</th>
+                                <th>Modelo</th>
+                                <th>Stock Total</th>
+                                <th>Precio/Desc.</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body">
+                            <tr><td colspan="5" class="text-center text-muted">Cargando inventario...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-primary text-white p-3 rounded-top-4">
+                        <h6 class="mb-0 fw-bold">Crear Cupón de Descuento</h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="coupon-form" autocomplete="off">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Código (Ej. GINOBILLI10)</label>
+                                <input type="text" class="form-control shadow-none" id="coupon-code" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label small fw-bold">Descuento %</label>
+                                    <input type="number" class="form-control shadow-none" id="coupon-discount" required>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label small fw-bold">Puntos Req.</label>
+                                    <input type="number" class="form-control shadow-none" id="coupon-points" value="0">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 fw-bold">Crear Cupón</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-info text-white p-3 rounded-top-4">
+                        <h6 class="mb-0 fw-bold">Cupones Activos</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Código / Pts</th>
+                                        <th>Descuento</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-coupons-list">
+                                    <tr><td colspan="3" class="text-center text-muted py-3">Cargando cupones...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-success text-white p-3 rounded-top-4">
+                        <h6 class="mb-0 fw-bold">Enviar Email Masivo</h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="promo-form" autocomplete="off">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Asunto del Correo</label>
+                                <input type="text" class="form-control shadow-none" id="promo-title" placeholder="¡Regalo para ti!" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Mensaje</label>
+                                <textarea class="form-control shadow-none" id="promo-message" rows="2" placeholder="Gracias por ser parte del club..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Código a Regalar</label>
+                                <input type="text" class="form-control shadow-none" id="promo-code" placeholder="GINOBILLI10" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 fw-bold">Enviar a todos</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-dark text-white p-3 rounded-top-4 border-bottom border-warning border-3">
+                        <h6 class="mb-0 fw-bold">Subir Reseña de Cliente</h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="review-form" autocomplete="off">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Nombre del Cliente</label>
+                                <input type="text" class="form-control shadow-none" id="review-name" placeholder="Ej. Facundo Campazzo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Club / Rol</label>
+                                <input type="text" class="form-control shadow-none" id="review-role" placeholder="Ej. Jugador Profesional" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Mensaje de Reseña</label>
+                                <textarea class="form-control shadow-none" id="review-message" rows="3" placeholder="¡Increíbles zapatillas, llegaron rapidísimo!" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Foto de Perfil</label>
+                                <input class="form-control shadow-none" type="file" id="review-image" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-dark w-100 fw-bold text-warning">Publicar Reseña</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header bg-secondary text-white p-3 rounded-top-4">
+                        <h6 class="mb-0 fw-bold">Reseñas Activas</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <tbody id="admin-reviews-list">
+                                    <tr><td class="text-center text-muted py-3">Cargando reseñas...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 mt-5 mb-5 border-top border-warning border-4">
+            <h4 class="fw-bold mb-4">Gestión de Pedidos</h4>
+            <div class="table-responsive">
+                <table class="table align-middle table-hover">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Código Seg. Correo</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="admin-orders-list">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="/src/admin.js"></script>
+</body>
+</html>
