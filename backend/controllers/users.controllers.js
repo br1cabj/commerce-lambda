@@ -160,7 +160,8 @@ export const forgotPassword = async(req, res) => {
         );
 
         // Enlace que el usuario va a clickear.
-        const resetLink = `http://localhost:5173/reset-password.html?token=${resetToken}`;
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        const resetLink = `${frontendUrl}/reset-password.html?token=${resetToken}`;
 
         // Lo que se le enviara al usuario.
 

@@ -1,8 +1,8 @@
-// Importaciones base
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import Swal from 'sweetalert2';
 import './style.css';
+import { api } from './api.js';
 
 // 1. Capturamos los elementos del HTML
 const loginForm = document.getElementById('login-form');
@@ -18,57 +18,38 @@ loginForm.addEventListener('submit', async (e) => {
     const password = document.getElementById('password').value;
 
     try {
-        // Le tocamos la puerta a tu Backend para hacer Login
-        const response = await fetch('http://localhost:3001/api/users/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json' // Le avisamos que le mandamos un JSON
-            },
-            body: JSON.stringify({ email, password }) // Convertimos los datos a texto
+        // Usamos nuestra utilidad de API centralizada
+        const data = await api.post('/users/login', { email, password });
+
+        // Guardamos la "Pulsera VIP", el nombre y el ROL
+        localStorage.setItem('token', data.token);
+        
+        if (data.user && data.user.name) {
+            localStorage.setItem('userName', data.user.name);
+            localStorage.setItem('userRole', data.user.role || 'cliente'); 
+        } else {
+            localStorage.setItem('userName', 'Jugador');
+            localStorage.setItem('userRole', 'cliente');
+        }
+
+        // Alerta elegante de bienvenida
+        Swal.fire({
+            title: '¡Bienvenido de vuelta!',
+            text: 'Ingreso exitoso a Onda Basquete.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+        }).then(() => {
+            window.location.href = '/index.html';
         });
 
-        // Convertimos la respuesta del backend
-        const data = await response.json();
-
-        if (response.ok) {
-            // Guardamos la "Pulsera VIP", el nombre y el ROL
-            localStorage.setItem('token', data.token);
-            
-            if (data.user && data.user.name) {
-                localStorage.setItem('userName', data.user.name);
-                // Guardamos el rol (si no viene, asumimos que es cliente normal)
-                localStorage.setItem('userRole', data.user.role || 'cliente'); 
-            } else {
-                localStorage.setItem('userName', 'Jugador');
-                localStorage.setItem('userRole', 'cliente');
-            }
-
-            // Alerta elegante de bienvenida
-            Swal.fire({
-                title: '¡Bienvenido de vuelta!',
-                text: 'Ingreso exitoso a Onda Basquete.',
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                // Lo enviamos de regreso a la tienda principal
-                window.location.href = '/index.html';
-            });
-        } else {
-            // ERROR: Contraseña incorrecta o usuario no encontrado
-            Swal.fire({
-                title: 'Error de ingreso',
-                text: data.message || 'Credenciales incorrectas. Intenta nuevamente.',
-                icon: 'error',
-                confirmButtonColor: '#e63946'
-            });
-        }
     } catch (error) {
-        console.error("Error en el login:", error);
+        // ERROR: Contraseña incorrecta, usuario no encontrado o error de validación
         Swal.fire({
-            title: 'Error de servidor',
-            text: 'No pudimos conectar con el servidor. ¿El Backend está encendido?',
-            icon: 'error'
+            title: 'Error de ingreso',
+            text: error.message || 'Credenciales incorrectas. Intenta nuevamente.',
+            icon: 'error',
+            confirmButtonColor: '#e63946'
         });
     }
 });
@@ -78,7 +59,6 @@ loginForm.addEventListener('submit', async (e) => {
 forgotBtn.addEventListener('click', async (e) => {
     e.preventDefault();
 
-    // Usamos SweetAlert para pedir el correo en una ventanita elegante sin salir de la página
     const { value: emailToRecover } = await Swal.fire({
         title: 'Recuperar contraseña',
         text: 'Ingresa tu correo y te enviaremos un link temporal.',
@@ -91,9 +71,7 @@ forgotBtn.addEventListener('click', async (e) => {
         cancelButtonText: 'Cancelar'
     });
 
-    // Si el usuario escribió un correo y le dio a Enviar...
     if (emailToRecover) {
-        // Mostramos un "spinner" de carga porque el correo puede tardar un par de segundos
         Swal.fire({
             title: 'Enviando...',
             text: 'Espera un momento, el cartero de Onda Basquete está en camino.',
@@ -104,35 +82,20 @@ forgotBtn.addEventListener('click', async (e) => {
         });
 
         try {
-            // Llamamos a la ruta de Nodemailer de tu Backend
-            const response = await fetch('http://localhost:3001/api/users/forgot-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: emailToRecover })
+            await api.post('/users/forgot-password', { email: emailToRecover });
+
+            Swal.fire({
+                title: '¡Correo enviado!',
+                text: 'Revisa tu bandeja de entrada o tu carpeta de Spam.',
+                icon: 'success',
+                confirmButtonColor: '#f28c28'
             });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                Swal.fire({
-                    title: '¡Correo enviado!',
-                    text: 'Revisa tu bandeja de entrada o tu carpeta de Spam.',
-                    icon: 'success',
-                    confirmButtonColor: '#f28c28'
-                });
-            } else {
-                Swal.fire({
-                    title: 'No pudimos enviarlo',
-                    text: data.message,
-                    icon: 'warning',
-                    confirmButtonColor: '#f28c28'
-                });
-            }
         } catch (error) {
             Swal.fire({
-                title: 'Error de conexión',
-                text: 'No pudimos conectar con el servidor.',
-                icon: 'error'
+                title: 'No pudimos enviarlo',
+                text: error.message || 'Error al conectar con el servidor.',
+                icon: 'warning',
+                confirmButtonColor: '#f28c28'
             });
         }
     }

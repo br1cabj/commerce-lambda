@@ -1,5 +1,6 @@
 import Product from "../models/Product.js";
 import cloudinary from "../config/cloudinary.js";
+import fs from "fs/promises";
 
 export const getAllProducts = async (req, res) => {
     try {
@@ -62,6 +63,8 @@ export const createProduct = async (req, res) => {
             for (let file of files) {
                 const result = await cloudinary.uploader.upload(file.tempFilePath);
                 imagesArray.push(result.secure_url);
+                // Borramos el archivo temporal después de subirlo
+                await fs.unlink(file.tempFilePath);
             }
             productData.images = imagesArray;
         } else {
@@ -73,6 +76,14 @@ export const createProduct = async (req, res) => {
 
         res.status(201).json({ message: "¡Zapatilla guardada con éxito!", product: productSaved });
     } catch (error) {
+        // En caso de error, intentamos limpiar archivos si quedaron
+        if (req.files && req.files.images) {
+            let files = req.files.images;
+            if (!Array.isArray(files)) files = [files];
+            for (let file of files) {
+                try { await fs.unlink(file.tempFilePath); } catch (e) {}
+            }
+        }
         res.status(500).json({ message: "Error de validación: " + error.message });
     }
 };
@@ -106,6 +117,8 @@ export const updateProduct = async (req, res) => {
             for (let file of files) {
                 const result = await cloudinary.uploader.upload(file.tempFilePath);
                 imagesArray.push(result.secure_url);
+                // Borramos el archivo temporal
+                await fs.unlink(file.tempFilePath);
             }
             productData.images = imagesArray;
         }
@@ -115,6 +128,14 @@ export const updateProduct = async (req, res) => {
 
         res.json({ message: "¡Zapatilla actualizada con éxito!", product: updatedProduct });
     } catch (error) {
+        // Limpieza en caso de error
+        if (req.files && req.files.images) {
+            let files = req.files.images;
+            if (!Array.isArray(files)) files = [files];
+            for (let file of files) {
+                try { await fs.unlink(file.tempFilePath); } catch (e) {}
+            }
+        }
         res.status(500).json({ message: "Error interno al actualizar." });
     }
 };

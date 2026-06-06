@@ -1,5 +1,8 @@
 // Imports de archivos
+import 'dotenv/config';
 import express from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import homeRoutes from './routes/home.routes.js';
 import productsRoutes from './routes/products.routes.js';
 import fileUpload from 'express-fileupload';
@@ -11,11 +14,28 @@ import ordersRoutes from './routes/orders.routes.js';
 import shippingRoutes from './routes/shipping.routes.js'; // NUEVA IMPORTACIÓN
 import cors from "cors";
 import reviewsRoutes from './routes/reviews.routes.js';
+import errorHandler from './middleware/errorHandler.js';
 
 // Constantes
 const app = express();
 
-app.use(cors()); // Esto permite que el Frontend se conecte sin bloqueos
+// Seguridad
+app.use(helmet()); // Protege las cabeceras HTTP
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // Limita cada IP a 100 peticiones por ventana
+    message: "Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos."
+});
+app.use('/api/', limiter); // Aplicamos el limitador a las rutas de la API
+
+// Configuración de CORS más segura
+const corsOptions = {
+    origin: process.env.FRONTEND_URL || '*', // En producción deberías especificar la URL real
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 
 app.use(fileUpload({
@@ -33,11 +53,14 @@ app.use('/api/reviews', reviewsRoutes);
 // Calculador de envíos
 app.use('/api/shipping', shippingRoutes);
 
-const port = 3001;
+// Manejo centralizado de errores (Debe ir después de todas las rutas)
+app.use(errorHandler);
+
+const port = process.env.PORT || 3001;
 
 // Evento de app
 connectDB();
 
 app.listen(port, () => {
-    console.log("Servidor de Onda Basquete encendido en el puerto 3001");
+    console.log(`Servidor de Onda Basquete encendido en el puerto ${port}`);
 });
