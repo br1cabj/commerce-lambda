@@ -8,14 +8,14 @@ export const registerUser = async (req, res) => {
         const { name, email, password, phone } = req.body;
 
         const userExists = await User.findOne({ tenantId: req.tenant._id, email });
-        if(userExists){
-            return res.status(400).json({ message: "This email is already registered."});
+        if (userExists) {
+            return res.status(400).json({ message: "This email is already registered." });
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User ({
+        const newUser = new User({
             tenantId: req.tenant._id,
             name,
             email,
@@ -35,9 +35,9 @@ export const registerUser = async (req, res) => {
             }
         });
 
-    }catch (error){
-        console.log("Error registering user:", error.message);
-        res.status(500).json({ message: "Server error during registration"});
+    } catch (error) {
+        console.error("Error registering user:", error.message);
+        res.status(500).json({ message: "Server error during registration" });
     }
 };
 
@@ -47,20 +47,20 @@ export const loginUser = async (req, res) => {
 
         const userFound = await User.findOne({ tenantId: req.tenant._id, email });
 
-        if(!userFound){
-            return res.status(404).json({ message: "User not found. Check your email."});
+        if (!userFound) {
+            return res.status(404).json({ message: "User not found. Check your email." });
         }
 
         const isPasswordCorrect = await bcrypt.compare(password, userFound.password);
 
-        if(!isPasswordCorrect){
-            return res.status(401).json({ message: "Incorrect password."});
+        if (!isPasswordCorrect) {
+            return res.status(401).json({ message: "Incorrect password." });
         }
 
         const token = jwt.sign(
-            { id: userFound._id, role: userFound.role, tenantId: userFound.tenantId },
+            { id: userFound._id, role: userFound.role, tenantId: userFound.tenantId, tokenVersion: userFound.tokenVersion },
             process.env.JWT_SECRET,
-            { expiresIn: "1d"}
+            { expiresIn: "1d" }
         )
 
         res.status(200).json({
@@ -74,9 +74,9 @@ export const loginUser = async (req, res) => {
                 tenantId: userFound.tenantId
             }
         });
-    }catch (error){
-        console.log("Login error:", error.message);
-        res.status(500).json({ message: "Server error during login."})
+    } catch (error) {
+        console.error("Login error:", error.message);
+        res.status(500).json({ message: "Server error during login." })
     }
 };
 
@@ -84,13 +84,13 @@ export const updatePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
 
-        const userFound = await User.findById(req.user.id);
-        if(!userFound){
+        const userFound = await User.findOne({ _id: req.user.id, tenantId: req.user.tenantId });
+        if (!userFound) {
             return res.status(404).json({ message: "User not found." });
         }
 
         const isMatch = await bcrypt.compare(oldPassword, userFound.password);
-        if(!isMatch){
+        if (!isMatch) {
             return res.status(400).json({ message: "Current password is incorrect." });
         }
 
@@ -98,29 +98,30 @@ export const updatePassword = async (req, res) => {
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         userFound.password = hashedPassword;
+        userFound.tokenVersion += 1;
         await userFound.save();
 
         res.status(200).json({ message: "Password updated successfully!" });
 
-    }catch (error) {
-        console.log("Error changing password:", error.message);
-        res.status(500).json({ message: "Server error updating password."});
+    } catch (error) {
+        console.error("Error changing password:", error.message);
+        res.status(500).json({ message: "Server error updating password." });
     }
 };
 
-export const forgotPassword = async(req, res) => {
+export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
 
         const userFound = await User.findOne({ tenantId: req.tenant._id, email });
-        if(!userFound){
+        if (!userFound) {
             return res.status(404).json({ message: "No account exists with that email." });
         }
 
         const resetToken = jwt.sign(
-            { id: userFound._id },
+            { id: userFound._id, tenantId: userFound.tenantId },
             process.env.JWT_SECRET,
-            { expiresIn: "15m"}
+            { expiresIn: "15m" }
         );
 
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
@@ -143,8 +144,8 @@ export const forgotPassword = async(req, res) => {
 
         res.status(200).json({ message: "Check your inbox! We sent you the instructions." });
 
-    }catch (error){
-        console.log("Error in forgotPassword:", error.message);
+    } catch (error) {
+        console.error("Error in forgotPassword:", error.message);
         res.status(500).json({ message: "Error sending recovery email." });
     }
 };
@@ -154,37 +155,42 @@ export const resetPassword = async (req, res) => {
         const { token } = req.params;
         const { newPassword } = req.body;
 
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({ message: "Password must have at least 6 characters." });
+        }
+
         const verified = jwt.verify(token, process.env.JWT_SECRET);
 
-        const userFound = await User.findById(verified.id);
-        if(!userFound){
-            return res.status(404).json({ message : "User not found." });
+        const userFound = await User.findOne({ _id: verified.id, tenantId: verified.tenantId });
+        if (!userFound) {
+            return res.status(404).json({ message: "User not found." });
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
-        
+
         userFound.password = hashedPassword;
+        userFound.tokenVersion += 1;
         await userFound.save();
 
         res.status(200).json({ message: "Your password has been reset successfully!" });
-    }catch (error){
-        console.log("Error in resetPassword:", error.message);
+    } catch (error) {
+        console.error("Error in resetPassword:", error.message);
         res.status(400).json({ message: "The link is invalid or has expired. Please request a new one." });
     }
 };
 
 export const getUserProfile = async (req, res) => {
     try {
-        const userFound = await User.findById(req.user.id).select("-password");
-        
-        if(!userFound){
+        const userFound = await User.findOne({ _id: req.user.id, tenantId: req.user.tenantId }).select("-password");
+
+        if (!userFound) {
             return res.status(404).json({ message: "User not found." });
         }
 
         res.status(200).json(userFound);
     } catch (error) {
-        console.log("Error fetching profile:", error.message);
+        console.error("Error fetching profile:", error.message);
         res.status(500).json({ message: "Error loading profile." });
     }
 };

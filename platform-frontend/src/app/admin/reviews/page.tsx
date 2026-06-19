@@ -26,6 +26,7 @@ export default function AdminReviewsPage() {
   const [message, setMessage] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated || !isAdmin) { router.push("/"); return; }
@@ -38,6 +39,7 @@ export default function AdminReviewsPage() {
       const data = await api.get("/reviews", config.slug) as Review[];
       setReviews(data || []);
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Error loading reviews");
       console.error("Error loading reviews:", err);
     } finally {
       setLoading(false);
@@ -46,6 +48,7 @@ export default function AdminReviewsPage() {
 
   const createReview = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!config || !image) return;
 
     const formData = new FormData();
@@ -60,7 +63,7 @@ export default function AdminReviewsPage() {
       setName(""); setRole(""); setMessage(""); setImage(null);
       loadReviews();
     } catch (err) {
-      console.error("Error creating review:", err);
+      setError(err instanceof Error ? err.message : "Error creating review");
     }
   };
 
@@ -70,7 +73,7 @@ export default function AdminReviewsPage() {
       await api.delete(`/reviews/${id}`, config.slug);
       loadReviews();
     } catch (err) {
-      console.error("Error deleting review:", err);
+      setError(err instanceof Error ? err.message : "Error deleting review");
     }
   };
 
@@ -88,6 +91,10 @@ export default function AdminReviewsPage() {
           <Plus className="h-4 w-4" /> New Review
         </button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">{error}</div>
+      )}
 
       {showForm && (
         <form onSubmit={createReview} className="bg-white rounded-xl shadow-sm border p-6 mb-6 space-y-4">

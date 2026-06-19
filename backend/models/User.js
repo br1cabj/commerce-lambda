@@ -14,15 +14,18 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        lowercase: true
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        minlength: 6
     },
     role: {
         type: String,
-        default: "client"
+        default: "client",
+        enum: ["client", "admin", "administrador", "super_admin"]
     },
     phone: {
         type: String,
@@ -42,6 +45,10 @@ const userSchema = new mongoose.Schema({
     isDeleted: {
         type: Boolean,
         default: false
+    },
+    tokenVersion: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true

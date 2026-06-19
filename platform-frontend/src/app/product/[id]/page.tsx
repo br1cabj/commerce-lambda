@@ -37,8 +37,9 @@ export default function ProductPage() {
       try {
         const data = await api.get(`/products/${productId}`, config.slug) as Product;
         setProduct(data);
-        const images = data.images?.[0] ? data.images : [data.images?.[0]];
-        setMainImage(images[0]);
+        if (data.images?.length) {
+          setMainImage(data.images[0]);
+        }
         if (data.sizes?.[0]) setSelectedSize(data.sizes[0].size);
       } catch (err) {
         console.error("Error loading product:", err);
@@ -93,11 +94,10 @@ export default function ProductPage() {
   const finalPrice = product.discount > 0
     ? product.price - product.price * (product.discount / 100)
     : product.price;
-  const images = product.images?.length ? product.images : [product.images?.[0]];
+  const images = product.images?.length ? product.images : [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:underline">Home</Link>
         <span className="mx-2">/</span>
@@ -107,7 +107,6 @@ export default function ProductPage() {
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Image Gallery */}
         <div className="flex gap-3">
           <div className="flex flex-col gap-2 overflow-y-auto max-h-[500px]">
             {images.map((img, i) => (
@@ -125,7 +124,6 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* Product Info */}
         <div>
           <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">{product.brand}</p>
           <h1 className="text-3xl font-extrabold mt-1">{product.model}</h1>
@@ -142,7 +140,6 @@ export default function ProductPage() {
             )}
           </div>
 
-          {/* Size Selector */}
           {product.sizes && product.sizes.length > 0 && (
             <div className="mt-6">
               <h3 className="font-bold mb-2">Select Size</h3>
@@ -176,7 +173,6 @@ export default function ProductPage() {
             <ShoppingCart className="h-5 w-5 inline mr-2" /> Add to Cart
           </button>
 
-          {/* Shipping Info */}
           <div className="mt-6 border rounded-xl p-4 bg-gray-50">
             <div className="flex items-center gap-3">
               <Truck className="h-8 w-8" style={{ color: config.theme.accentColor }} />

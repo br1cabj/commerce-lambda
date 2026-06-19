@@ -13,6 +13,8 @@ export default function Navbar() {
 
   if (!config) return null;
 
+  const categories = config.categories || [];
+
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-sm border-b" style={{ borderColor: config.theme.accentColor }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -27,7 +29,7 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center gap-4">
-            {config.categories.map((cat) => (
+            {categories.map((cat) => (
               <Link
                 key={cat._id}
                 href={`/catalog/${cat.slug}`}

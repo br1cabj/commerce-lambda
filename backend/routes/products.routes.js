@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getAllProducts, getProductById, createProduct, deleteProduct, updateProduct, toggleFeatured } from "../controllers/products.controllers.js";
-import { verifyToken, isAdmin } from "../middleware/verifyToken.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 import { identifyTenant } from "../middleware/identifyTenant.js";
 import { isAdminForTenant } from "../middleware/tenantAuth.js";
 

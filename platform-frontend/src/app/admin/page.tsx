@@ -44,6 +44,7 @@ export default function AdminPage() {
   const [discount, setDiscount] = useState("0");
   const [sizes, setSizes] = useState<{ size: string; stock: string }[]>([{ size: "", stock: "" }]);
   const [images, setImages] = useState<FileList | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated || !isAdmin) { router.push("/"); return; }
@@ -59,6 +60,7 @@ export default function AdminPage() {
   };
 
   const handleEdit = (product: Product) => {
+    setError("");
     setEditingProduct(product);
     setName(product.model); setBrand(product.brand); setCategory(product.category || "");
     setPrice(product.price.toString()); setDiscount(product.discount.toString());
@@ -69,17 +71,18 @@ export default function AdminPage() {
   const handleDelete = async (id: string) => {
     if (!config || !confirm("Delete this product?")) return;
     try { await api.delete(`/products/${id}`, config.slug); loadProducts(); }
-    catch (err) { console.error("Error deleting product:", err); }
+    catch (err) { setError(err instanceof Error ? err.message : "Error deleting product"); }
   };
 
   const toggleFeatured = async (id: string) => {
     if (!config) return;
     try { await api.put(`/products/${id}/feature`, {}, config.slug); loadProducts(); }
-    catch (err) { console.error("Error toggling featured:", err); }
+    catch (err) { setError(err instanceof Error ? err.message : "Error toggling featured"); }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!config) return;
     const sizesList = sizes.filter(s => s.size && s.stock).map(s => ({ size: s.size, stock: Number(s.stock) }));
     const totalStock = sizesList.reduce((acc, s) => acc + s.stock, 0);
@@ -93,7 +96,7 @@ export default function AdminPage() {
       if (editingProduct) await api.put(`/products/${editingProduct._id}`, formData, config.slug);
       else await api.post("/products", formData, config.slug);
       setShowForm(false); setEditingProduct(null); resetForm(); loadProducts();
-    } catch (err) { console.error("Error saving product:", err); }
+    } catch (err) { setError(err instanceof Error ? err.message : "Error saving product"); }
   };
 
   const resetForm = () => { setName(""); setBrand(""); setCategory(""); setPrice(""); setDiscount("0"); setSizes([{ size: "", stock: "" }]); setImages(null); };
@@ -115,6 +118,10 @@ export default function AdminPage() {
           ))}
         </nav>
       </div>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">{error}</div>
+      )}
 
       {showForm && (
         <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">

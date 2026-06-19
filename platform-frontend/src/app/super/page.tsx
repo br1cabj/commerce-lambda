@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Store, Users, TrendingUp, Activity } from "lucide-react";
 
@@ -12,10 +14,21 @@ interface Analytics {
 }
 
 export default function SuperDashboardPage() {
+  const { isAuthenticated, isSuperAdmin } = useAuth();
+  const router = useRouter();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+    if (!isSuperAdmin) {
+      router.push("/");
+      return;
+    }
+
     const loadAnalytics = async () => {
       try {
         const data = await api.get("/super/analytics") as Analytics;
@@ -27,7 +40,15 @@ export default function SuperDashboardPage() {
       }
     };
     loadAnalytics();
-  }, []);
+  }, [isAuthenticated, isSuperAdmin, router]);
+
+  if (!isAuthenticated || !isSuperAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-gray-500">Checking access...</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -52,7 +73,6 @@ export default function SuperDashboardPage() {
     <div>
       <h1 className="text-3xl font-bold mb-8">Platform Dashboard</h1>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {stats.map((stat) => (
           <div key={stat.label} className="bg-white rounded-xl shadow-sm border p-6">
@@ -65,7 +85,6 @@ export default function SuperDashboardPage() {
         ))}
       </div>
 
-      {/* Plans Distribution */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h2 className="text-xl font-bold mb-6">Stores by Plan</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -88,7 +107,6 @@ export default function SuperDashboardPage() {
         </div>
       </div>
 
-      {/* Quick Actions */}
       <div className="mt-8 bg-white rounded-xl shadow-sm border p-6">
         <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-3">

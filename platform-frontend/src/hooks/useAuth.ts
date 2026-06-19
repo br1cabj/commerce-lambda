@@ -2,6 +2,7 @@
 
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
+import { useMemo } from "react";
 
 export function useAuth() {
   const { token, user, setAuth, logout, isAuthenticated, isAdmin, isSuperAdmin } = useAuthStore();
@@ -14,8 +15,6 @@ export function useAuth() {
 
     setAuth(data.token, data.user);
     localStorage.setItem("token", data.token);
-    localStorage.setItem("userName", data.user.name);
-    localStorage.setItem("userRole", data.user.role);
 
     return data;
   };
@@ -24,14 +23,18 @@ export function useAuth() {
     await api.post("/users/register", { name, email, password }, tenantSlug);
   };
 
+  const authState = useMemo(() => ({
+    isAuthenticated: isAuthenticated(),
+    isAdmin: isAdmin(),
+    isSuperAdmin: isSuperAdmin(),
+  }), [token, user, isAuthenticated, isAdmin, isSuperAdmin]);
+
   return {
     token,
     user,
     login,
     register,
     logout,
-    isAuthenticated: isAuthenticated(),
-    isAdmin: isAdmin(),
-    isSuperAdmin: isSuperAdmin(),
+    ...authState,
   };
 }

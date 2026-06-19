@@ -4,9 +4,9 @@ export const isAdminForTenant = (req, res, next) => {
     }
 
     const isAdminRole = req.user.role === "admin" || req.user.role === "administrador";
-    const isSuperAdmin = req.user.role === "super_admin";
+    const hasSuperAdminRole = req.user.role === "super_admin";
 
-    if (!isAdminRole && !isSuperAdmin) {
+    if (!isAdminRole && !hasSuperAdminRole) {
         return res.status(403).json({ message: "Access denied. Administrator privileges required." });
     }
 

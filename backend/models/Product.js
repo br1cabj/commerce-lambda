@@ -12,18 +12,18 @@ const productSchema = new mongoose.Schema({
         trim: true
     },
     brand: { type: String, required: true, trim: true },
-    model: { type: String, required: true },
-    price: { type: Number, required: true },
+    model: { type: String, required: true, trim: true },
+    price: { type: Number, required: true, min: 0 },
     
     sizes: [{
         size: { type: String, required: true },
         stock: { type: Number, required: true, min: 0 }
     }],
     
-    stock: { type: Number, default: 0 },
+    stock: { type: Number, default: 0, min: 0 },
     images: [{ type: String, required: true }],
-    discount: { type: Number, default: 0 },
-    earnedPoints: { type: Number, default: 0 },
+    discount: { type: Number, default: 0, min: 0, max: 100 },
+    earnedPoints: { type: Number, default: 0, min: 0 },
     isFeatured: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false }
 }, {

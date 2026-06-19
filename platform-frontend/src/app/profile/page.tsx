@@ -24,6 +24,8 @@ export default function ProfilePage() {
   const [points, setPoints] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -33,21 +35,26 @@ export default function ProfilePage() {
       if (!config) return;
       try {
         const profileData = await api.get("/users/profile", config.slug) as { name: string; email: string; points: number };
-        setPoints(profileData.points || 0);
+        if (!cancelled) setPoints(profileData.points || 0);
 
         const ordersData = await api.get("/orders/my-orders", config.slug) as Order[];
-        setOrders(ordersData || []);
+        if (!cancelled) setOrders(ordersData || []);
       } catch (err) {
         console.error("Error loading profile:", err);
       }
     };
     loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [config, isAuthenticated, router]);
 
-  if (!config || !user) return null;
+  if (!config || !user || !isAuthenticated) return null;
 
   const statusColors: Record<string, string> = {
     "Pendiente": "bg-yellow-500",
+    "En Preparación": "bg-blue-500",
     "En Preparacion": "bg-blue-500",
     "Enviado": "bg-indigo-500",
     "Entregado": "bg-green-500",
@@ -56,7 +63,6 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Profile Card */}
       <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
         <div className="flex items-center gap-4">
           <div
@@ -84,7 +90,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Orders */}
       <h2 className="text-xl font-bold mb-4">My Orders</h2>
       {orders.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border p-8 text-center">

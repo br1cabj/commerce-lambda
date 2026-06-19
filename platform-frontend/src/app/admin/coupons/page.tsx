@@ -25,6 +25,7 @@ export default function AdminCouponsPage() {
   const [discount, setDiscount] = useState("");
   const [points, setPoints] = useState("0");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated || !isAdmin) { router.push("/"); return; }
@@ -34,9 +35,11 @@ export default function AdminCouponsPage() {
   const loadCoupons = async () => {
     if (!config) return;
     try {
-      const data = await api.get("/coupons", config.slug) as Coupon[];
-      setCoupons(data || []);
+      const data = await api.get("/coupons", config.slug) as { results?: Coupon[] } | Coupon[];
+      const results = Array.isArray(data) ? data : (data.results || []);
+      setCoupons(results);
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Error loading coupons");
       console.error("Error loading coupons:", err);
     } finally {
       setLoading(false);
@@ -45,6 +48,7 @@ export default function AdminCouponsPage() {
 
   const createCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!config) return;
     try {
       await api.post("/coupons", { code, discountPercentage: Number(discount), pointsRequired: Number(points) }, config.slug);
@@ -52,7 +56,7 @@ export default function AdminCouponsPage() {
       setCode(""); setDiscount(""); setPoints("0");
       loadCoupons();
     } catch (err) {
-      console.error("Error creating coupon:", err);
+      setError(err instanceof Error ? err.message : "Error creating coupon");
     }
   };
 
@@ -62,7 +66,7 @@ export default function AdminCouponsPage() {
       await api.put(`/coupons/${id}`, {}, config.slug);
       loadCoupons();
     } catch (err) {
-      console.error("Error toggling coupon:", err);
+      setError(err instanceof Error ? err.message : "Error toggling coupon");
     }
   };
 
@@ -72,7 +76,7 @@ export default function AdminCouponsPage() {
       await api.delete(`/coupons/${id}`, config.slug);
       loadCoupons();
     } catch (err) {
-      console.error("Error deleting coupon:", err);
+      setError(err instanceof Error ? err.message : "Error deleting coupon");
     }
   };
 
@@ -90,6 +94,10 @@ export default function AdminCouponsPage() {
           <Plus className="h-4 w-4" /> New Coupon
         </button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">{error}</div>
+      )}
 
       {showForm && (
         <form onSubmit={createCoupon} className="bg-white rounded-xl shadow-sm border p-6 mb-6 space-y-4">

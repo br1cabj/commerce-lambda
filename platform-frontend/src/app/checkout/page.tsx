@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
@@ -34,6 +34,21 @@ export default function CheckoutPage() {
   const [couponMessage, setCouponMessage] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("redirectAfterLogin", "/checkout");
+      }
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (isAuthenticated && items.length === 0) {
+      router.push("/cart");
+    }
+  }, [isAuthenticated, items.length, router]);
+
   const discountAmount = totalAmount * (discountPercent / 100);
   const finalTotal = totalAmount - discountAmount;
 
@@ -46,20 +61,18 @@ export default function CheckoutPage() {
     availableMethods.push("whatsapp");
   }
 
-  if (!isAuthenticated) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("redirectAfterLogin", "/checkout");
-    }
-    router.push("/login");
-    return null;
-  }
+  if (!config || !isAuthenticated || items.length === 0) return null;
 
-  if (items.length === 0) {
-    router.push("/cart");
+  const validateForm = (): string | null => {
+    if (!fullName.trim()) return "Full name is required.";
+    if (!dni.trim()) return "ID number is required.";
+    if (!street.trim()) return "Street is required.";
+    if (!number.trim()) return "Street number is required.";
+    if (!city.trim()) return "City is required.";
+    if (!province.trim()) return "Province is required.";
+    if (!zipCode.trim()) return "Postal code is required.";
     return null;
-  }
-
-  if (!config) return null;
+  };
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -86,6 +99,13 @@ export default function CheckoutPage() {
     } finally {
       setApplyingCoupon(false);
     }
+  };
+
+  const removeCoupon = () => {
+    setCouponApplied(false);
+    setDiscountPercent(0);
+    setCouponCode("");
+    setCouponMessage("");
   };
 
   const processWhatsAppOrder = async () => {
@@ -187,6 +207,13 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
     if (selectedPayment === "whatsapp") {
       await processWhatsAppOrder();
@@ -331,14 +358,23 @@ export default function CheckoutPage() {
                   className="flex-1 px-3 py-2 rounded border text-sm uppercase"
                   disabled={couponApplied}
                 />
-                <button
-                  onClick={applyCoupon}
-                  disabled={applyingCoupon || couponApplied}
-                  className="px-3 py-2 rounded font-semibold text-sm text-white disabled:opacity-50"
-                  style={{ backgroundColor: config.theme.primaryColor }}
-                >
-                  <Tag className="h-4 w-4" />
-                </button>
+                {couponApplied ? (
+                  <button
+                    onClick={removeCoupon}
+                    className="px-3 py-2 rounded font-semibold text-sm text-white bg-red-500 hover:bg-red-600"
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    onClick={applyCoupon}
+                    disabled={applyingCoupon}
+                    className="px-3 py-2 rounded font-semibold text-sm text-white disabled:opacity-50"
+                    style={{ backgroundColor: config.theme.primaryColor }}
+                  >
+                    <Tag className="h-4 w-4" />
+                  </button>
+                )}
               </div>
               {couponMessage && (
                 <p className={`text-xs mt-1 font-semibold ${couponApplied ? "text-green-600" : "text-red-500"}`}>

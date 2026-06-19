@@ -12,8 +12,11 @@ async function apiRequest(endpoint: string, options: ApiOptions = {}) {
   const headers: Record<string, string> = {
     ...(tenantSlug ? { "X-Tenant-Slug": tenantSlug } : {}),
     ...(token ? { "auth-token": token } : {}),
-    ...(customHeaders as Record<string, string> || {}),
   };
+
+  if (customHeaders) {
+    Object.assign(headers, customHeaders as Record<string, string>);
+  }
 
   if (!(body instanceof FormData)) {
     headers["Content-Type"] = "application/json";

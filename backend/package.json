@@ -1,14 +1,22 @@
 {
-  "name": "backend",
+  "name": "ecommerce-lambda-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Multi-tenant e-commerce platform backend with Stripe and MercadoPago integration",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js",
-    "migrate": "node scripts/migrate-to-multi-tenant.js"
+    "seed": "node scripts/seed.js",
+    "migrate": "node scripts/migrate-to-multi-tenant.js",
+    "start": "node index.js"
   },
-  "keywords": [],
+  "keywords": [
+    "ecommerce",
+    "multi-tenant",
+    "stripe",
+    "mercadopago",
+    "express"
+  ],
   "author": "",
   "license": "ISC",
   "type": "module",
@@ -26,6 +34,7 @@
     "mercadopago": "^3.1.0",
     "mongoose": "^9.6.2",
     "nodemailer": "^8.0.9",
+    "serverless-http": "^4.0.0",
     "stripe": "^22.2.2"
   },
   "devDependencies": {

@@ -24,6 +24,7 @@ export default function AdminOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated || !isAdmin) { router.push("/"); return; }
@@ -33,9 +34,11 @@ export default function AdminOrdersPage() {
   const loadOrders = async () => {
     if (!config) return;
     try {
-      const data = await api.get("/orders/all", config.slug) as Order[];
-      setOrders(data || []);
+      const data = await api.get("/orders/all", config.slug) as { results?: Order[] } | Order[];
+      const results = Array.isArray(data) ? data : (data.results || []);
+      setOrders(results);
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Error loading orders");
       console.error("Error loading orders:", err);
     } finally {
       setLoading(false);
@@ -48,6 +51,7 @@ export default function AdminOrdersPage() {
       await api.put(`/orders/update-status/${orderId}`, { status, trackingCode }, config.slug);
       loadOrders();
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Error updating order");
       console.error("Error updating order:", err);
     }
   };
@@ -58,6 +62,7 @@ export default function AdminOrdersPage() {
       await api.delete(`/orders/${orderId}`, config.slug);
       loadOrders();
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Error deleting order");
       console.error("Error deleting order:", err);
     }
   };
@@ -66,6 +71,7 @@ export default function AdminOrdersPage() {
 
   const statusColors: Record<string, string> = {
     "Pendiente": "bg-yellow-100 text-yellow-800",
+    "En Preparación": "bg-blue-100 text-blue-800",
     "En Preparacion": "bg-blue-100 text-blue-800",
     "Enviado": "bg-indigo-100 text-indigo-800",
     "Entregado": "bg-green-100 text-green-800",
@@ -75,6 +81,10 @@ export default function AdminOrdersPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Orders Management</h1>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">{error}</div>
+      )}
 
       {loading ? (
         <div className="space-y-4">
@@ -123,7 +133,7 @@ export default function AdminOrdersPage() {
                   className="px-3 py-2 rounded-lg border text-sm"
                 >
                   <option value="Pendiente">Pendiente</option>
-                  <option value="En Preparacion">En Preparacion</option>
+                  <option value="En Preparación">En Preparación</option>
                   <option value="Enviado">Enviado</option>
                   <option value="Entregado">Entregado</option>
                   <option value="Cancelado">Cancelado</option>

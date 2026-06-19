@@ -14,6 +14,10 @@ export const createTenant = async (req, res) => {
         let owner = await User.findOne({ email: ownerEmail });
 
         if (!owner) {
+            if (!ownerPassword || ownerPassword.length < 6) {
+                return res.status(400).json({ message: "Password must have at least 6 characters." });
+            }
+
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(ownerPassword, salt);
 
@@ -39,7 +43,7 @@ export const createTenant = async (req, res) => {
 
         res.status(201).json({ message: "Store created successfully!", tenant: savedTenant });
     } catch (error) {
-        console.log("Error creating tenant:", error.message);
+        console.error("Error creating tenant:", error.message);
         res.status(500).json({ message: "Error creating store." });
     }
 };
@@ -64,6 +68,7 @@ export const getAllTenants = async (req, res) => {
             results: tenants
         });
     } catch (error) {
+        console.error("Error fetching stores:", error.message);
         res.status(500).json({ message: "Error fetching stores." });
     }
 };
@@ -74,6 +79,7 @@ export const getTenantById = async (req, res) => {
         if (!tenant) return res.status(404).json({ message: "Store not found." });
         res.json(tenant);
     } catch (error) {
+        console.error("Error fetching store:", error.message);
         res.status(500).json({ message: "Error fetching store." });
     }
 };
@@ -88,6 +94,7 @@ export const updateTenant = async (req, res) => {
 
         res.json({ message: "Store updated successfully!", tenant: updatedTenant });
     } catch (error) {
+        console.error("Error updating store:", error.message);
         res.status(500).json({ message: "Error updating store." });
     }
 };
@@ -103,6 +110,7 @@ export const toggleTenantStatus = async (req, res) => {
 
         res.json({ message: `Store ${tenant.isActive ? 'activated' : 'suspended'} successfully!`, tenant });
     } catch (error) {
+        console.error("Error updating store status:", error.message);
         res.status(500).json({ message: "Error updating store status." });
     }
 };
@@ -115,6 +123,7 @@ export const deleteTenant = async (req, res) => {
 
         res.json({ message: "Store deleted permanently." });
     } catch (error) {
+        console.error("Error deleting store:", error.message);
         res.status(500).json({ message: "Error deleting store." });
     }
 };
@@ -135,6 +144,7 @@ export const getPlatformAnalytics = async (req, res) => {
             tenantsByPlan
         });
     } catch (error) {
+        console.error("Error fetching analytics:", error.message);
         res.status(500).json({ message: "Error fetching analytics." });
     }
 };

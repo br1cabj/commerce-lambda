@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -16,6 +16,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -24,10 +25,12 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     }
     if (user?.role !== "super_admin") {
       router.push("/");
+      return;
     }
+    setIsChecking(false);
   }, [isAuthenticated, user, router]);
 
-  if (!isAuthenticated || user?.role !== "super_admin") {
+  if (!isAuthenticated || user?.role !== "super_admin" || isChecking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-gray-500">Checking access...</p>
@@ -37,7 +40,6 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Bar */}
       <header className="bg-gray-900 text-white px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -54,7 +56,6 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         </div>
       </header>
 
-      {/* Nav */}
       <nav className="bg-white border-b px-6">
         <div className="max-w-7xl mx-auto flex gap-1">
           {superLinks.map((link) => (
@@ -73,7 +74,6 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         </div>
       </nav>
 
-      {/* Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {children}
       </main>

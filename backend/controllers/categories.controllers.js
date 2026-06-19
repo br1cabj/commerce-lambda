@@ -2,13 +2,25 @@ import Category from "../models/Category.js";
 
 export const getAllCategories = async (req, res) => {
     try {
-        const { isActive } = req.query;
+        const { isActive, page = 1, limit = 20 } = req.query;
         let query = { tenantId: req.tenant._id };
         if (isActive !== undefined) query.isActive = isActive === "true";
 
-        const categories = await Category.find(query).sort({ order: 1 });
-        res.status(200).json(categories);
+        const skip = (page - 1) * limit;
+
+        const categories = await Category.find(query)
+            .sort({ order: 1 })
+            .skip(skip)
+            .limit(Number(limit));
+
+        const total = await Category.countDocuments(query);
+
+        res.status(200).json({
+            info: { total, currentPage: Number(page), totalPages: Math.ceil(total / limit) },
+            results: categories
+        });
     } catch (error) {
+        console.error("Error fetching categories:", error.message);
         res.status(500).json({ message: "Error fetching categories." });
     }
 };
@@ -19,6 +31,7 @@ export const getCategoryById = async (req, res) => {
         if (!category) return res.status(404).json({ message: "Category not found." });
         res.json(category);
     } catch (error) {
+        console.error("Error fetching category:", error.message);
         res.status(500).json({ message: "Error fetching category." });
     }
 };
@@ -46,6 +59,7 @@ export const createCategory = async (req, res) => {
         const savedCategory = await newCategory.save();
         res.status(201).json({ message: "Category created!", category: savedCategory });
     } catch (error) {
+        console.error("Error creating category:", error.message);
         res.status(500).json({ message: "Error creating category." });
     }
 };
@@ -65,6 +79,7 @@ export const updateCategory = async (req, res) => {
 
         res.json({ message: "Category updated!", category: updatedCategory });
     } catch (error) {
+        console.error("Error updating category:", error.message);
         res.status(500).json({ message: "Error updating category." });
     }
 };
@@ -77,6 +92,7 @@ export const deleteCategory = async (req, res) => {
 
         res.json({ message: "Category deleted successfully!" });
     } catch (error) {
+        console.error("Error deleting category:", error.message);
         res.status(500).json({ message: "Error deleting category." });
     }
 };
@@ -92,6 +108,7 @@ export const toggleCategoryStatus = async (req, res) => {
 
         res.json({ message: `Category ${category.isActive ? 'activated' : 'deactivated'}!`, category });
     } catch (error) {
+        console.error("Error updating category status:", error.message);
         res.status(500).json({ message: "Error updating category status." });
     }
 };

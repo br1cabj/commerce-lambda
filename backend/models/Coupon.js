@@ -25,6 +25,18 @@ const couponSchema = new mongoose.Schema({
     pointsRequired: {
         type: Number,
         default: 0
+    },
+    expiresAt: {
+        type: Date,
+        default: null
+    },
+    maxUses: {
+        type: Number,
+        default: null
+    },
+    usedCount: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true

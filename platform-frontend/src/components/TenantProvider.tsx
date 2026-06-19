@@ -1,21 +1,23 @@
 "use client";
 
-import { useEffect, createContext, useContext } from "react";
+import { useEffect, useState, createContext, useContext } from "react";
 import { useTenant } from "@/hooks/useTenant";
 
 interface TenantProviderProps {
   children: React.ReactNode;
+  initialSlug?: string | null;
 }
 
 const TenantContext = createContext<{ tenantSlug: string | null }>({ tenantSlug: null });
 
-export function TenantProvider({ children }: TenantProviderProps) {
+export function TenantProvider({ children, initialSlug }: TenantProviderProps) {
   const { config, loading, error, fetchConfig } = useTenant();
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    let tenantSlug: string | null = null;
+    let tenantSlug: string | null = initialSlug || null;
 
-    if (typeof window !== "undefined") {
+    if (!tenantSlug && typeof window !== "undefined") {
       const hostname = window.location.hostname;
       const hostParts = hostname.split(".");
 
@@ -26,12 +28,13 @@ export function TenantProvider({ children }: TenantProviderProps) {
       }
     }
 
-    if (tenantSlug && !config) {
+    if (tenantSlug && !initialized) {
+      setInitialized(true);
       fetchConfig(tenantSlug);
     }
-  }, [config, fetchConfig]);
+  }, [fetchConfig, initialized, initialSlug]);
 
-  if (loading) {
+  if (loading && !config) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -42,7 +45,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
     );
   }
 
-  if (error) {
+  if (error && !config) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

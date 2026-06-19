@@ -79,7 +79,6 @@ export default function CatalogPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border p-6 h-fit sticky top-24">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-sm uppercase">Filters</h3>
@@ -143,13 +142,10 @@ export default function CatalogPage() {
           </div>
         </div>
 
-        {/* Products Grid */}
         <div className="lg:col-span-3">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-gray-100 rounded-xl h-72 animate-pulse" />
-              ))}
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-xl shadow-sm">

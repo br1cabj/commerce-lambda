@@ -8,12 +8,8 @@ const router = Router();
 
 router.use(identifyTenant);
 
-// MercadoPago
 router.post("/mercadopago/create-preference", verifyToken, createMercadoPagoPreference);
-router.post("/webhook/mercadopago", handleMercadoPagoWebhook);
-
-// Stripe
 router.post("/stripe/create-session", verifyToken, createStripeSession);
-router.post("/webhook/stripe", handleStripeWebhook);
 
+export { handleMercadoPagoWebhook, handleStripeWebhook };
 export default router;

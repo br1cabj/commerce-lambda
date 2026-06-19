@@ -25,7 +25,7 @@ export default function TrackingPage() {
 
   if (!config) return null;
 
-  const statusSteps = ["Pendiente", "En Preparacion", "Enviado", "Entregado"];
+  const statusSteps = ["Pendiente", "En Preparación", "Enviado", "Entregado"];
   const currentStep = order ? statusSteps.indexOf(order.status) : -1;
 
   const handleSearch = async () => {
@@ -95,7 +95,6 @@ export default function TrackingPage() {
             </div>
           </div>
 
-          {/* Progress Bar */}
           <div className="flex items-center justify-between mb-8 relative">
             <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200" />
             <div

@@ -38,6 +38,14 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    couponCode: {
+        type: String,
+        default: null
+    },
+    discountApplied: {
+        type: Number,
+        default: 0
+    },
     status: {
         type: String,
         enum: ["Pendiente", "En Preparación", "Enviado", "Entregado", "Cancelado"],
@@ -51,6 +59,12 @@ const orderSchema = new mongoose.Schema({
         type: String,
         enum: ["pending", "confirmed", "failed", "refunded"],
         default: "pending"
+    },
+    externalReference: {
+        type: String,
+        required: false,
+        unique: true,
+        sparse: true
     }
 }, {
     timestamps: true

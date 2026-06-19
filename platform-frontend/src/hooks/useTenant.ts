@@ -24,6 +24,10 @@ export function useTenant() {
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty("--font-family", config?.theme.fontFamily || "Poppins");
+
+    return () => {
+      root.style.removeProperty("--font-family");
+    };
   }, [config?.theme.fontFamily]);
 
   return { config, loading, error, fetchConfig };

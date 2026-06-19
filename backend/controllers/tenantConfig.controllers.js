@@ -25,6 +25,7 @@ export const getStoreConfig = async (req, res) => {
             categories
         });
     } catch (error) {
+        console.error("Error loading store configuration:", error.message);
         res.status(500).json({ message: "Error loading store configuration." });
     }
 };
@@ -52,6 +53,7 @@ export const updateStoreConfig = async (req, res) => {
 
         res.json({ message: "Store configuration updated!", tenant });
     } catch (error) {
+        console.error("Error updating store configuration:", error.message);
         res.status(500).json({ message: "Error updating store configuration." });
     }
 };
@@ -78,6 +80,7 @@ export const updateTheme = async (req, res) => {
 
         res.json({ message: "Theme updated!", theme: tenant.theme });
     } catch (error) {
+        console.error("Error updating theme:", error.message);
         res.status(500).json({ message: "Error updating theme." });
     }
 };

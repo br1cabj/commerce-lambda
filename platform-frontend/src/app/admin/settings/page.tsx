@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -16,8 +16,8 @@ export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("theme");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
-  // Theme state
   const [primaryColor, setPrimaryColor] = useState(config?.theme.primaryColor || "#000000");
   const [secondaryColor, setSecondaryColor] = useState(config?.theme.secondaryColor || "#333333");
   const [accentColor, setAccentColor] = useState(config?.theme.accentColor || "#f28c28");
@@ -26,23 +26,46 @@ export default function AdminSettingsPage() {
   const [logoUrl, setLogoUrl] = useState(config?.theme.logoUrl || "");
   const [heroImageUrl, setHeroImageUrl] = useState(config?.theme.heroImageUrl || "");
 
-  // Settings state
   const [whatsappNumber, setWhatsappNumber] = useState(config?.settings.whatsappNumber || "");
   const [email, setEmail] = useState(config?.settings.email || "");
   const [phone, setPhone] = useState(config?.settings.phone || "");
   const [currency, setCurrency] = useState(config?.settings.currency || "USD");
 
-  // Features
   const [loyaltyPoints, setLoyaltyPoints] = useState(config?.settings.features.loyaltyPoints || false);
   const [coupons, setCoupons] = useState(config?.settings.features.coupons ?? true);
   const [reviews, setReviews] = useState(config?.settings.features.reviews ?? true);
   const [emailMarketing, setEmailMarketing] = useState(config?.settings.features.emailMarketing || false);
 
-  if (!isAuthenticated || !isAdmin) {
-    router.push("/");
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated && !isAdmin) {
+      router.push("/");
+    }
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isAdmin, router]);
 
+  useEffect(() => {
+    if (config) {
+      setPrimaryColor(config.theme.primaryColor);
+      setSecondaryColor(config.theme.secondaryColor);
+      setAccentColor(config.theme.accentColor);
+      setHeroTitle(config.theme.heroTitle);
+      setHeroSubtitle(config.theme.heroSubtitle);
+      setLogoUrl(config.theme.logoUrl);
+      setHeroImageUrl(config.theme.heroImageUrl);
+      setWhatsappNumber(config.settings.whatsappNumber);
+      setEmail(config.settings.email);
+      setPhone(config.settings.phone);
+      setCurrency(config.settings.currency);
+      setLoyaltyPoints(config.settings.features.loyaltyPoints);
+      setCoupons(config.settings.features.coupons);
+      setReviews(config.settings.features.reviews);
+      setEmailMarketing(config.settings.features.emailMarketing);
+    }
+  }, [config]);
+
+  if (!isAuthenticated || !isAdmin) return null;
   if (!config) return null;
 
   const saveTheme = async () => {
@@ -96,7 +119,6 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-8 border-b">
         {tabs.map((tab) => (
           <button
@@ -113,7 +135,6 @@ export default function AdminSettingsPage() {
         ))}
       </div>
 
-      {/* Theme Tab */}
       {activeTab === "theme" && (
         <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
           <h2 className="text-lg font-bold">Appearance</h2>
@@ -173,7 +194,6 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      {/* Payments Tab */}
       {activeTab === "payments" && (
         <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
           <h2 className="text-lg font-bold">Payment Configuration</h2>
@@ -233,7 +253,6 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      {/* Shipping Tab */}
       {activeTab === "shipping" && (
         <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
           <h2 className="text-lg font-bold">Shipping Configuration</h2>
@@ -254,7 +273,6 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      {/* Features Tab */}
       {activeTab === "features" && (
         <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
           <h2 className="text-lg font-bold">Store Features</h2>

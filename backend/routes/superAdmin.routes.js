@@ -8,16 +8,19 @@ import {
     deleteTenant,
     getPlatformAnalytics
 } from "../controllers/superAdmin.controllers.js";
-import { verifyToken, isAdmin } from "../middleware/verifyToken.js";
+import { verifyToken, isSuperAdmin } from "../middleware/tenantAuth.js";
 
 const router = Router();
 
-router.get("/", verifyToken, isAdmin, getAllTenants);
-router.get("/analytics", verifyToken, isAdmin, getPlatformAnalytics);
-router.get("/:id", verifyToken, isAdmin, getTenantById);
-router.post("/", verifyToken, isAdmin, createTenant);
-router.put("/:id", verifyToken, isAdmin, updateTenant);
-router.put("/:id/toggle-status", verifyToken, isAdmin, toggleTenantStatus);
-router.delete("/:id", verifyToken, isAdmin, deleteTenant);
+router.use(verifyToken);
+router.use(isSuperAdmin);
+
+router.get("/", getAllTenants);
+router.get("/analytics", getPlatformAnalytics);
+router.get("/:id", getTenantById);
+router.post("/", createTenant);
+router.put("/:id", updateTenant);
+router.put("/:id/toggle-status", toggleTenantStatus);
+router.delete("/:id", deleteTenant);
 
 export default router;

@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const hostname = request.headers.get("host") || "";
-  const hostParts = hostname.split(".");
+  const hostname = request.headers.get("host");
+  const hostParts = hostname ? hostname.split(".") : [];
 
   let tenantSlug: string | null = null;
 
