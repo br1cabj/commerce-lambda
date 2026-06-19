@@ -1,11 +1,11 @@
 import { Router } from "express";
 import {
-    getAllCategories,
-    getCategoryById,
-    createCategory,
-    updateCategory,
-    deleteCategory,
-    toggleCategoryStatus
+  getAllCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  toggleCategoryStatus,
 } from "../controllers/categories.controllers.js";
 import { identifyTenant } from "../middleware/identifyTenant.js";
 import { verifyToken } from "../middleware/verifyToken.js";

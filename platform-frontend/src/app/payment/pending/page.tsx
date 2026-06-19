@@ -19,13 +19,15 @@ export default function PaymentPendingPage() {
 
           <h1 className="text-2xl font-bold mb-2">Payment Pending</h1>
           <p className="text-gray-500 mb-6">
-            Your payment is being processed. You will receive a confirmation once it is complete.
+            Your payment is being processed. You will receive a confirmation
+            once it is complete.
           </p>
 
           <div className="bg-yellow-50 rounded-lg p-4 mb-6">
             <p className="text-sm text-yellow-700">
-              For bank transfers or cash payments, it may take up to 24 hours to confirm.
-              We will notify you via email once your payment is verified.
+              For bank transfers or cash payments, it may take up to 24 hours to
+              confirm. We will notify you via email once your payment is
+              verified.
             </p>
           </div>
 

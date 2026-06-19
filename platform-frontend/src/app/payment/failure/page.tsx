@@ -19,13 +19,14 @@ export default function PaymentFailurePage() {
 
           <h1 className="text-2xl font-bold mb-2">Payment Failed</h1>
           <p className="text-gray-500 mb-6">
-            Your payment could not be processed. Your cart has been preserved so you can try again.
+            Your payment could not be processed. Your cart has been preserved so
+            you can try again.
           </p>
 
           <div className="bg-red-50 rounded-lg p-4 mb-6">
             <p className="text-sm text-red-600">
-              Common reasons: insufficient funds, card declined, or expired card.
-              Please try a different payment method.
+              Common reasons: insufficient funds, card declined, or expired
+              card. Please try a different payment method.
             </p>
           </div>
 

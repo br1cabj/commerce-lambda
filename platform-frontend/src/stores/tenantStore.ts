@@ -31,8 +31,16 @@ export interface TenantConfig {
     email: string;
     phone: string;
     address: string;
-    paymentMethods: { type: string; enabled: boolean; config: Record<string, unknown> }[];
-    shippingMethods: { type: string; enabled: boolean; config: Record<string, unknown> }[];
+    paymentMethods: {
+      type: string;
+      enabled: boolean;
+      config: Record<string, unknown>;
+    }[];
+    shippingMethods: {
+      type: string;
+      enabled: boolean;
+      config: Record<string, unknown>;
+    }[];
     features: {
       loyaltyPoints: boolean;
       coupons: boolean;

@@ -7,7 +7,8 @@ import { useTenant } from "@/hooks/useTenant";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { Tag, MessageCircle, CreditCard, Wallet } from "lucide-react";
+import { MessageCircle, CreditCard, Wallet } from "lucide-react";
+import { OrderSummary } from "@/components/checkout/OrderSummary";
 
 type PaymentMethod = "whatsapp" | "mercadopago" | "stripe";
 
@@ -26,7 +27,8 @@ export default function CheckoutPage() {
   const [dni, setDni] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("whatsapp");
+  const [selectedPayment, setSelectedPayment] =
+    useState<PaymentMethod>("whatsapp");
 
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
@@ -54,8 +56,8 @@ export default function CheckoutPage() {
 
   const paymentMethods = config?.settings.paymentMethods || [];
   const availableMethods: PaymentMethod[] = paymentMethods
-    .filter(m => m.enabled)
-    .map(m => m.type as PaymentMethod);
+    .filter((m) => m.enabled)
+    .map((m) => m.type as PaymentMethod);
 
   if (availableMethods.length === 0) {
     availableMethods.push("whatsapp");
@@ -80,7 +82,11 @@ export default function CheckoutPage() {
     setCouponMessage("");
 
     try {
-      const data = await api.post("/coupons/validate", { code: couponCode }, config.slug) as {
+      const data = (await api.post(
+        "/coupons/validate",
+        { code: couponCode },
+        config.slug,
+      )) as {
         discountPercentage: number;
         pointsRequired: number;
       };
@@ -112,20 +118,25 @@ export default function CheckoutPage() {
     setLoading(true);
     setError("");
 
-    const orderProducts = items.map(item => ({
+    const orderProducts = items.map((item) => ({
       product: item.id,
       quantity: item.quantity,
       price: item.price,
     }));
 
-    const orderData = {
+    const orderData: any = {
       products: orderProducts,
       shippingAddress: { street, number, city, province, zipCode },
       shippingCost: 0,
     };
+    if (couponApplied && couponCode) {
+      orderData.couponCode = couponCode;
+    }
 
     try {
-      const data = await api.post("/orders", orderData, config.slug) as { orderId: string };
+      const data = (await api.post("/orders", orderData, config.slug)) as {
+        orderId: string;
+      };
 
       const phoneNumber = config.settings.whatsappNumber || "";
       let wspText = `*Hello ${config.name}! I just placed an order.*\n`;
@@ -133,7 +144,7 @@ export default function CheckoutPage() {
       wspText += `*Customer:* ${fullName}\n`;
       wspText += `*ID:* ${dni}\n\n`;
       wspText += `*Order Details:*\n`;
-      items.forEach(item => {
+      items.forEach((item) => {
         wspText += `- ${item.model} (Size: ${item.size}) x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}\n`;
       });
       wspText += `\n*Shipping Address:*\n${street} ${number}, ${city}, ${province} (${zipCode})\n\n`;
@@ -146,7 +157,10 @@ export default function CheckoutPage() {
       clearCart();
 
       if (phoneNumber) {
-        window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(wspText)}`, "_blank");
+        window.open(
+          `https://wa.me/${phoneNumber}?text=${encodeURIComponent(wspText)}`,
+          "_blank",
+        );
       }
 
       router.push("/");
@@ -161,17 +175,26 @@ export default function CheckoutPage() {
     setLoading(true);
     setError("");
 
-    const orderProducts = items.map(item => ({
+    const orderProducts = items.map((item) => ({
       product: item.id,
       quantity: item.quantity,
       price: item.price,
     }));
 
     try {
-      const data = await api.post("/payments/mercadopago/create-preference", {
+      const payload: any = {
         products: orderProducts,
         shippingAddress: { street, number, city, province, zipCode },
-      }, config.slug) as { initPoint: string };
+      };
+      if (couponApplied && couponCode) {
+        payload.couponCode = couponCode;
+      }
+
+      const data = (await api.post(
+        "/payments/mercadopago/create-preference",
+        payload,
+        config.slug,
+      )) as { initPoint: string };
 
       clearCart();
       window.location.href = data.initPoint;
@@ -185,17 +208,26 @@ export default function CheckoutPage() {
     setLoading(true);
     setError("");
 
-    const orderProducts = items.map(item => ({
+    const orderProducts = items.map((item) => ({
       product: item.id,
       quantity: item.quantity,
       price: item.price,
     }));
 
     try {
-      const data = await api.post("/payments/stripe/create-session", {
+      const payload: any = {
         products: orderProducts,
         shippingAddress: { street, number, city, province, zipCode },
-      }, config.slug) as { url: string };
+      };
+      if (couponApplied && couponCode) {
+        payload.couponCode = couponCode;
+      }
+
+      const data = (await api.post(
+        "/payments/stripe/create-session",
+        payload,
+        config.slug,
+      )) as { url: string };
 
       clearCart();
       window.location.href = data.url;
@@ -242,43 +274,95 @@ export default function CheckoutPage() {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border p-6">
           <h2 className="text-xl font-bold mb-6">Shipping Address</h2>
 
-          {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">{error}</div>}
+          {error && (
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold mb-1">Full Name</label>
-                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-2 rounded-lg border bg-gray-50" required />
+                <label className="block text-sm font-bold mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border bg-gray-50"
+                  required
+                />
               </div>
               <div>
-                <label className="block text-sm font-bold mb-1">ID Number</label>
-                <input type="text" value={dni} onChange={(e) => setDni(e.target.value)} className="w-full px-4 py-2 rounded-lg border bg-gray-50" required />
+                <label className="block text-sm font-bold mb-1">
+                  ID Number
+                </label>
+                <input
+                  type="text"
+                  value={dni}
+                  onChange={(e) => setDni(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border bg-gray-50"
+                  required
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
                 <label className="block text-sm font-bold mb-1">Street</label>
-                <input type="text" value={street} onChange={(e) => setStreet(e.target.value)} className="w-full px-4 py-2 rounded-lg border bg-gray-50" required />
+                <input
+                  type="text"
+                  value={street}
+                  onChange={(e) => setStreet(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border bg-gray-50"
+                  required
+                />
               </div>
               <div>
                 <label className="block text-sm font-bold mb-1">Number</label>
-                <input type="text" value={number} onChange={(e) => setNumber(e.target.value)} className="w-full px-4 py-2 rounded-lg border bg-gray-50" required />
+                <input
+                  type="text"
+                  value={number}
+                  onChange={(e) => setNumber(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border bg-gray-50"
+                  required
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-bold mb-1">City</label>
-                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full px-4 py-2 rounded-lg border bg-gray-50" required />
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border bg-gray-50"
+                  required
+                />
               </div>
               <div>
                 <label className="block text-sm font-bold mb-1">Province</label>
-                <input type="text" value={province} onChange={(e) => setProvince(e.target.value)} className="w-full px-4 py-2 rounded-lg border bg-gray-50" required />
+                <input
+                  type="text"
+                  value={province}
+                  onChange={(e) => setProvince(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border bg-gray-50"
+                  required
+                />
               </div>
               <div>
-                <label className="block text-sm font-bold mb-1">Postal Code</label>
-                <input type="text" value={zipCode} onChange={(e) => setZipCode(e.target.value)} className="w-full px-4 py-2 rounded-lg border bg-gray-50" required />
+                <label className="block text-sm font-bold mb-1">
+                  Postal Code
+                </label>
+                <input
+                  type="text"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border bg-gray-50"
+                  required
+                />
               </div>
             </div>
 
@@ -290,7 +374,9 @@ export default function CheckoutPage() {
                 <label
                   key={method}
                   className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                    selectedPayment === method ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"
+                    selectedPayment === method
+                      ? "border-gray-900 bg-gray-50"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   <input
@@ -304,15 +390,23 @@ export default function CheckoutPage() {
                   <div className="flex items-center gap-3 flex-1">
                     {paymentIcons[method]}
                     <div>
-                      <p className="font-bold text-sm">{paymentLabels[method]}</p>
+                      <p className="font-bold text-sm">
+                        {paymentLabels[method]}
+                      </p>
                       {method === "whatsapp" && (
-                        <p className="text-xs text-gray-500">Coordinate shipping and payment via WhatsApp</p>
+                        <p className="text-xs text-gray-500">
+                          Coordinate shipping and payment via WhatsApp
+                        </p>
                       )}
                       {method === "mercadopago" && (
-                        <p className="text-xs text-gray-500">Pay securely with MercadoPago</p>
+                        <p className="text-xs text-gray-500">
+                          Pay securely with MercadoPago
+                        </p>
                       )}
                       {method === "stripe" && (
-                        <p className="text-xs text-gray-500">Pay with credit or debit card</p>
+                        <p className="text-xs text-gray-500">
+                          Pay with credit or debit card
+                        </p>
                       )}
                     </div>
                   </div>
@@ -326,84 +420,29 @@ export default function CheckoutPage() {
               className="w-full py-4 rounded-full font-bold text-lg text-white transition-transform hover:scale-105 disabled:opacity-50"
               style={{ backgroundColor: config.theme.primaryColor }}
             >
-              {loading ? "Processing..." : `Pay $${finalTotal.toLocaleString()} with ${paymentLabels[selectedPayment]}`}
+              {loading
+                ? "Processing..."
+                : `Pay $${finalTotal.toLocaleString()} with ${paymentLabels[selectedPayment]}`}
             </button>
           </form>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border p-6 h-fit sticky top-24">
-          <h3 className="font-bold text-lg mb-4">Order Summary</h3>
-          <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
-            {items.map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <img src={item.image} alt={item.model} className="h-12 w-12 object-contain bg-gray-50 rounded" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold truncate">{item.model}</p>
-                  <p className="text-xs text-gray-500">Size: {item.size} | Qty: {item.quantity}</p>
-                </div>
-                <span className="font-bold text-sm">${(item.price * item.quantity).toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-
-          {config.settings.features.coupons && (
-            <div className="mb-4 bg-gray-50 rounded-lg p-3 border">
-              <label className="text-xs font-bold mb-2 block">Discount Code</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={couponCode}
-                  onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponMessage(""); }}
-                  placeholder="e.g., SAVE10"
-                  className="flex-1 px-3 py-2 rounded border text-sm uppercase"
-                  disabled={couponApplied}
-                />
-                {couponApplied ? (
-                  <button
-                    onClick={removeCoupon}
-                    className="px-3 py-2 rounded font-semibold text-sm text-white bg-red-500 hover:bg-red-600"
-                  >
-                    Remove
-                  </button>
-                ) : (
-                  <button
-                    onClick={applyCoupon}
-                    disabled={applyingCoupon}
-                    className="px-3 py-2 rounded font-semibold text-sm text-white disabled:opacity-50"
-                    style={{ backgroundColor: config.theme.primaryColor }}
-                  >
-                    <Tag className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              {couponMessage && (
-                <p className={`text-xs mt-1 font-semibold ${couponApplied ? "text-green-600" : "text-red-500"}`}>
-                  {couponMessage}
-                </p>
-              )}
-            </div>
-          )}
-
-          <hr className="mb-4" />
-          <div className="flex justify-between mb-2 text-gray-500 text-sm">
-            <span>Subtotal</span>
-            <span className="font-bold">${totalAmount.toLocaleString()}</span>
-          </div>
-          {discountPercent > 0 && (
-            <div className="flex justify-between mb-2 text-red-500 text-sm">
-              <span>Discount ({discountPercent}%)</span>
-              <span className="font-bold">-${discountAmount.toLocaleString()}</span>
-            </div>
-          )}
-          <div className="flex justify-between mb-4 text-gray-500 text-sm pb-4 border-b">
-            <span>Shipping</span>
-            <span className="font-bold text-green-600">To be arranged</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-bold text-lg">Total</span>
-            <span className="font-bold text-lg">${finalTotal.toLocaleString()}</span>
-          </div>
-        </div>
+        <OrderSummary
+          items={items}
+          config={config}
+          totalAmount={totalAmount}
+          finalTotal={finalTotal}
+          discountPercent={discountPercent}
+          discountAmount={discountAmount}
+          couponCode={couponCode}
+          couponApplied={couponApplied}
+          applyingCoupon={applyingCoupon}
+          couponMessage={couponMessage}
+          setCouponCode={setCouponCode}
+          setCouponMessage={setCouponMessage}
+          applyCoupon={applyCoupon}
+          removeCoupon={removeCoupon}
+        />
       </div>
     </div>
   );

@@ -1,7 +1,17 @@
 import { Router } from "express";
-import { registerUser, loginUser, updatePassword, forgotPassword, resetPassword, getUserProfile } from "../controllers/users.controllers.js";
+import {
+  registerUser,
+  loginUser,
+  updatePassword,
+  forgotPassword,
+  resetPassword,
+  getUserProfile,
+} from "../controllers/users.controllers.js";
 import { verifyToken } from "../middleware/verifyToken.js";
-import validateSchema, { registerSchema, loginSchema } from "../middleware/validation.js";
+import validateSchema, {
+  registerSchema,
+  loginSchema,
+} from "../middleware/validation.js";
 import { identifyTenant } from "../middleware/identifyTenant.js";
 
 const router = Router();

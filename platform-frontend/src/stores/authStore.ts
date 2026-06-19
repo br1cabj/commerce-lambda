@@ -3,7 +3,13 @@ import { persist } from "zustand/middleware";
 
 interface AuthState {
   token: string | null;
-  user: { id: string; name: string; email: string; role: string; tenantId?: string } | null;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    tenantId?: string;
+  } | null;
   setAuth: (token: string, user: AuthState["user"]) => void;
   logout: () => void;
   isAuthenticated: () => boolean;
@@ -35,6 +41,6 @@ export const useAuthStore = create<AuthState>()(
         return user?.role === "super_admin";
       },
     }),
-    { name: "auth-storage" }
-  )
+    { name: "auth-storage" },
+  ),
 );

@@ -29,15 +29,21 @@ export default function AdminReviewsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isAuthenticated || !isAdmin) { router.push("/"); return; }
+    if (!isAuthenticated || !isAdmin) {
+      router.push("/");
+      return;
+    }
     loadReviews();
   }, [config, isAuthenticated, isAdmin, router]);
 
   const loadReviews = async () => {
     if (!config) return;
     try {
-      const data = await api.get("/reviews", config.slug) as Review[];
-      setReviews(data || []);
+      const data = (await api.get("/reviews", config.slug)) as
+        | { results?: Review[] }
+        | Review[];
+      const results = Array.isArray(data) ? data : data.results || [];
+      setReviews(results);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading reviews");
       console.error("Error loading reviews:", err);
@@ -60,7 +66,10 @@ export default function AdminReviewsPage() {
     try {
       await api.post("/reviews", formData, config.slug);
       setShowForm(false);
-      setName(""); setRole(""); setMessage(""); setImage(null);
+      setName("");
+      setRole("");
+      setMessage("");
+      setImage(null);
       loadReviews();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error creating review");
@@ -93,32 +102,80 @@ export default function AdminReviewsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">{error}</div>
+        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">
+          {error}
+        </div>
       )}
 
       {showForm && (
-        <form onSubmit={createReview} className="bg-white rounded-xl shadow-sm border p-6 mb-6 space-y-4">
+        <form
+          onSubmit={createReview}
+          className="bg-white rounded-xl shadow-sm border p-6 mb-6 space-y-4"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold mb-1">Client Name</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 rounded-lg border" required />
+              <label className="block text-sm font-bold mb-1">
+                Client Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border"
+                required
+              />
             </div>
             <div>
-              <label className="block text-sm font-bold mb-1">Role / Title</label>
-              <input type="text" value={role} onChange={(e) => setRole(e.target.value)} className="w-full px-4 py-2 rounded-lg border" placeholder="e.g., Professional Athlete" required />
+              <label className="block text-sm font-bold mb-1">
+                Role / Title
+              </label>
+              <input
+                type="text"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border"
+                placeholder="e.g., Professional Athlete"
+                required
+              />
             </div>
           </div>
           <div>
             <label className="block text-sm font-bold mb-1">Message</label>
-            <textarea value={message} onChange={(e) => setMessage(e.target.value)} className="w-full px-4 py-2 rounded-lg border" rows={3} required />
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border"
+              rows={3}
+              required
+            />
           </div>
           <div>
-            <label className="block text-sm font-bold mb-1">Profile Photo</label>
-            <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} className="w-full px-4 py-2 rounded-lg border" required />
+            <label className="block text-sm font-bold mb-1">
+              Profile Photo
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImage(e.target.files?.[0] || null)}
+              className="w-full px-4 py-2 rounded-lg border"
+              required
+            />
           </div>
           <div className="flex gap-3">
-            <button type="submit" className="px-6 py-2 rounded-lg font-semibold text-white" style={{ backgroundColor: config.theme.accentColor }}>Publish</button>
-            <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2 rounded-lg border font-semibold">Cancel</button>
+            <button
+              type="submit"
+              className="px-6 py-2 rounded-lg font-semibold text-white"
+              style={{ backgroundColor: config.theme.accentColor }}
+            >
+              Publish
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="px-6 py-2 rounded-lg border font-semibold"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       )}
@@ -126,7 +183,10 @@ export default function AdminReviewsPage() {
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm border p-4 animate-pulse h-20" />
+            <div
+              key={i}
+              className="bg-white rounded-xl shadow-sm border p-4 animate-pulse h-20"
+            />
           ))}
         </div>
       ) : reviews.length === 0 ? (
@@ -136,17 +196,34 @@ export default function AdminReviewsPage() {
       ) : (
         <div className="space-y-3">
           {reviews.map((review) => (
-            <div key={review._id} className="bg-white rounded-xl shadow-sm border p-4 flex items-center gap-4">
-              <img src={review.image} alt={review.clientName} className="h-12 w-12 rounded-full object-cover border-2" style={{ borderColor: config.theme.accentColor }} />
+            <div
+              key={review._id}
+              className="bg-white rounded-xl shadow-sm border p-4 flex items-center gap-4"
+            >
+              <img
+                src={review.image}
+                alt={review.clientName}
+                className="h-12 w-12 rounded-full object-cover border-2"
+                style={{ borderColor: config.theme.accentColor }}
+              />
               <div className="flex-1">
                 <p className="font-bold">{review.clientName}</p>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">{review.clientRole}</p>
-                <p className="text-sm text-gray-600 italic mt-1">&ldquo;{review.message}&rdquo;</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">
+                  {review.clientRole}
+                </p>
+                <p className="text-sm text-gray-600 italic mt-1">
+                  &ldquo;{review.message}&rdquo;
+                </p>
               </div>
               <div className="flex gap-1 text-yellow-400">
-                {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-current" />)}
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="h-4 w-4 fill-current" />
+                ))}
               </div>
-              <button onClick={() => deleteReview(review._id)} className="p-2 rounded hover:bg-red-50 text-red-500">
+              <button
+                onClick={() => deleteReview(review._id)}
+                className="p-2 rounded hover:bg-red-50 text-red-500"
+              >
                 <Trash className="h-5 w-5" />
               </button>
             </div>

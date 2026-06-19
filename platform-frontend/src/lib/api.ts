@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 export interface ApiOptions extends RequestInit {
   tenantSlug?: string;
@@ -7,7 +8,8 @@ export interface ApiOptions extends RequestInit {
 async function apiRequest(endpoint: string, options: ApiOptions = {}) {
   const { tenantSlug, headers: customHeaders, body, ...restOptions } = options;
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const headers: Record<string, string> = {
     ...(tenantSlug ? { "X-Tenant-Slug": tenantSlug } : {}),
@@ -36,7 +38,9 @@ async function apiRequest(endpoint: string, options: ApiOptions = {}) {
 
   if (!response.ok) {
     const errorData = data as { message?: string; details?: string };
-    throw new Error(errorData.details || errorData.message || "An unexpected error occurred");
+    throw new Error(
+      errorData.details || errorData.message || "An unexpected error occurred",
+    );
   }
 
   return data;
@@ -47,10 +51,18 @@ export const api = {
     apiRequest(endpoint, { method: "GET", tenantSlug }),
 
   post: (endpoint: string, body: unknown, tenantSlug?: string) =>
-    apiRequest(endpoint, { method: "POST", body: body instanceof FormData ? body : JSON.stringify(body), tenantSlug }),
+    apiRequest(endpoint, {
+      method: "POST",
+      body: body instanceof FormData ? body : JSON.stringify(body),
+      tenantSlug,
+    }),
 
   put: (endpoint: string, body: unknown, tenantSlug?: string) =>
-    apiRequest(endpoint, { method: "PUT", body: body instanceof FormData ? body : JSON.stringify(body), tenantSlug }),
+    apiRequest(endpoint, {
+      method: "PUT",
+      body: body instanceof FormData ? body : JSON.stringify(body),
+      tenantSlug,
+    }),
 
   delete: (endpoint: string, tenantSlug?: string) =>
     apiRequest(endpoint, { method: "DELETE", tenantSlug }),

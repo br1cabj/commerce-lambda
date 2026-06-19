@@ -8,7 +8,9 @@ interface TenantProviderProps {
   initialSlug?: string | null;
 }
 
-const TenantContext = createContext<{ tenantSlug: string | null }>({ tenantSlug: null });
+const TenantContext = createContext<{ tenantSlug: string | null }>({
+  tenantSlug: null,
+});
 
 export function TenantProvider({ children, initialSlug }: TenantProviderProps) {
   const { config, loading, error, fetchConfig } = useTenant();
@@ -24,7 +26,10 @@ export function TenantProvider({ children, initialSlug }: TenantProviderProps) {
       if (hostParts.length > 2) {
         tenantSlug = hostParts[0].toLowerCase();
       } else {
-        tenantSlug = localStorage.getItem("tenantSlug") || process.env.NEXT_PUBLIC_DEFAULT_TENANT || null;
+        tenantSlug =
+          localStorage.getItem("tenantSlug") ||
+          process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
+          null;
       }
     }
 
@@ -50,7 +55,9 @@ export function TenantProvider({ children, initialSlug }: TenantProviderProps) {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p className="text-red-500 font-medium">{error}</p>
-          <p className="text-gray-500 text-sm mt-2">Make sure the store slug is correct.</p>
+          <p className="text-gray-500 text-sm mt-2">
+            Make sure the store slug is correct.
+          </p>
         </div>
       </div>
     );

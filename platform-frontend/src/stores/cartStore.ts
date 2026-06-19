@@ -30,7 +30,9 @@ export const useCartStore = create<CartState>()(
       addItem: (item) =>
         set((state) => {
           const existingIndex = state.items.findIndex(
-            (i) => i.id === item.id && i.size.toLowerCase() === item.size.toLowerCase()
+            (i) =>
+              i.id === item.id &&
+              i.size.toLowerCase() === item.size.toLowerCase(),
           );
 
           if (existingIndex !== -1) {
@@ -68,10 +70,12 @@ export const useCartStore = create<CartState>()(
 
       clearCart: () => set({ items: [] }),
 
-      totalItems: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
+      totalItems: () =>
+        get().items.reduce((acc, item) => acc + item.quantity, 0),
 
-      totalAmount: () => get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+      totalAmount: () =>
+        get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
     }),
-    { name: "cart-storage" }
-  )
+    { name: "cart-storage" },
+  ),
 );

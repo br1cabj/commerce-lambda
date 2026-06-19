@@ -1,8 +1,8 @@
 import { Router } from "express";
 import {
-    getStoreConfig,
-    updateStoreConfig,
-    updateTheme
+  getStoreConfig,
+  updateStoreConfig,
+  updateTheme,
 } from "../controllers/tenantConfig.controllers.js";
 import { identifyTenant } from "../middleware/identifyTenant.js";
 import { verifyToken } from "../middleware/verifyToken.js";

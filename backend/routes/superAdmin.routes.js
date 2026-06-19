@@ -1,12 +1,12 @@
 import { Router } from "express";
 import {
-    createTenant,
-    getAllTenants,
-    getTenantById,
-    updateTenant,
-    toggleTenantStatus,
-    deleteTenant,
-    getPlatformAnalytics
+  createTenant,
+  getAllTenants,
+  getTenantById,
+  updateTenant,
+  toggleTenantStatus,
+  deleteTenant,
+  getPlatformAnalytics,
 } from "../controllers/superAdmin.controllers.js";
 import { verifyToken, isSuperAdmin } from "../middleware/tenantAuth.js";
 

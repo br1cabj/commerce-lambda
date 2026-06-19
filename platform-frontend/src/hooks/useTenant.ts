@@ -5,25 +5,33 @@ import { useTenantStore, type TenantConfig } from "@/stores/tenantStore";
 import { api } from "@/lib/api";
 
 export function useTenant() {
-  const { config, loading, error, setConfig, setLoading, setError } = useTenantStore();
+  const { config, loading, error, setConfig, setLoading, setError } =
+    useTenantStore();
 
-  const fetchConfig = useCallback(async (slug: string) => {
-    setLoading(true);
-    try {
-      const data = await api.get("/store", slug) as TenantConfig;
-      setConfig(data);
-      applyTheme(data.theme);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load store config";
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [setConfig, setLoading, setError]);
+  const fetchConfig = useCallback(
+    async (slug: string) => {
+      setLoading(true);
+      try {
+        const data = (await api.get("/store", slug)) as TenantConfig;
+        setConfig(data);
+        applyTheme(data.theme);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load store config";
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setConfig, setLoading, setError],
+  );
 
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty("--font-family", config?.theme.fontFamily || "Poppins");
+    root.style.setProperty(
+      "--font-family",
+      config?.theme.fontFamily || "Poppins",
+    );
 
     return () => {
       root.style.removeProperty("--font-family");

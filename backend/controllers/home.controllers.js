@@ -1,3 +1,3 @@
 export const getHomeMessage = (req, res) => {
-    res.json({ message: "Welcome to the Store API!"})
-}
+  res.json({ message: "Welcome to the Store API!" });
+};

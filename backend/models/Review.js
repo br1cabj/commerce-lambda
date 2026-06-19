@@ -1,32 +1,35 @@
 import mongoose from "mongoose";
 
-const reviewSchema = new mongoose.Schema({
+const reviewSchema = new mongoose.Schema(
+  {
     tenantId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Tenant",
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tenant",
+      required: true,
     },
-    clientName: { 
-        type: String, 
-        required: true, 
-        trim: true 
+    clientName: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    clientRole: { 
-        type: String, 
-        required: true, 
-        trim: true 
+    clientRole: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    message: { 
-        type: String, 
-        required: true 
+    message: {
+      type: String,
+      required: true,
     },
-    image: { 
-        type: String, 
-        default: ""
-    }
-}, {
-    timestamps: true 
-});
+    image: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
 reviewSchema.index({ tenantId: 1, createdAt: -1 });
 

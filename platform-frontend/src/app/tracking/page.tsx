@@ -39,9 +39,14 @@ export default function TrackingPage() {
     setLoading(true);
     try {
       if (isAuthenticated) {
-        const orders = await api.get("/orders/my-orders", config.slug) as Order[];
+        const orders = (await api.get(
+          "/orders/my-orders",
+          config.slug,
+        )) as Order[];
         const found = orders.find(
-          (o) => o.trackingCode?.toLowerCase() === trackingInput.toLowerCase() || o._id === trackingInput
+          (o) =>
+            o.trackingCode?.toLowerCase() === trackingInput.toLowerCase() ||
+            o._id === trackingInput,
         );
         if (found) {
           setOrder(found);
@@ -61,7 +66,9 @@ export default function TrackingPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold mb-2">Track Your Order</h1>
-      <p className="text-gray-500 mb-8">Enter your tracking code or order ID to see the current status.</p>
+      <p className="text-gray-500 mb-8">
+        Enter your tracking code or order ID to see the current status.
+      </p>
 
       <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
         <div className="flex gap-3">
@@ -88,10 +95,15 @@ export default function TrackingPage() {
       {order && (
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center gap-3 mb-6">
-            <Package className="h-6 w-6" style={{ color: config.theme.accentColor }} />
+            <Package
+              className="h-6 w-6"
+              style={{ color: config.theme.accentColor }}
+            />
             <div>
               <h3 className="font-bold">Order {order._id.slice(-6)}</h3>
-              <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-500">
+                {new Date(order.createdAt).toLocaleDateString()}
+              </p>
             </div>
           </div>
 
@@ -105,16 +117,25 @@ export default function TrackingPage() {
               }}
             />
             {statusSteps.map((step, i) => (
-              <div key={step} className="relative z-10 flex flex-col items-center">
+              <div
+                key={step}
+                className="relative z-10 flex flex-col items-center"
+              >
                 <div
                   className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
                     i <= currentStep ? "" : "bg-gray-300"
                   }`}
-                  style={i <= currentStep ? { backgroundColor: config.theme.accentColor } : {}}
+                  style={
+                    i <= currentStep
+                      ? { backgroundColor: config.theme.accentColor }
+                      : {}
+                  }
                 >
                   {i <= currentStep ? "✓" : i + 1}
                 </div>
-                <span className="text-xs mt-2 text-gray-600 text-center hidden sm:block">{step}</span>
+                <span className="text-xs mt-2 text-gray-600 text-center hidden sm:block">
+                  {step}
+                </span>
               </div>
             ))}
           </div>
@@ -122,10 +143,13 @@ export default function TrackingPage() {
           <div className="bg-gray-50 rounded-lg p-4">
             <p className="text-sm">
               <span className="font-bold">Tracking Code:</span>{" "}
-              <span className="text-blue-600 font-bold">{order.trackingCode || "Not yet assigned"}</span>
+              <span className="text-blue-600 font-bold">
+                {order.trackingCode || "Not yet assigned"}
+              </span>
             </p>
             <p className="text-sm mt-2">
-              <span className="font-bold">Total:</span> ${order.totalAmount.toLocaleString()}
+              <span className="font-bold">Total:</span> $
+              {order.totalAmount.toLocaleString()}
             </p>
           </div>
         </div>

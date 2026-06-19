@@ -25,7 +25,10 @@ function PaymentSuccessContent() {
   const fetchOrderDetails = async () => {
     if (!config) return;
     try {
-      const orders = await api.get("/orders/my-orders", config.slug) as Array<{ _id: string }>;
+      const orders = (await api.get(
+        "/orders/my-orders",
+        config.slug,
+      )) as Array<{ _id: string }>;
       if (orders.length > 0) {
         setOrderId(orders[0]._id);
       }
@@ -57,7 +60,9 @@ function PaymentSuccessContent() {
                 <Package className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-500">Order ID</span>
               </div>
-              <p className="font-mono font-bold text-lg">#{orderId.slice(-8)}</p>
+              <p className="font-mono font-bold text-lg">
+                #{orderId.slice(-8)}
+              </p>
             </div>
           )}
 
@@ -91,11 +96,13 @@ function PaymentSuccessContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      }
+    >
       <PaymentSuccessContent />
     </Suspense>
   );

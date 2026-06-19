@@ -6,7 +6,7 @@
   --color-primary: #000000;
   --color-secondary: #333333;
   --color-accent: #f28c28;
-  --font-family: 'Poppins', sans-serif;
+  --font-family: "Poppins", sans-serif;
 }
 
 @theme inline {

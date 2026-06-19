@@ -42,50 +42,73 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-700 px-4">
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-md w-full">
-        <div className="p-8 text-center text-white" style={{ backgroundColor: config.theme.primaryColor }}>
+        <div
+          className="p-8 text-center text-white"
+          style={{ backgroundColor: config.theme.primaryColor }}
+        >
           <h2 className="text-2xl font-bold">{config.name}</h2>
           <p className="text-gray-300 text-sm mt-1">Create your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-5">
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{error}</div>
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
+              {error}
+            </div>
           )}
 
           <div>
-            <label className="block text-sm font-semibold text-gray-500 uppercase mb-1">Name</label>
+            <label className="block text-sm font-semibold text-gray-500 uppercase mb-1">
+              Name
+            </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border bg-gray-50 focus:outline-none focus:ring-2 focus:border-transparent"
-              style={{ "--tw-ring-color": config.theme.accentColor } as React.CSSProperties}
+              style={
+                {
+                  "--tw-ring-color": config.theme.accentColor,
+                } as React.CSSProperties
+              }
               placeholder="Your name"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-500 uppercase mb-1">Email</label>
+            <label className="block text-sm font-semibold text-gray-500 uppercase mb-1">
+              Email
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border bg-gray-50 focus:outline-none focus:ring-2 focus:border-transparent"
-              style={{ "--tw-ring-color": config.theme.accentColor } as React.CSSProperties}
+              style={
+                {
+                  "--tw-ring-color": config.theme.accentColor,
+                } as React.CSSProperties
+              }
               placeholder="you@example.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-500 uppercase mb-1">Password</label>
+            <label className="block text-sm font-semibold text-gray-500 uppercase mb-1">
+              Password
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border bg-gray-50 focus:outline-none focus:ring-2 focus:border-transparent"
-              style={{ "--tw-ring-color": config.theme.accentColor } as React.CSSProperties}
+              style={
+                {
+                  "--tw-ring-color": config.theme.accentColor,
+                } as React.CSSProperties
+              }
               placeholder="Min 6 characters"
               required
               minLength={6}
@@ -93,13 +116,19 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-500 uppercase mb-1">Confirm Password</label>
+            <label className="block text-sm font-semibold text-gray-500 uppercase mb-1">
+              Confirm Password
+            </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border bg-gray-50 focus:outline-none focus:ring-2 focus:border-transparent"
-              style={{ "--tw-ring-color": config.theme.accentColor } as React.CSSProperties}
+              style={
+                {
+                  "--tw-ring-color": config.theme.accentColor,
+                } as React.CSSProperties
+              }
               placeholder="Repeat password"
               required
             />
@@ -116,7 +145,11 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-gray-500">
             Already have an account?{" "}
-            <Link href="/login" className="font-semibold hover:underline" style={{ color: config.theme.primaryColor }}>
+            <Link
+              href="/login"
+              className="font-semibold hover:underline"
+              style={{ color: config.theme.primaryColor }}
+            >
               Sign in
             </Link>
           </p>

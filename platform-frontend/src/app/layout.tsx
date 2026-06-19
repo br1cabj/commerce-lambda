@@ -12,13 +12,44 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "E-Commerce Store",
-    template: "%s | E-Commerce Store",
-  },
-  description: "Your specialized online store",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  const tenantSlug =
+    headersList.get("x-tenant-slug") ||
+    process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
+    "default";
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/store/config`, {
+      headers: { "x-tenant-slug": tenantSlug },
+      next: { revalidate: 60 },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch");
+
+    const config = await res.json();
+
+    return {
+      title: {
+        default: config.name || "E-Commerce Store",
+        template: `%s | ${config.name || "E-Commerce Store"}`,
+      },
+      description:
+        config.theme?.heroSubtitle || "Your specialized online store",
+      openGraph: {
+        title: config.name || "E-Commerce Store",
+        description:
+          config.theme?.heroSubtitle || "Your specialized online store",
+        siteName: config.name || "E-Commerce",
+      },
+    };
+  } catch (err) {
+    return {
+      title: "E-Commerce Store",
+      description: "Your specialized online store",
+    };
+  }
+}
 
 export default async function RootLayout({
   children,
@@ -26,11 +57,17 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const headersList = await headers();
-  const tenantSlug = headersList.get("x-tenant-slug") || process.env.NEXT_PUBLIC_DEFAULT_TENANT || null;
+  const tenantSlug =
+    headersList.get("x-tenant-slug") ||
+    process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
+    null;
 
   return (
     <html lang="en" className={`${poppins.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>
+      <body
+        className="min-h-full flex flex-col"
+        style={{ fontFamily: "var(--font-poppins), sans-serif" }}
+      >
         <TenantProvider initialSlug={tenantSlug}>
           <Navbar />
           <main className="flex-1">{children}</main>

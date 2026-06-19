@@ -8,11 +8,23 @@ import { usePathname } from "next/navigation";
 import { BarChart3, Store, ArrowLeft } from "lucide-react";
 
 const superLinks = [
-  { href: "/super", label: "Dashboard", icon: <BarChart3 className="h-4 w-4" /> },
-  { href: "/super/tenants", label: "Tenants", icon: <Store className="h-4 w-4" /> },
+  {
+    href: "/super",
+    label: "Dashboard",
+    icon: <BarChart3 className="h-4 w-4" />,
+  },
+  {
+    href: "/super/tenants",
+    label: "Tenants",
+    icon: <Store className="h-4 w-4" />,
+  },
 ];
 
-export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
+export default function SuperAdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -43,7 +55,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
       <header className="bg-gray-900 text-white px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+            >
               <ArrowLeft className="h-4 w-4" /> Back to Store
             </Link>
             <span className="text-gray-600">|</span>
@@ -51,7 +66,9 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-400">{user.name}</span>
-            <span className="bg-purple-600 text-xs px-2 py-1 rounded-full font-bold">SUPER ADMIN</span>
+            <span className="bg-purple-600 text-xs px-2 py-1 rounded-full font-bold">
+              SUPER ADMIN
+            </span>
           </div>
         </div>
       </header>
@@ -74,9 +91,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {children}
-      </main>
+      <main className="max-w-7xl mx-auto px-6 py-8">{children}</main>
     </div>
   );
 }

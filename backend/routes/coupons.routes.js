@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { createCoupon, toggleCoupon, sendPromoEmail, validateCoupon, getAllCoupons, deleteCoupon } from "../controllers/coupons.controllers.js";
+import {
+  createCoupon,
+  toggleCoupon,
+  sendPromoEmail,
+  validateCoupon,
+  getAllCoupons,
+  deleteCoupon,
+} from "../controllers/coupons.controllers.js";
 import { identifyTenant } from "../middleware/identifyTenant.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdminForTenant } from "../middleware/tenantAuth.js";
