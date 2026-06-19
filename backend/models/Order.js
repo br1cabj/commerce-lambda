@@ -1,15 +1,16 @@
-// Imports
-
 import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
-    // Quien hizo la compra?(usuario)
+    tenantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tenant",
+        required: true
+    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
-    // Que se compro?(orden de compra).
     products: [
         {
             product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
@@ -17,7 +18,6 @@ const orderSchema = new mongoose.Schema({
             price: { type: Number, required: true}
         }
     ],
-    // A donde se envia el paquete.
     shippingAddress: {
         street: { type: String, required: true },
         number: { type: String, required: true },
@@ -25,29 +25,39 @@ const orderSchema = new mongoose.Schema({
         province: { type: String, required: true },
         zipCode: { type: String, required: true}
     },
-    // Datos del Correo Argentino(Envio y Seguimiento)
     shippingCost: {
         type: Number,
         required: true,
-        default: 0 // Lo que cuesta el envio.
+        default: 0
     },
     trackingCode: {
         type: String,
-        default: "" // Aqui se va a copiar el codigo de Correo Argentino cuando despache el producto.
+        default: ""
     },
-    // Total de cuanto se pago (productos + envios + descuentos)
     totalAmount: {
         type: Number,
         required: true
     },
-    // Estado visual de la compra.
     status: {
         type: String,
         enum: ["Pendiente", "En Preparación", "Enviado", "Entregado", "Cancelado"],
         default: "Pendiente"
+    },
+    paymentMethod: {
+        type: String,
+        default: "whatsapp"
+    },
+    paymentStatus: {
+        type: String,
+        enum: ["pending", "confirmed", "failed", "refunded"],
+        default: "pending"
     }
 }, {
     timestamps: true
 });
+
+orderSchema.index({ tenantId: 1, user: 1 });
+orderSchema.index({ tenantId: 1, status: 1 });
+orderSchema.index({ tenantId: 1, createdAt: -1 });
 
 export default mongoose.model("Order", orderSchema);

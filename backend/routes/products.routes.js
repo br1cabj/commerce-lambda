@@ -1,29 +1,19 @@
-// Imports
-
 import { Router } from "express";
-
 import { getAllProducts, getProductById, createProduct, deleteProduct, updateProduct, toggleFeatured } from "../controllers/products.controllers.js";
-
 import { verifyToken, isAdmin } from "../middleware/verifyToken.js";
-
-// Constantes
+import { identifyTenant } from "../middleware/identifyTenant.js";
+import { isAdminForTenant } from "../middleware/tenantAuth.js";
 
 const router = Router();
 
-router.get('/', getAllProducts); // Agarro todos los productos 
+router.use(identifyTenant);
 
-router.get('/:id', getProductById); // Busco los productos por el id
+router.get('/', getAllProducts);
+router.get('/:id', getProductById);
 
-// Rutas privadas
-
-router.post('/', verifyToken, isAdmin, createProduct); // Ruta de los nuevos productos creados
-
-router.delete('/:id', verifyToken, isAdmin, deleteProduct); // Ruta de la funcion para borrar productos
-
-router.put('/:id', verifyToken, isAdmin, updateProduct); // Ruta de la funcion para actualizar los productos
-
-router.put('/:id/feature', verifyToken, isAdmin, toggleFeatured); // Ruta de la funcion para los destacados de la pagina de inicio.
-
-
+router.post('/', verifyToken, isAdminForTenant, createProduct);
+router.delete('/:id', verifyToken, isAdminForTenant, deleteProduct);
+router.put('/:id', verifyToken, isAdminForTenant, updateProduct);
+router.put('/:id/feature', verifyToken, isAdminForTenant, toggleFeatured);
 
 export default router;

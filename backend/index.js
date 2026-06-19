@@ -1,4 +1,3 @@
-// Imports de archivos
 import 'dotenv/config';
 import express from 'express';
 import helmet from 'helmet';
@@ -11,27 +10,28 @@ import usersRoutes from "./routes/users.routes.js";
 import "./config/mailer.js";
 import couponsRoutes from './routes/coupons.routes.js';
 import ordersRoutes from './routes/orders.routes.js';
-import shippingRoutes from './routes/shipping.routes.js'; // NUEVA IMPORTACIÓN
+import shippingRoutes from './routes/shipping.routes.js';
 import cors from "cors";
 import reviewsRoutes from './routes/reviews.routes.js';
 import errorHandler from './middleware/errorHandler.js';
+import superAdminRoutes from './routes/superAdmin.routes.js';
+import tenantConfigRoutes from './routes/tenantConfig.routes.js';
+import categoriesRoutes from './routes/categories.routes.js';
+import paymentsRoutes from './routes/payments.routes.js';
 
-// Constantes
 const app = express();
 
-// Seguridad
-app.use(helmet()); // Protege las cabeceras HTTP
+app.use(helmet());
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // Limita cada IP a 100 peticiones por ventana
-    message: "Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos."
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: "Too many requests from this IP, please try again in 15 minutes."
 });
-app.use('/api/', limiter); // Aplicamos el limitador a las rutas de la API
+app.use('/api/', limiter);
 
-// Configuración de CORS más segura
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || '*', // En producción deberías especificar la URL real
+    origin: process.env.FRONTEND_URL || '*',
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
@@ -49,18 +49,18 @@ app.use("/api/users", usersRoutes);
 app.use('/api/orders', ordersRoutes); 
 app.use('/api/coupons', couponsRoutes);
 app.use('/api/reviews', reviewsRoutes);
-
-// Calculador de envíos
 app.use('/api/shipping', shippingRoutes);
+app.use('/api/store', tenantConfigRoutes);
+app.use('/api/categories', categoriesRoutes);
+app.use('/api/super', superAdminRoutes);
+app.use('/api/payments', paymentsRoutes);
 
-// Manejo centralizado de errores (Debe ir después de todas las rutas)
 app.use(errorHandler);
 
 const port = process.env.PORT || 3001;
 
-// Evento de app
 connectDB();
 
 app.listen(port, () => {
-    console.log(`Servidor de Onda Basquete encendido en el puerto ${port}`);
+    console.log(`Server running on port ${port}`);
 });

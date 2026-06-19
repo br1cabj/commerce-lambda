@@ -1,19 +1,22 @@
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
-    // Separo los productos en secciones
-    category: { 
-        type: String, 
-        enum: ['Zapatillas', 'Indumentaria', 'Accesorios'], 
-        default: 'Zapatillas',
+    tenantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tenant",
         required: true
+    },
+    category: {
+        type: String,
+        required: true,
+        trim: true
     },
     brand: { type: String, required: true, trim: true },
     model: { type: String, required: true },
     price: { type: Number, required: true },
     
     sizes: [{
-        size: { type: String, required: true }, // Cambiado a String para soportar S, M, L o "Único"
+        size: { type: String, required: true },
         stock: { type: Number, required: true, min: 0 }
     }],
     
@@ -26,5 +29,9 @@ const productSchema = new mongoose.Schema({
 }, {
     timestamps: true 
 });
+
+productSchema.index({ tenantId: 1, isDeleted: 1 });
+productSchema.index({ tenantId: 1, category: 1 });
+productSchema.index({ tenantId: 1, isFeatured: 1 });
 
 export default mongoose.model("Product", productSchema);

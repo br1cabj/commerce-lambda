@@ -1,16 +1,20 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
+    tenantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tenant",
+        required: false
+    },
     name: {
-        type: String, // String hace que reciba los datos en cadena de texto
+        type: String,
         required: true,
         trim: true
     },
     email: {
         type: String,
         required: true,
-        unique: true,  // Hace que no haya personas con el mismo email.
-        trim: true // Saca los espacios para que no haya fallas en el email
+        trim: true
     },
     password: {
         type: String,
@@ -18,7 +22,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: "client" // Aca se le asigna a los usuarios el rol de cliente.
+        default: "client"
     },
     phone: {
         type: String,
@@ -31,19 +35,18 @@ const userSchema = new mongoose.Schema({
         province: { type: String, required: false, trim: true},
         zipCode: { type: String, required: false, trim: true}
     },
-    // Sistema de puntos de Onda Basquete Club.
     points: {
         type: Number,
-        default: 0 // Todos los usuarios arrancan con 0 puntos.
+        default: 0
     },
-    // Borrado logico
     isDeleted: {
         type: Boolean,
-        default: false // Por defecto ningun usuario nace borrado.
+        default: false
     }
 }, {
-    timestamps: true // Se guarda la fecha exacta que se crea el usuario.
+    timestamps: true
 })
 
+userSchema.index({ tenantId: 1, email: 1 }, { unique: true, partialFilterExpression: { tenantId: { $exists: true } } });
+
 export default mongoose.model("User", userSchema);
-    

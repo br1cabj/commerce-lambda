@@ -1,31 +1,18 @@
-// Imports
-
 import { Router } from "express";
-
 import { createCoupon, toggleCoupon, sendPromoEmail, validateCoupon, getAllCoupons, deleteCoupon } from "../controllers/coupons.controllers.js";
-
 import { verifyToken, isAdmin } from "../middleware/verifyToken.js";
+import { identifyTenant } from "../middleware/identifyTenant.js";
+import { isAdminForTenant } from "../middleware/tenantAuth.js";
 
 const router = Router();
 
-// Ruta privada => solo el admin puede crear el cupon.
+router.use(identifyTenant);
 
-router.post("/", verifyToken, isAdmin, createCoupon);
-
-router.get("/", verifyToken, isAdmin, getAllCoupons); // Obtener todos los cupones
-
-router.delete("/:id", verifyToken, isAdmin, deleteCoupon); // Eliminar cupones
-
-// Ruta para activar/desactivar un cupón (usamos PUT porque actualizamos y le pasamos el ID)
-
-router.put("/:id", verifyToken, isAdmin, toggleCoupon);
-
-// Ruta para enviar los correos de promoción
-
-router.post("/send-promo", verifyToken, isAdmin, sendPromoEmail);
-
-// Ruta para los clientes
-
+router.post("/", verifyToken, isAdminForTenant, createCoupon);
+router.get("/", verifyToken, isAdminForTenant, getAllCoupons);
+router.delete("/:id", verifyToken, isAdminForTenant, deleteCoupon);
+router.put("/:id", verifyToken, isAdminForTenant, toggleCoupon);
+router.post("/send-promo", verifyToken, isAdminForTenant, sendPromoEmail);
 router.post("/validate", verifyToken, validateCoupon);
 
 export default router;

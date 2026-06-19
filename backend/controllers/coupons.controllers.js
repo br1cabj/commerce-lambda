@@ -1,157 +1,125 @@
-// Imports
-
 import Coupon from "../models/Coupon.js";
-
 import User from "../models/User.js";
-
 import { transporter } from "../config/mailer.js";
 
-// Funcion para que el dueño pueda crear nuevos cupones.
 export const createCoupon = async (req, res) => {
     try{
-        // Agarro los datos que voy a enviar.
         const { code, discountPercentage, pointsRequired } = req.body;
 
-        // Verifico si ya existe un cupon con esa palabra para no duplicarlo.(uso toUpperCase para que sea todo en mayusculas).
-        const existingCoupon = await Coupon.findOne({ code: code.toUpperCase() });
+        const existingCoupon = await Coupon.findOne({ code: code.toUpperCase(), tenantId: req.tenant._id });
         if(existingCoupon){
-            return res.status(400).json({ message: "¡Ese código de cupón ya existe!" });
+            return res.status(400).json({ message: "This coupon code already exists!" });
         }
 
-        // Creo el nuevo cupon.
         const newCoupon = new Coupon({
+            tenantId: req.tenant._id,
             code,
             discountPercentage,
             pointsRequired
         });
 
-        // Lo guardo
         const savedCoupon = await newCoupon.save();
 
-        res.status(201).json({ message: "¡Cupón creado con éxito para Onda Basquete Club",
-            coupon: savedCoupon
-        });
+        res.status(201).json({ message: "Coupon created successfully!", coupon: savedCoupon });
     }catch (error){
-        console.log("Error al crear cupón", error.message);
-        res.status(500).json({ message: "Error interno al crear cupón." });
+        console.log("Error creating coupon", error.message);
+        res.status(500).json({ message: "Error creating coupon." });
     }
 };
-
-// Funcion para que los dueños activen o desactiven los cupones.
 
 export const toggleCoupon = async (req, res) => {
     try {
-        // Agarro el ID del cupon con la URL
         const { id } = req.params;
 
-        // Busco el cupon la base de datos.
-        const couponFound = await Coupon.findById(id);
+        const couponFound = await Coupon.findOne({ _id: id, tenantId: req.tenant._id });
         if(!couponFound){
-            return res.status(404).json({ message: "Cupón no encontrado." });
+            return res.status(404).json({ message: "Coupon not found." });
         }
 
-        // Aca lo activo o desactivo
         couponFound.isActive = !couponFound.isActive;
-
-        // Guardo el cambio
         await couponFound.save();
 
-        res.status(200).json({ message: `El cupón ahora está ${couponFound.isActive ? 'ACTIVADO' : 'DESACTIVADO'}`,
-        coupon: couponFound
-    });
+        res.status(200).json({ message: `Coupon is now ${couponFound.isActive ? 'ACTIVE' : 'INACTIVE'}`, coupon: couponFound });
     } catch (error) {
-        console.log("Error al actualizar cupón:", error.message);
-        res.status(500).json({ message: "Error interno al actualizar cupón." });
+        console.log("Error updating coupon:", error.message);
+        res.status(500).json({ message: "Error updating coupon." });
     }
 };
 
-// Funcion para que el dueño envie un correo electronico masivo con codigo de descuento.
-
 export const sendPromoEmail = async (req, res) => {
     try {
-        // mensaje del deuño
         const { title, message, discountCode } = req.body;
 
-        // Busco los usuarios registrados.
-        const allUsers = await User.find();
+        const allUsers = await User.find({ tenantId: req.tenant._id });
 
-        // Se le envia un correo a cada uno.
         for (let user of allUsers) {
             await transporter.sendMail({
-                from: `"Onda Basquete" <${process.env.EMAIL_USER}>`,
+                from: `"${req.tenant.name}" <${process.env.EMAIL_USER}>`,
                 to: user.email,
                 subject: `${title}`,
                 html: `
                     <div style="font-family: Arial, sans-serif; text-align: center; color: #333;">
-                        <h2>¡Hola ${user.name}!</h2>
+                        <h2>Hello ${user.name}!</h2>
                         <p>${message}</p>
                         <div style="background-color: #f4f4f4; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                            <p style="margin: 0; font-size: 16px;">Tu código de regalo es:</p>
+                            <p style="margin: 0; font-size: 16px;">Your gift code is:</p>
                             <h1 style="color: #fca311; letter-spacing: 2px; margin: 10px 0;">${discountCode}</h1>
                         </div>
-                        <p>¡Te esperamos en la tienda!</p>
+                        <p>We look forward to seeing you in the store!</p>
                     </div>
                 `
             });
         };
 
-        res.status(200).json({ message: "¡Correos promocionales enviados a todos los clientes con éxito!" });
+        res.status(200).json({ message: "Promotional emails sent to all customers successfully!" });
     } catch (error) {
-        console.log("Error al enviar promociones:", error.message);
-        res.status(500).json({ message: "Error interno del servidor al enviar los correos."});
+        console.log("Error sending promotions:", error.message);
+        res.status(500).json({ message: "Server error sending emails."});
     }
 };
-
-// Función para que el cliente valide un cupón en el checkout
 
 export const validateCoupon = async (req, res) => {
     try {
         const { code } = req.body;
         
-        // Buscamos el cupón (forzando mayúsculas por si el usuario lo escribe en minúsculas)
-        const couponFound = await Coupon.findOne({ code: code.toUpperCase() });
+        const couponFound = await Coupon.findOne({ code: code.toUpperCase(), tenantId: req.tenant._id });
         
         if (!couponFound) {
-            return res.status(404).json({ message: "El cupón no existe o está mal escrito." });
+            return res.status(404).json({ message: "Coupon does not exist or is misspelled." });
         }
 
         if (!couponFound.isActive) {
-            return res.status(400).json({ message: "Este cupón ya ha expirado o está desactivado." });
+            return res.status(400).json({ message: "This coupon has expired or is deactivated." });
         }
 
-        // Si todo está bien, le enviamos los datos del cupón al frontend
         res.status(200).json(couponFound);
     } catch (error) {
-        console.log("Error al validar cupón:", error.message);
-        res.status(500).json({ message: "Error interno al validar el cupón." });
+        console.log("Error validating coupon:", error.message);
+        res.status(500).json({ message: "Error validating coupon." });
     }
 };
-
-// Función para que el admin vea todos los cupones creados
 
 export const getAllCoupons = async (req, res) => {
     try {
-        const coupons = await Coupon.find().sort({ createdAt: -1 });
+        const coupons = await Coupon.find({ tenantId: req.tenant._id }).sort({ createdAt: -1 });
         res.status(200).json(coupons);
     } catch (error) {
-        console.log("Error al obtener cupones:", error.message);
-        res.status(500).json({ message: "Error interno al obtener los cupones." });
+        console.log("Error fetching coupons:", error.message);
+        res.status(500).json({ message: "Error fetching coupons." });
     }
 };
-
-// Función para que el admin elimine un cupón
 
 export const deleteCoupon = async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedCoupon = await Coupon.findByIdAndDelete(id);
+        const deletedCoupon = await Coupon.findOneAndDelete({ _id: id, tenantId: req.tenant._id });
         
         if (!deletedCoupon) {
-            return res.status(404).json({ message: "Cupón no encontrado." });
+            return res.status(404).json({ message: "Coupon not found." });
         }
-        res.status(200).json({ message: "Cupón eliminado con éxito." });
+        res.status(200).json({ message: "Coupon deleted successfully." });
     } catch (error) {
-        console.log("Error al eliminar cupón:", error.message);
-        res.status(500).json({ message: "Error interno al eliminar el cupón." });
+        console.log("Error deleting coupon:", error.message);
+        res.status(500).json({ message: "Error deleting coupon." });
     }
 };

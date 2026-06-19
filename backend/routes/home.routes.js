@@ -1,13 +1,3 @@
-// Importo express
-
-import { Router } from "express";
-
-import { getHomeMessage } from "../controllers/home.controllers.js";
-
-// Variables
-
-const router = Router();
-
-router.get('/', getHomeMessage);
-
-export default router;
+export const getHomeMessage = (req, res) => {
+    res.json({ message: "Welcome to the Store API!"})
+}

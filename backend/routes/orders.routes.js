@@ -1,25 +1,17 @@
 import { Router } from "express";
 import { createOrder, getMyOrders, getAllOrders, updateOrderStatus, deleteOrder } from "../controllers/orders.controllers.js";
 import { verifyToken, isAdmin } from "../middleware/verifyToken.js";
+import { identifyTenant } from "../middleware/identifyTenant.js";
+import { isAdminForTenant } from "../middleware/tenantAuth.js";
 
 const router = Router();
 
-// Ruta PRIVADA para clientes: Tienen que tener la pulsera (estar logueados) para comprar
+router.use(identifyTenant);
 
 router.post("/", verifyToken, createOrder);
-
-// Historial del cliente
-
 router.get("/my-orders", verifyToken, getMyOrders);
-
-// Panel del administrador
-
-router.get("/all", verifyToken, isAdmin, getAllOrders);
-
-router.put("/update-status/:id", verifyToken, isAdmin, updateOrderStatus);
-
-// Eliminar orden del pedido.
-
-router.delete("/:id", verifyToken, isAdmin, deleteOrder);
+router.get("/all", verifyToken, isAdminForTenant, getAllOrders);
+router.put("/update-status/:id", verifyToken, isAdminForTenant, updateOrderStatus);
+router.delete("/:id", verifyToken, isAdminForTenant, deleteOrder);
 
 export default router;

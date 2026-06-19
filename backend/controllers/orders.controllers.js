@@ -1,14 +1,9 @@
-// Imports
-
 import Order from "../models/Order.js";
-
 import Product from "../models/Product.js";
-
 import User from "../models/User.js";
 
 export const createOrder = async (req, res) => {
     try {
-        // Agarro lo que el cliente nos manda desde el carrito y el costo del Correo
         const { products, shippingAddress, shippingCost } = req.body;
         const userId = req.user.id;
 
@@ -16,30 +11,23 @@ export const createOrder = async (req, res) => {
         let totalEarnedPoints = 0;
         const orderProducts = [];
 
-        // El cajero revisa el producto.
         for (let item of products) {
-            const productFound = await Product.findById(item.product);
+            const productFound = await Product.findOne({ _id: item.product, tenantId: req.tenant._id });
 
             if(!productFound){
-                return res.status(404).json({ message: "Un producto de tu carrito no existe" });
+                return res.status(404).json({ message: "A product in your cart does not exist" });
             }
 
-            // Tengo stock en el deposito?
             if(productFound.stock < item.quantity){
-                return res.status(400).json({ message: `No hay stock suficiente para ${productFound.name}.` });
+                return res.status(400).json({ message: `Insufficient stock for ${productFound.name}.` });
             }
 
-            // Precio por cantidad
             totalAmount += productFound.price * item.quantity;
-
-            // Calculo cuantos puntos de Onda Basquete Club se gana
             totalEarnedPoints += (productFound.earnedPoints || 0) * item.quantity;
 
-            // Resto el stock del deposito
             productFound.stock -= item.quantity;
             await productFound.save();
 
-            // Anoto el producto en el recibo(congelo el precio).
             orderProducts.push({
                 product: productFound._id,
                 quantity: item.quantity,
@@ -47,12 +35,10 @@ export const createOrder = async (req, res) => {
             });
         }
 
-        // Sumo el costo del correo al total a pagar.
         totalAmount += (shippingCost || 0);
 
-        // Imprimo el recibo
-
         const newOrder = new Order({
+            tenantId: req.tenant._id,
             user: userId,
             products: orderProducts,
             shippingAddress,
@@ -62,63 +48,50 @@ export const createOrder = async (req, res) => {
 
         const savedOrder = await newOrder.save();
 
-        // Pongo los puntos de premio por la compra al perfil del usuario.
         const userFound = await User.findById(userId);
         userFound.points += totalEarnedPoints;
         await userFound.save();
 
         res.status(201).json({
-            message: "¡Orden creada con éxito! Tu paquete se preparará pronto.",
+            message: "Order created successfully! Your package will be prepared soon.",
             order: savedOrder,
-            pointsEarned: totalEarnedPoints // Aviso cuantos puntos ganó.
+            pointsEarned: totalEarnedPoints
         });
     } catch (error) {
-        console.log("Error al crear orden:", error.message);
-        res.status(500).json({ message: "Error interno al procesar la compra." });
+        console.log("Error creating order:", error.message);
+        res.status(500).json({ message: "Error processing purchase." });
     }
 };
-
-// Funcion que hace que el cliente vea sus propias cuentas.
 
 export const getMyOrders = async (req, res) => {
     try {
-        // Busco todas las ordenes donde el usuario sea quien está logueado
-        const orders = await Order.find({ user: req.user.id }).sort({ createdAt: -1 });
+        const orders = await Order.find({ tenantId: req.tenant._id, user: req.user.id }).sort({ createdAt: -1 });
         res.status(200).json(orders);
     } catch (error) {
-        res.status(500).json({ message: "Error al obtener tus pedidos." });
+        res.status(500).json({ message: "Error fetching your orders." });
     }
 };
-
-// Funcion para que el admin vea todos los pedidos de la tienda.
 
 export const getAllOrders = async (req, res) => {
     try {
-        // Busco todas las ordenes y traigo los datos del usuario que compró.
-        const orders = await Order.find().populate("user", "name email").sort({ createdAt: -1 });
+        const orders = await Order.find({ tenantId: req.tenant._id }).populate("user", "name email").sort({ createdAt: -1 });
         res.status(200).json(orders);
     } catch (error) {
-        res.status(500).json({ message: "Error al obtener todos los pedidos." });
+        res.status(500).json({ message: "Error fetching all orders." });
     }
 };
-
-// Funcion para que el admin agregue el estado a las compras (pendiente, enviado, etc)
-
-// Funcion para que el admin agregue el estado a las compras (pendiente, enviado, etc)
 
 export const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status, trackingCode } = req.body;
 
-        // Buscamos la orden original
-        const order = await Order.findById(id);
+        const order = await Order.findOne({ _id: id, tenantId: req.tenant._id });
         if (!order) {
-            return res.status(404).json({ message: "Orden no encontrada." });
+            return res.status(404).json({ message: "Order not found." });
         }
 
-        // Si se marca como "Cancelado" y antes no lo estaba, devolvemos el stock
-        if (status === "Cancelado" && order.status !== "Cancelado") {
+        if (status === "Cancelled" && order.status !== "Cancelled") {
             for (let item of order.products) {
                 const product = await Product.findById(item.product);
                 if (product) {
@@ -128,32 +101,27 @@ export const updateOrderStatus = async (req, res) => {
             }
         }
 
-        //  Actualizamos los datos y guardamos
         order.status = status;
         order.trackingCode = trackingCode;
         const updatedOrder = await order.save();
 
-        res.status(200).json({ message: "Estado de orden actualizado con éxito.", order: updatedOrder });
+        res.status(200).json({ message: "Order status updated successfully.", order: updatedOrder });
     } catch (error) {
-        console.log("Error al actualizar estado:", error.message);
-        res.status(500).json({ message: "Error al actualizar estado." });
+        console.log("Error updating status:", error.message);
+        res.status(500).json({ message: "Error updating status." });
     }
 };
-
-// Funcion para que el admin elimine un pedido de la base de datos
 
 export const deleteOrder = async (req, res) => {
     try {
         const { id } = req.params;
         
-        // Buscamos la orden
-        const order = await Order.findById(id);
+        const order = await Order.findOne({ _id: id, tenantId: req.tenant._id });
         if (!order) {
-            return res.status(404).json({ message: "Pedido no encontrado." });
+            return res.status(404).json({ message: "Order not found." });
         }
 
-        // Solo devolvemos el stock si la orden NO estaba cancelada previamente
-        if (order.status !== "Cancelado") {
+        if (order.status !== "Cancelled") {
             for (let item of order.products) {
                 const product = await Product.findById(item.product);
                 if (product) {
@@ -163,12 +131,11 @@ export const deleteOrder = async (req, res) => {
             }
         }
 
-        // Eliminamos la orden permanentemente
         await Order.findByIdAndDelete(id);
         
-        res.status(200).json({ message: "Pedido eliminado de la base de datos." });
+        res.status(200).json({ message: "Order deleted permanently." });
     } catch (error) {
-        console.log("Error al eliminar pedido:", error.message);
-        res.status(500).json({ message: "Error interno al eliminar el pedido." });
+        console.log("Error deleting order:", error.message);
+        res.status(500).json({ message: "Error deleting order." });
     }
 };
