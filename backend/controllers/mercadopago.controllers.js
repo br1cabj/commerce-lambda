@@ -86,6 +86,11 @@ export const createMercadoPagoPreference = async (req, res) => {
         (!coupon.expiresAt || new Date(coupon.expiresAt) > new Date()) &&
         (!coupon.maxUses || coupon.usedCount < coupon.maxUses)
       ) {
+        const user = await User.findById(userId);
+        if (coupon.pointsRequired > 0 && user.points < coupon.pointsRequired) {
+          return res.status(400).json({ message: "Not enough points for this coupon." });
+        }
+
         discountApplied = totalAmount * (coupon.discountPercentage / 100);
 
         const discountFactor = 1 - coupon.discountPercentage / 100;
@@ -238,9 +243,14 @@ export const handleMercadoPagoWebhook = async (req, res) => {
               const product = await Product.findById(item.product);
               totalEarnedPoints += (product?.earnedPoints || 0) * item.quantity;
             }
+            let pointsToDeduct = 0;
+            if (metadata.couponCode) {
+              const c = await Coupon.findOne({ code: metadata.couponCode, tenantId: metadata.tenantId }).session(session);
+              if (c) pointsToDeduct = c.pointsRequired || 0;
+            }
             await User.updateOne(
               { _id: metadata.userId },
-              { $inc: { points: totalEarnedPoints } },
+              { $inc: { points: totalEarnedPoints - pointsToDeduct } },
             ).session(session);
           }
 

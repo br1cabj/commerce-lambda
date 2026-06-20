@@ -87,15 +87,13 @@ export const createStripeSession = async (req, res) => {
         (!coupon.expiresAt || new Date(coupon.expiresAt) > new Date()) &&
         (!coupon.maxUses || coupon.usedCount < coupon.maxUses)
       ) {
+        const user = await User.findById(userId);
+        if (coupon.pointsRequired > 0 && user.points < coupon.pointsRequired) {
+          return res.status(400).json({ message: "Not enough points for this coupon." });
+        }
+
         discountApplied = totalAmount * (coupon.discountPercentage / 100);
 
-        // Stripe requires line items to match the total.
-        // We apply a discount via a negative line item if supported or use Stripe coupons.
-        // Alternatively, simplest way is to apply a global discount line item in Stripe
-        // but Stripe requires positive unit_amount.
-        // Since Stripe Sessions support `discounts: [{ coupon: stripeCouponId }]`,
-        // creating dynamic Stripe coupons on the fly is complex.
-        // For simplicity, we can reduce the unit prices proportionally.
         const discountFactor = 1 - coupon.discountPercentage / 100;
 
         lineItems.forEach((item) => {
@@ -252,9 +250,14 @@ export const handleStripeWebhook = async (req, res) => {
             const product = await Product.findById(item.product);
             totalEarnedPoints += (product?.earnedPoints || 0) * item.quantity;
           }
+          let pointsToDeduct = 0;
+          if (metadata.couponCode) {
+            const c = await Coupon.findOne({ code: metadata.couponCode, tenantId: metadata.tenantId }).session(sessionDb);
+            if (c) pointsToDeduct = c.pointsRequired || 0;
+          }
           await User.updateOne(
             { _id: metadata.userId },
-            { $inc: { points: totalEarnedPoints } },
+            { $inc: { points: totalEarnedPoints - pointsToDeduct } },
           ).session(sessionDb);
         }
 

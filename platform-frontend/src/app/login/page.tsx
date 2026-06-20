@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -22,7 +23,9 @@ export default function LoginPage() {
 
     try {
       await login(email, password, config?.slug || "");
-      router.push("/");
+      const redirectUrl = localStorage.getItem("redirectAfterLogin") || "/";
+      localStorage.removeItem("redirectAfterLogin");
+      router.push(redirectUrl);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -41,10 +44,13 @@ export default function LoginPage() {
           style={{ backgroundColor: config.theme.primaryColor }}
         >
           {config.theme.logoUrl && (
-            <img
+            <Image
               src={config.theme.logoUrl}
               alt={config.name}
-              className="h-16 w-16 rounded-full mx-auto mb-3 object-cover"
+              width={64}
+              height={64}
+              className="rounded-full mx-auto mb-3 object-cover"
+              unoptimized
             />
           )}
           <h2 className="text-2xl font-bold">{config.name}</h2>

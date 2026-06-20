@@ -1,5 +1,179 @@
 import { create } from "zustand";
 
+export interface Translation {
+  en: string;
+  es: string;
+}
+
+export interface HeroSlide {
+  id: string;
+  title: Translation;
+  subtitle: Translation;
+  imageUrl: string;
+  ctaPrimary: Translation;
+  ctaSecondary: Translation;
+  ctaPrimaryLink: string;
+  ctaSecondaryLink: string;
+  enabled: boolean;
+  order: number;
+}
+
+export interface Banner {
+  id: string;
+  title: Translation;
+  description: Translation;
+  imageUrl: string;
+  link: string;
+  enabled: boolean;
+  order: number;
+}
+
+export interface TrustSignal {
+  id: string;
+  icon: string;
+  title: Translation;
+  description: Translation;
+  enabled: boolean;
+  order: number;
+}
+
+export interface SectionConfig {
+  id: string;
+  type: "hero" | "trust" | "categories" | "featured" | "banners" | "flash" | "new" | "bestseller" | "reviews" | "newsletter" | "brands" | "why-choose-us" | "payment-methods" | "how-it-works" | "faq";
+  enabled: boolean;
+  order: number;
+  config: Record<string, unknown>;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  logoUrl: string;
+  website: string;
+  enabled: boolean;
+  order: number;
+}
+
+export interface Benefit {
+  id: string;
+  icon: string;
+  title: Translation;
+  description: Translation;
+  enabled: boolean;
+  order: number;
+}
+
+export interface FaqItem {
+  id: string;
+  question: Translation;
+  answer: Translation;
+  enabled: boolean;
+  order: number;
+}
+
+export interface HomeConfig {
+  heroSlides: HeroSlide[];
+  banners: Banner[];
+  trustSignals: TrustSignal[];
+  brands: Brand[];
+  benefits: Benefit[];
+  faqItems: FaqItem[];
+  categoriesConfig: CategoriesConfig;
+  sections: SectionConfig[];
+  defaultLanguage: "en" | "es";
+  supportedLanguages: ("en" | "es")[];
+}
+
+export interface Translations {
+  hero: {
+    shopNow: Translation;
+    viewCollections: Translation;
+  };
+  featured: {
+    title: Translation;
+    subtitle: Translation;
+    viewAll: Translation;
+  };
+  categories: {
+    title: Translation;
+    subtitle: Translation;
+    viewAll: Translation;
+  };
+  reviews: {
+    title: Translation;
+    subtitle: Translation;
+  };
+  newsletter: {
+    title: Translation;
+    subtitle: Translation;
+    placeholder: Translation;
+    button: Translation;
+    success: Translation;
+  };
+  trustSignals: {
+    freeShipping: Translation;
+    freeShippingDesc: Translation;
+    securePayment: Translation;
+    securePaymentDesc: Translation;
+    easyReturns: Translation;
+    easyReturnsDesc: Translation;
+    support: Translation;
+    supportDesc: Translation;
+  };
+  common: {
+    addToCart: Translation;
+    added: Translation;
+    quickView: Translation;
+    onlyLeft: Translation;
+    new: Translation;
+    bestSeller: Translation;
+    off: Translation;
+  };
+  newProducts: {
+    title: Translation;
+    subtitle: Translation;
+    viewAll: Translation;
+  };
+  bestSellers: {
+    title: Translation;
+    subtitle: Translation;
+    viewAll: Translation;
+  };
+  specialOffers: {
+    title: Translation;
+    subtitle: Translation;
+    viewAll: Translation;
+    endsIn: Translation;
+  };
+  brands: {
+    title: Translation;
+    subtitle: Translation;
+  };
+  whyChooseUs: {
+    title: Translation;
+    subtitle: Translation;
+  };
+  paymentMethods: {
+    title: Translation;
+    subtitle: Translation;
+  };
+  howItWorks: {
+    title: Translation;
+    subtitle: Translation;
+    step1Title: Translation;
+    step1Desc: Translation;
+    step2Title: Translation;
+    step2Desc: Translation;
+    step3Title: Translation;
+    step3Desc: Translation;
+  };
+  faq: {
+    title: Translation;
+    subtitle: Translation;
+    viewAll: Translation;
+  };
+}
+
 export interface TenantTheme {
   primaryColor: string;
   secondaryColor: string;
@@ -17,13 +191,32 @@ export interface TenantCategory {
   slug: string;
   description: string;
   imageUrl: string;
+  icon: string;
+  backgroundColor: string;
+  displayStyle: "image" | "icon" | "gradient";
+  showOnHome: boolean;
+  parentId: string | null;
   order: number;
+  isActive: boolean;
+}
+
+export interface CategoriesConfig {
+  layout: "grid" | "masonry" | "horizontal-scroll" | "cards-icon" | "cards-image" | "list";
+  columns: number;
+  showDescription: boolean;
+  showProductCount: boolean;
+  cardStyle: "overlay" | "bottom" | "side" | "minimal";
+  hoverEffect: "zoom" | "slide" | "fade" | "none";
+  borderRadius: string;
+  maxHeight: string;
 }
 
 export interface TenantConfig {
   name: string;
   slug: string;
   theme: TenantTheme;
+  translations: Translations;
+  homeConfig: HomeConfig;
   settings: {
     currency: string;
     language: string;
@@ -55,17 +248,42 @@ interface TenantState {
   config: TenantConfig | null;
   loading: boolean;
   error: string | null;
+  currentLanguage: "en" | "es";
   setConfig: (config: TenantConfig) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setLanguage: (lang: "en" | "es") => void;
+}
+
+const LANGUAGE_STORAGE_KEY = "ecommerce-language";
+
+function getStoredLanguage(): "en" | "es" | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (stored === "en" || stored === "es") return stored;
+  return null;
 }
 
 export const useTenantStore = create<TenantState>()((set) => ({
   config: null,
   loading: false,
   error: null,
+  currentLanguage: getStoredLanguage() || "en",
 
-  setConfig: (config) => set({ config, error: null }),
+  setConfig: (config) => {
+    const storedLang = getStoredLanguage();
+    set({ 
+      config, 
+      error: null,
+      currentLanguage: storedLang || config.homeConfig?.defaultLanguage || "en"
+    });
+  },
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
+  setLanguage: (lang) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+    }
+    set({ currentLanguage: lang });
+  },
 }));

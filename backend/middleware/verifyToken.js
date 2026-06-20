@@ -13,7 +13,7 @@ export const verifyToken = async (req, res, next) => {
   }
 
   try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    const verified = jwt.verify(token, process.env.JWT_SECRET || "supersecret123");
 
     const user = await User.findById(verified.id);
     if (!user || user.isDeleted) {

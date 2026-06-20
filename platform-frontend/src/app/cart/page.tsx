@@ -3,12 +3,13 @@
 import { useCart } from "@/hooks/useCart";
 import { useTenant } from "@/hooks/useTenant";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
 
 export default function CartPage() {
   const { config } = useTenant();
-  const { items, removeItem, updateQuantity, totalItems, totalAmount } =
+  const { items, removeItem, updateQuantity, totalAmount } =
     useCart();
   const router = useRouter();
 
@@ -45,10 +46,13 @@ export default function CartPage() {
               className="flex items-center gap-6 py-6 border-b border-gray-100 last:border-b-0"
             >
               <div className="h-32 w-32 bg-gray-50 rounded-2xl p-3 flex items-center justify-center shrink-0 border border-gray-100">
-                <img
+                <Image
                   src={item.image}
                   alt={item.model}
+                  width={128}
+                  height={128}
                   className="max-h-full max-w-full object-contain mix-blend-multiply"
+                  unoptimized
                 />
               </div>
               <div className="flex-1">
@@ -118,7 +122,7 @@ export default function CartPage() {
             <span>Shipping</span>
             <span className="font-bold text-gray-800 text-right">
               {config.settings.shippingMethods.find(
-                (m: any) => m.type === "free" && m.enabled,
+                (m: { type: string; enabled: boolean }) => m.type === "free" && m.enabled,
               ) ? (
                 <span className="text-emerald-600">Free Shipping</span>
               ) : (

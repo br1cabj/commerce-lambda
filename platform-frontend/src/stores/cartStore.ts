@@ -61,7 +61,9 @@ export const useCartStore = create<CartState>()(
           if (!item) return state;
 
           const newQuantity = item.quantity + change;
-          if (newQuantity < 1) return state;
+          if (newQuantity < 1) {
+            return { items: state.items.filter((_, i) => i !== index) };
+          }
           if (newQuantity > item.maxStock) return state;
 
           updatedItems[index] = { ...item, quantity: newQuantity };

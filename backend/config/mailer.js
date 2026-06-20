@@ -10,11 +10,15 @@ export const transporter = nodemailer.createTransport({
   },
 });
 
-transporter
-  .verify()
-  .then(() => {
-    console.log("Email service is ready to send messages!");
-  })
-  .catch((error) => {
-    console.log("Error connecting to email service:", error.message);
-  });
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  transporter
+    .verify()
+    .then(() => {
+      console.log("Email service is ready to send messages!");
+    })
+    .catch((error) => {
+      console.log("Error connecting to email service:", error.message);
+    });
+} else {
+  console.log("Email service is disabled. Please provide EMAIL_USER and EMAIL_PASS in your .env file.");
+}

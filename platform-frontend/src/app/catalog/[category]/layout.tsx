@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { headers } from "next/headers";
 
 type Props = {
   params: Promise<{ category: string }>;

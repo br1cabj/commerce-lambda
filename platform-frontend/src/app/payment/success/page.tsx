@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -12,32 +12,36 @@ function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [orderId, setOrderId] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !!sessionId);
 
-  useEffect(() => {
-    if (sessionId) {
-      fetchOrderDetails();
-    } else {
-      setLoading(false);
-    }
-  }, [sessionId]);
-
-  const fetchOrderDetails = async () => {
-    if (!config) return;
+  const fetchOrderDetails = useCallback(async () => {
+    if (!config) return "";
     try {
       const orders = (await api.get(
         "/orders/my-orders",
         config.slug,
       )) as Array<{ _id: string }>;
       if (orders.length > 0) {
-        setOrderId(orders[0]._id);
+        return orders[0]._id;
       }
     } catch (err) {
       console.error("Error fetching order:", err);
-    } finally {
-      setLoading(false);
     }
-  };
+    return "";
+  }, [config]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let ignore = false;
+    (async () => {
+      const id = await fetchOrderDetails();
+      if (!ignore) {
+        if (id) setOrderId(id);
+        setLoading(false);
+      }
+    })();
+    return () => { ignore = true; };
+  }, [sessionId, fetchOrderDetails]);
 
   if (!config) return null;
 

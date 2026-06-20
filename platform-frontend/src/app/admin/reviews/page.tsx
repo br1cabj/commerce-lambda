@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Plus, Trash, Star } from "lucide-react";
+import Image from "next/image";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 interface Review {
   _id: string;
@@ -17,7 +19,7 @@ interface Review {
 
 export default function AdminReviewsPage() {
   const { config } = useTenant();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
   const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -28,29 +30,36 @@ export default function AdminReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!isAuthenticated || !isAdmin) {
-      router.push("/");
-      return;
-    }
-    loadReviews();
-  }, [config, isAuthenticated, isAdmin, router]);
-
-  const loadReviews = async () => {
-    if (!config) return;
+  const loadReviews = useCallback(async () => {
+    if (!config) return [];
     try {
       const data = (await api.get("/reviews", config.slug)) as
         | { results?: Review[] }
         | Review[];
-      const results = Array.isArray(data) ? data : data.results || [];
-      setReviews(results);
+      return Array.isArray(data) ? data : data.results || [];
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading reviews");
       console.error("Error loading reviews:", err);
-    } finally {
-      setLoading(false);
+      return [];
     }
-  };
+  }, [config]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (!isAuthenticated || !isAdmin) {
+      router.push("/");
+      return;
+    }
+    let ignore = false;
+    (async () => {
+      const result = await loadReviews();
+      if (!ignore) {
+        setReviews(result);
+        setLoading(false);
+      }
+    })();
+    return () => { ignore = true; };
+  }, [isAuthenticated, isAdmin, router, loadReviews, isHydrated]);
 
   const createReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,9 +98,11 @@ export default function AdminReviewsPage() {
   if (!config) return null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Reviews</h1>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <AdminNav />
+
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Reviews</h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-white"
@@ -200,11 +211,14 @@ export default function AdminReviewsPage() {
               key={review._id}
               className="bg-white rounded-xl shadow-sm border p-4 flex items-center gap-4"
             >
-              <img
+              <Image
                 src={review.image}
                 alt={review.clientName}
-                className="h-12 w-12 rounded-full object-cover border-2"
+                width={48}
+                height={48}
+                className="rounded-full object-cover border-2"
                 style={{ borderColor: config.theme.accentColor }}
+                unoptimized
               />
               <div className="flex-1">
                 <p className="font-bold">{review.clientName}</p>

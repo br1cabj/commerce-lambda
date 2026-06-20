@@ -73,6 +73,7 @@ export const createOrder = async (req, res) => {
 
     let discountApplied = 0;
     let finalCouponCode = null;
+    let pointsToDeduct = 0;
 
     if (couponCode) {
       const coupon = await Coupon.findOne({
@@ -85,6 +86,13 @@ export const createOrder = async (req, res) => {
         (!coupon.expiresAt || new Date(coupon.expiresAt) > new Date()) &&
         (!coupon.maxUses || coupon.usedCount < coupon.maxUses)
       ) {
+        const user = await User.findById(userId).session(session);
+        if (coupon.pointsRequired > 0 && user.points < coupon.pointsRequired) {
+          await session.abortTransaction();
+          return res.status(400).json({ message: "Not enough points for this coupon." });
+        }
+        pointsToDeduct = coupon.pointsRequired || 0;
+
         discountApplied = totalAmount * (coupon.discountPercentage / 100);
         totalAmount -= discountApplied;
         finalCouponCode = coupon.code;
@@ -110,7 +118,7 @@ export const createOrder = async (req, res) => {
 
     await User.updateOne(
       { _id: userId },
-      { $inc: { points: totalEarnedPoints } },
+      { $inc: { points: totalEarnedPoints - pointsToDeduct } },
     ).session(session);
 
     await session.commitTransaction();
@@ -266,8 +274,7 @@ export const deleteOrder = async (req, res) => {
             { $inc: { stock: item.quantity } },
           ).session(session);
         }
-        order.status = "Cancelado";
-        await order.save({ session });
+        await order.deleteOne({ session });
         await session.commitTransaction();
       } catch (error) {
         await session.abortTransaction();
@@ -275,9 +282,11 @@ export const deleteOrder = async (req, res) => {
       } finally {
         session.endSession();
       }
+    } else {
+      await order.deleteOne();
     }
 
-    res.status(200).json({ message: "Order cancelled successfully." });
+    res.status(200).json({ message: "Order deleted successfully." });
   } catch (error) {
     console.error("Error deleting order:", error.message);
     res.status(500).json({ message: "Error deleting order." });

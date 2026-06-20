@@ -46,7 +46,7 @@ export const getCategoryById = async (req, res) => {
 
 export const createCategory = async (req, res) => {
   try {
-    const { name, slug, description, imageUrl, parentId, order } = req.body;
+    const { name, slug, description, imageUrl, icon, backgroundColor, displayStyle, showOnHome, parentId, order } = req.body;
 
     const existingCategory = await Category.findOne({
       tenantId: req.tenant._id,
@@ -62,6 +62,10 @@ export const createCategory = async (req, res) => {
       slug,
       description: description || "",
       imageUrl: imageUrl || "",
+      icon: icon || "",
+      backgroundColor: backgroundColor || "",
+      displayStyle: displayStyle || "image",
+      showOnHome: showOnHome !== undefined ? showOnHome : true,
       parentId: parentId || null,
       order: order || 0,
       isActive: true,

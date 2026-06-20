@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { api } from "@/lib/api";
 import {
-  Package,
-  ShoppingCart,
-  Tag,
-  Star,
-  Settings,
   Plus,
   Edit,
   Trash,
+  Star,
 } from "lucide-react";
+import Image from "next/image";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 interface Product {
   _id: string;
@@ -30,33 +27,9 @@ interface Product {
   sizes: { size: string; stock: number }[];
 }
 
-const adminLinks = [
-  { href: "/admin", label: "Products", icon: <Package className="h-4 w-4" /> },
-  {
-    href: "/admin/orders",
-    label: "Orders",
-    icon: <ShoppingCart className="h-4 w-4" />,
-  },
-  {
-    href: "/admin/coupons",
-    label: "Coupons",
-    icon: <Tag className="h-4 w-4" />,
-  },
-  {
-    href: "/admin/reviews",
-    label: "Reviews",
-    icon: <Star className="h-4 w-4" />,
-  },
-  {
-    href: "/admin/settings",
-    label: "Settings",
-    icon: <Settings className="h-4 w-4" />,
-  },
-];
-
 export default function AdminPage() {
   const { config } = useTenant();
-  const { user, isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
   const router = useRouter();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -74,25 +47,31 @@ export default function AdminPage() {
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!isAuthenticated || !isAdmin) {
-      router.push("/");
-      return;
-    }
-    loadProducts();
-  }, [config, isAuthenticated, isAdmin, router]);
-
-  const loadProducts = async () => {
-    if (!config) return;
+  const loadProducts = useCallback(async () => {
+    if (!config) return [];
     try {
       const data = (await api.get("/products?limit=50", config.slug)) as {
         results: Product[];
       };
-      setProducts(data.results || []);
+      return data.results || [];
     } catch (err) {
       console.error("Error loading products:", err);
+      return [];
     }
-  };
+  }, [config]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (!isAuthenticated || !isAdmin) {
+      router.push("/");
+      return;
+    }
+    let ignore = false;
+    loadProducts().then((result) => {
+      if (!ignore) setProducts(result);
+    });
+    return () => { ignore = true; };
+  }, [isAuthenticated, isAdmin, router, loadProducts, isHydrated]);
 
   const handleEdit = (product: Product) => {
     setError("");
@@ -137,16 +116,30 @@ export default function AdminPage() {
     e.preventDefault();
     setError("");
     if (!config) return;
+
+    if (isNaN(Number(price)) || Number(price) <= 0) {
+      return setError("Price must be a positive number.");
+    }
+    const parsedDiscount = discount === "" ? "0" : discount;
+    if (isNaN(Number(parsedDiscount)) || Number(parsedDiscount) < 0 || Number(parsedDiscount) > 100) {
+      return setError("Discount must be a valid percentage between 0 and 100.");
+    }
+
     const sizesList = sizes
-      .filter((s) => s.size && s.stock)
-      .map((s) => ({ size: s.size, stock: Number(s.stock) }));
+      .filter((s) => s.size.trim() !== "" && s.stock !== "")
+      .map((s) => ({ size: s.size.trim(), stock: Number(s.stock) }));
+      
+    if (sizesList.length === 0) {
+      return setError("You must provide at least one valid size with stock.");
+    }
+
     const totalStock = sizesList.reduce((acc, s) => acc + s.stock, 0);
     const formData = new FormData();
     formData.append("model", name);
     formData.append("brand", brand);
     formData.append("category", category);
     formData.append("price", price);
-    formData.append("discount", discount);
+    formData.append("discount", parsedDiscount);
     formData.append("sizes", JSON.stringify(sizesList));
     formData.append("stock", totalStock.toString());
     if (images)
@@ -189,20 +182,7 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-        <h1 className="text-3xl font-bold">Admin Panel</h1>
-        <nav className="flex flex-wrap gap-2">
-          {adminLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 hover:bg-gray-200 transition-colors"
-            >
-              {link.icon} {link.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
+      <AdminNav />
 
       {error && (
         <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">
@@ -298,11 +278,14 @@ export default function AdminPage() {
                     </p>
                     <div className="flex gap-2 overflow-x-auto">
                       {existingImages.map((img, idx) => (
-                        <img
+                        <Image
                           key={idx}
                           src={img}
                           alt="Product"
-                          className="h-12 w-12 object-cover rounded-md border"
+                          width={48}
+                          height={48}
+                          className="object-cover rounded-md border"
+                          unoptimized
                         />
                       ))}
                     </div>
@@ -404,10 +387,13 @@ export default function AdminPage() {
             {products.map((product) => (
               <tr key={product._id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">
-                  <img
+                  <Image
                     src={product.images?.[0] || ""}
                     alt=""
-                    className="h-10 w-10 object-cover rounded"
+                    width={40}
+                    height={40}
+                    className="object-cover rounded"
+                    unoptimized
                   />
                 </td>
                 <td className="px-4 py-3">

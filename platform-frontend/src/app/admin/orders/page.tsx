@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Package } from "lucide-react";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 interface Order {
   _id: string;
@@ -25,36 +26,43 @@ interface Order {
 
 export default function AdminOrdersPage() {
   const { config } = useTenant();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saveStatus, setSaveStatus] = useState("");
 
-  useEffect(() => {
-    if (!isAuthenticated || !isAdmin) {
-      router.push("/");
-      return;
-    }
-    loadOrders();
-  }, [config, isAuthenticated, isAdmin, router]);
-
-  const loadOrders = async () => {
-    if (!config) return;
+  const loadOrders = useCallback(async () => {
+    if (!config) return [];
     try {
       const data = (await api.get("/orders/all", config.slug)) as
         | { results?: Order[] }
         | Order[];
-      const results = Array.isArray(data) ? data : data.results || [];
-      setOrders(results);
+      return Array.isArray(data) ? data : data.results || [];
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading orders");
       console.error("Error loading orders:", err);
-    } finally {
-      setLoading(false);
+      return [];
     }
-  };
+  }, [config]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (!isAuthenticated || !isAdmin) {
+      router.push("/");
+      return;
+    }
+    let ignore = false;
+    (async () => {
+      const result = await loadOrders();
+      if (!ignore) {
+        setOrders(result);
+        setLoading(false);
+      }
+    })();
+    return () => { ignore = true; };
+  }, [isAuthenticated, isAdmin, router, loadOrders, isHydrated]);
 
   const updateStatus = async (
     orderId: string,
@@ -103,8 +111,10 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Orders Management</h1>
+      <AdminNav />
+
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Orders Management</h2>
         {saveStatus && (
           <span
             className={`px-4 py-2 rounded-full text-sm font-bold shadow-sm transition-opacity ${saveStatus === "Saving..." ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}`}

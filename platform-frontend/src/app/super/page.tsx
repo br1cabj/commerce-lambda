@@ -15,12 +15,13 @@ interface Analytics {
 }
 
 export default function SuperDashboardPage() {
-  const { isAuthenticated, isSuperAdmin } = useAuth();
+  const { isAuthenticated, isSuperAdmin , isHydrated} = useAuth();
   const router = useRouter();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -41,7 +42,7 @@ export default function SuperDashboardPage() {
       }
     };
     loadAnalytics();
-  }, [isAuthenticated, isSuperAdmin, router]);
+  }, [isAuthenticated, isSuperAdmin, router, isHydrated]);
 
   if (!isAuthenticated || !isSuperAdmin) {
     return (

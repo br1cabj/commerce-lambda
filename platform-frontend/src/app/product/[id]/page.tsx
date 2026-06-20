@@ -6,6 +6,7 @@ import { useCart } from "@/hooks/useCart";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ShoppingCart, Truck } from "lucide-react";
+import Image from "next/image";
 import { api } from "@/lib/api";
 
 interface Product {
@@ -129,19 +130,25 @@ export default function ProductPage() {
                     : {}
                 }
               >
-                <img
+                <Image
                   src={img}
                   alt=""
+                  width={80}
+                  height={80}
                   className="w-full h-full object-cover rounded-lg"
+                  unoptimized
                 />
               </button>
             ))}
           </div>
           <div className="flex-1 bg-gray-50 rounded-3xl flex items-center justify-center p-8 min-h-[500px] relative overflow-hidden group border border-gray-100">
-            <img
+            <Image
               src={mainImage}
               alt={product.model}
+              width={500}
+              height={400}
               className="max-h-[400px] max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+              unoptimized
             />
           </div>
         </div>
@@ -211,7 +218,7 @@ export default function ProductPage() {
 
           <div className="mt-8 border border-gray-100 rounded-2xl p-5 bg-white shadow-sm flex flex-col gap-4">
             {config.settings.shippingMethods.length > 0 ? (
-              config.settings.shippingMethods.map((method: any) => (
+              config.settings.shippingMethods.map((method: { type: string; enabled: boolean; config: Record<string, unknown> }) => (
                 <div key={method.type} className="flex items-center gap-4">
                   <Truck
                     className="h-7 w-7 flex-shrink-0"

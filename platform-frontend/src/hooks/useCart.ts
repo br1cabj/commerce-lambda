@@ -1,33 +1,31 @@
 "use client";
 
 import { useCartStore } from "@/stores/cartStore";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 export function useCart() {
-  const {
-    items,
-    addItem,
-    removeItem,
-    updateQuantity,
-    clearCart,
-    totalItems,
-    totalAmount,
-  } = useCartStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+  const store = useCartStore();
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const computed = useMemo(
     () => ({
-      totalItems: totalItems(),
-      totalAmount: totalAmount(),
+      totalItems: isHydrated ? store.totalItems() : 0,
+      totalAmount: isHydrated ? store.totalAmount() : 0,
     }),
-    [items, totalItems, totalAmount],
+    [store, isHydrated],
   );
 
   return {
-    items,
-    addItem,
-    removeItem,
-    updateQuantity,
-    clearCart,
+    items: isHydrated ? store.items : [],
+    addItem: store.addItem,
+    removeItem: store.removeItem,
+    updateQuantity: store.updateQuantity,
+    clearCart: store.clearCart,
     ...computed,
+    isHydrated,
   };
 }

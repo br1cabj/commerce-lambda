@@ -8,7 +8,8 @@ import {
   deleteTenant,
   getPlatformAnalytics,
 } from "../controllers/superAdmin.controllers.js";
-import { verifyToken, isSuperAdmin } from "../middleware/tenantAuth.js";
+import { isSuperAdmin } from "../middleware/tenantAuth.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = Router();
 

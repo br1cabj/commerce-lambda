@@ -70,7 +70,7 @@ export const loginUser = async (req, res) => {
         tenantId: userFound.tenantId,
         tokenVersion: userFound.tokenVersion,
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || "supersecret123",
       { expiresIn: "1d" },
     );
 
@@ -137,7 +137,7 @@ export const forgotPassword = async (req, res) => {
 
     const resetToken = jwt.sign(
       { id: userFound._id, tenantId: userFound.tenantId },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || "supersecret123",
       { expiresIn: "15m" },
     );
 
@@ -179,7 +179,7 @@ export const resetPassword = async (req, res) => {
         .json({ message: "Password must have at least 6 characters." });
     }
 
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    const verified = jwt.verify(token, process.env.JWT_SECRET || "supersecret123");
 
     const userFound = await User.findOne({
       _id: verified.id,

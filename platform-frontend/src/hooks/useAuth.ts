@@ -2,18 +2,15 @@
 
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 export function useAuth() {
-  const {
-    token,
-    user,
-    setAuth,
-    logout,
-    isAuthenticated,
-    isAdmin,
-    isSuperAdmin,
-  } = useAuthStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+  const store = useAuthStore();
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const login = async (email: string, password: string, tenantSlug: string) => {
     const data = (await api.post(
@@ -31,7 +28,7 @@ export function useAuth() {
       };
     };
 
-    setAuth(data.token, data.user);
+    store.setAuth(data.token, data.user);
     localStorage.setItem("token", data.token);
 
     return data;
@@ -48,19 +45,20 @@ export function useAuth() {
 
   const authState = useMemo(
     () => ({
-      isAuthenticated: isAuthenticated(),
-      isAdmin: isAdmin(),
-      isSuperAdmin: isSuperAdmin(),
+      isAuthenticated: isHydrated ? store.isAuthenticated() : false,
+      isAdmin: isHydrated ? store.isAdmin() : false,
+      isSuperAdmin: isHydrated ? store.isSuperAdmin() : false,
     }),
-    [token, user, isAuthenticated, isAdmin, isSuperAdmin],
+    [store, isHydrated],
   );
 
   return {
-    token,
-    user,
+    token: isHydrated ? store.token : null,
+    user: isHydrated ? store.user : null,
     login,
     register,
-    logout,
+    logout: store.logout,
     ...authState,
+    isHydrated,
   };
 }

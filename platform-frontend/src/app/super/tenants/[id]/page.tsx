@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, Power, PowerOff } from "lucide-react";
@@ -44,7 +44,6 @@ interface Tenant {
 
 export default function TenantDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const tenantId = params.id as string;
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);

@@ -24,7 +24,7 @@ interface Order {
 
 export default function ProfilePage() {
   const { config } = useTenant();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isHydrated } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [points, setPoints] = useState(0);
@@ -32,6 +32,7 @@ export default function ProfilePage() {
   useEffect(() => {
     let cancelled = false;
 
+    if (!isHydrated) return;
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -47,11 +48,8 @@ export default function ProfilePage() {
         };
         if (!cancelled) setPoints(profileData.points || 0);
 
-        const ordersData = (await api.get(
-          "/orders/my-orders",
-          config.slug,
-        )) as Order[];
-        if (!cancelled) setOrders(ordersData || []);
+        const ordersResponse = await api.get("/orders/my-orders", config.slug) as { results: Order[] };
+        if (!cancelled) setOrders(ordersResponse.results || []);
       } catch (err) {
         console.error("Error loading profile:", err);
       }

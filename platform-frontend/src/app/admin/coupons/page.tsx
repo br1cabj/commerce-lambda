@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Plus, Trash, ToggleLeft, ToggleRight } from "lucide-react";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 interface Coupon {
   _id: string;
@@ -17,7 +18,7 @@ interface Coupon {
 
 export default function AdminCouponsPage() {
   const { config } = useTenant();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
   const router = useRouter();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -27,29 +28,36 @@ export default function AdminCouponsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!isAuthenticated || !isAdmin) {
-      router.push("/");
-      return;
-    }
-    loadCoupons();
-  }, [config, isAuthenticated, isAdmin, router]);
-
-  const loadCoupons = async () => {
-    if (!config) return;
+  const loadCoupons = useCallback(async () => {
+    if (!config) return [];
     try {
       const data = (await api.get("/coupons", config.slug)) as
         | { results?: Coupon[] }
         | Coupon[];
-      const results = Array.isArray(data) ? data : data.results || [];
-      setCoupons(results);
+      return Array.isArray(data) ? data : data.results || [];
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading coupons");
       console.error("Error loading coupons:", err);
-    } finally {
-      setLoading(false);
+      return [];
     }
-  };
+  }, [config]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (!isAuthenticated || !isAdmin) {
+      router.push("/");
+      return;
+    }
+    let ignore = false;
+    (async () => {
+      const result = await loadCoupons();
+      if (!ignore) {
+        setCoupons(result);
+        setLoading(false);
+      }
+    })();
+    return () => { ignore = true; };
+  }, [isAuthenticated, isAdmin, router, loadCoupons, isHydrated]);
 
   const createCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,9 +106,11 @@ export default function AdminCouponsPage() {
   if (!config) return null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Coupons</h1>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <AdminNav />
+
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Coupons</h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-white"

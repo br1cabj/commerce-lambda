@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/hooks/useTenant";
-import { useCart } from "@/hooks/useCart";
-import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
 import { api } from "@/lib/api";
 
@@ -21,7 +19,6 @@ interface Product {
 
 export default function CatalogPage() {
   const { config } = useTenant();
-  const { addItem } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState("");

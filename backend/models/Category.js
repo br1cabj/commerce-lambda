@@ -30,6 +30,23 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    icon: {
+      type: String,
+      default: "",
+    },
+    backgroundColor: {
+      type: String,
+      default: "",
+    },
+    displayStyle: {
+      type: String,
+      enum: ["image", "icon", "gradient"],
+      default: "image",
+    },
+    showOnHome: {
+      type: Boolean,
+      default: true,
+    },
     parentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",

@@ -1,22 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Save, Palette, Truck, CreditCard, Settings } from "lucide-react";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 type Tab = "theme" | "payments" | "shipping" | "features";
 
 export default function AdminSettingsPage() {
-  const { config } = useTenant();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { config, fetchConfig } = useTenant();
+  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("theme");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [accessDenied, setAccessDenied] = useState(false);
+  const configSyncedRef = useRef(false);
 
   const [primaryColor, setPrimaryColor] = useState(
     config?.theme.primaryColor || "#000000",
@@ -57,16 +58,18 @@ export default function AdminSettingsPage() {
   );
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (isAuthenticated && !isAdmin) {
       router.push("/");
     }
     if (!isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, isAdmin, router]);
+  }, [isAuthenticated, isAdmin, router, isHydrated]);
 
   useEffect(() => {
-    if (config) {
+    if (config && !configSyncedRef.current) {
+      configSyncedRef.current = true;
       setPrimaryColor(config.theme.primaryColor);
       setSecondaryColor(config.theme.secondaryColor);
       setAccentColor(config.theme.accentColor);
@@ -106,6 +109,7 @@ export default function AdminSettingsPage() {
         },
         config.slug,
       );
+      await fetchConfig(config.slug);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -131,6 +135,7 @@ export default function AdminSettingsPage() {
         },
         config.slug,
       );
+      await fetchConfig(config.slug);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -156,9 +161,11 @@ export default function AdminSettingsPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Store Settings</h1>
-      <p className="text-gray-500 mb-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <AdminNav />
+
+      <h2 className="text-2xl font-bold mb-2">Store Settings</h2>
+      <p className="text-gray-500 mb-6">
         Customize your store&apos;s appearance and functionality.
       </p>
 

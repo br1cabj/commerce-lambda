@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext } from "react";
+import { useEffect, useRef, createContext, useContext } from "react";
 import { useTenant } from "@/hooks/useTenant";
 
 interface TenantProviderProps {
@@ -14,7 +14,7 @@ const TenantContext = createContext<{ tenantSlug: string | null }>({
 
 export function TenantProvider({ children, initialSlug }: TenantProviderProps) {
   const { config, loading, error, fetchConfig } = useTenant();
-  const [initialized, setInitialized] = useState(false);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     let tenantSlug: string | null = initialSlug || null;
@@ -33,11 +33,11 @@ export function TenantProvider({ children, initialSlug }: TenantProviderProps) {
       }
     }
 
-    if (tenantSlug && !initialized) {
-      setInitialized(true);
+    if (tenantSlug && !initializedRef.current) {
+      initializedRef.current = true;
       fetchConfig(tenantSlug);
     }
-  }, [fetchConfig, initialized, initialSlug]);
+  }, [fetchConfig, initialSlug]);
 
   if (loading && !config) {
     return (

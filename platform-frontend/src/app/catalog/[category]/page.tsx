@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/hooks/useTenant";
-import { useCart } from "@/hooks/useCart";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
@@ -22,7 +21,6 @@ interface Product {
 
 export default function CategoryPage() {
   const { config } = useTenant();
-  const { addItem } = useCart();
   const params = useParams();
   const router = useRouter();
   const categorySlug = params.category as string;
@@ -38,10 +36,11 @@ export default function CategoryPage() {
       if (!config) return;
       setLoading(true);
       try {
-        const categories = (await api.get(
+        const categoriesData = (await api.get(
           "/categories",
           config.slug,
-        )) as Array<{ _id: string; name: string; slug: string }>;
+        )) as { results: Array<{ _id: string; name: string; slug: string }> };
+        const categories = categoriesData.results || [];
         const cat = categories.find((c) => c.slug === categorySlug);
         if (cat) {
           setCategoryName(cat.name);

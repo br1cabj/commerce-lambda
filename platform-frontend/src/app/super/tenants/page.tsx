@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { Plus, Edit, Trash2, Power, PowerOff, Search, X } from "lucide-react";
 import Link from "next/link";
@@ -35,22 +35,28 @@ export default function SuperTenantsPage() {
   const [ownerPassword, setOwnerPassword] = useState("");
   const [plan, setPlan] = useState<"free" | "basic" | "premium">("free");
 
-  useEffect(() => {
-    loadTenants();
-  }, []);
-
-  const loadTenants = async () => {
+  const loadTenants = useCallback(async () => {
     try {
       const data = (await api.get(
         "/super/tenants?limit=100",
       )) as TenantsResponse;
-      setTenants(data.results || []);
+      return data.results || [];
     } catch (err) {
       console.error("Error loading tenants:", err);
-    } finally {
-      setLoading(false);
+      return [];
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    loadTenants().then((result) => {
+      if (!ignore) {
+        setTenants(result);
+        setLoading(false);
+      }
+    });
+    return () => { ignore = true; };
+  }, [loadTenants]);
 
   const resetForm = () => {
     setName("");

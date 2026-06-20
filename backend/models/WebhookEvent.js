@@ -27,6 +27,6 @@ const webhookEventSchema = new mongoose.Schema(
   },
 );
 
-webhookEventSchema.index({ eventId: 1 }, { unique: true });
+
 
 export default mongoose.model("WebhookEvent", webhookEventSchema);

@@ -1,7 +1,9 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
+import { useState } from "react";
+import { ShoppingCart, Check } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
+import { useTranslations } from "@/hooks/useTranslations";
 
 interface Product {
   _id: string;
@@ -22,6 +24,8 @@ export function AddToCartButton({
   accentColor?: string;
 }) {
   const { addItem } = useCart();
+  const { t, translations } = useTranslations();
+  const [added, setAdded] = useState(false);
 
   const handleAddToCart = () => {
     const finalPrice =
@@ -41,6 +45,9 @@ export function AddToCartButton({
       size,
       maxStock: product.stock,
     });
+
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
   };
 
   return (
@@ -49,10 +56,22 @@ export function AddToCartButton({
         e.preventDefault();
         handleAddToCart();
       }}
-      className="mt-3 w-full py-2 rounded-lg font-semibold text-sm text-white transition-transform hover:scale-105 flex items-center justify-center"
-      style={{ backgroundColor: accentColor || "#f97316" }}
+      className={`w-full py-2.5 rounded-lg font-semibold text-sm text-white transition-all flex items-center justify-center gap-2 ${
+        added ? "scale-95" : "hover:scale-105 hover:shadow-lg"
+      }`}
+      style={{ backgroundColor: added ? "#10b981" : accentColor || "#f97316" }}
     >
-      <ShoppingCart className="h-4 w-4 mr-1" /> Add to Cart
+      {added ? (
+        <>
+          <Check className="h-4 w-4" />
+          {t(translations?.common?.added) || "Added!"}
+        </>
+      ) : (
+        <>
+          <ShoppingCart className="h-4 w-4" />
+          {t(translations?.common?.addToCart) || "Add to Cart"}
+        </>
+      )}
     </button>
   );
 }

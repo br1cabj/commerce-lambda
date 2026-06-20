@@ -14,8 +14,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     "default";
 
   try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/products/${resolvedParams.id}`,
+      `${apiUrl}/products/${resolvedParams.id}`,
       {
         headers: { "x-tenant-slug": tenantSlug },
         next: { revalidate: 60 },
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         images: product.images?.length ? [{ url: product.images[0] }] : [],
       },
     };
-  } catch (err) {
+  } catch {
     return {
       title: "Product Details",
     };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -25,24 +25,22 @@ export default function SuperAdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user , isHydrated} = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isAuthenticated) {
       router.push("/login");
       return;
     }
     if (user?.role !== "super_admin") {
       router.push("/");
-      return;
     }
-    setIsChecking(false);
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, isHydrated]);
 
-  if (!isAuthenticated || user?.role !== "super_admin" || isChecking) {
+  if (!isAuthenticated || user?.role !== "super_admin") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-gray-500">Checking access...</p>

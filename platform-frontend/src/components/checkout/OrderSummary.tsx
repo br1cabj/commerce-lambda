@@ -1,8 +1,20 @@
 import { Tag } from "lucide-react";
+import Image from "next/image";
+import type { TenantConfig } from "@/stores/tenantStore";
+
+interface CartItem {
+  id: string;
+  model: string;
+  brand: string;
+  price: number;
+  image: string;
+  quantity: number;
+  size: string;
+}
 
 interface OrderSummaryProps {
-  items: any[];
-  config: any;
+  items: CartItem[];
+  config: TenantConfig;
   totalAmount: number;
   finalTotal: number;
   discountPercent: number;
@@ -39,10 +51,13 @@ export function OrderSummary({
       <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
-            <img
+            <Image
               src={item.image}
               alt={item.model}
-              className="h-12 w-12 object-contain bg-gray-50 rounded"
+              width={48}
+              height={48}
+              className="object-contain bg-gray-50 rounded"
+              unoptimized
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate">{item.model}</p>
@@ -119,7 +134,7 @@ export function OrderSummary({
         <span>Shipping</span>
         <span className="font-bold text-gray-800 text-right">
           {config.settings.shippingMethods.find(
-            (m: any) => m.type === "free" && m.enabled,
+            (m: { type: string; enabled: boolean }) => m.type === "free" && m.enabled,
           ) ? (
             <span className="text-emerald-600">Free Shipping</span>
           ) : (

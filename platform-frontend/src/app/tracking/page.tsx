@@ -17,7 +17,7 @@ interface Order {
 
 export default function TrackingPage() {
   const { config } = useTenant();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated , isHydrated} = useAuth();
   const [trackingInput, setTrackingInput] = useState("");
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
@@ -39,10 +39,8 @@ export default function TrackingPage() {
     setLoading(true);
     try {
       if (isAuthenticated) {
-        const orders = (await api.get(
-          "/orders/my-orders",
-          config.slug,
-        )) as Order[];
+        const ordersResponse = await api.get("/orders/my-orders", config.slug) as { results: Order[] };
+        const orders = ordersResponse.results || [];
         const found = orders.find(
           (o) =>
             o.trackingCode?.toLowerCase() === trackingInput.toLowerCase() ||
@@ -56,7 +54,7 @@ export default function TrackingPage() {
       } else {
         setError("Please log in to track your orders.");
       }
-    } catch (err) {
+    } catch {
       setError("Error searching for your order.");
     } finally {
       setLoading(false);

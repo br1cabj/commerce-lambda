@@ -4,12 +4,15 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { TenantProvider } from "@/components/TenantProvider";
+import { AnnouncementBarWrapper } from "@/components/AnnouncementBarWrapper";
 import { headers } from "next/headers";
 
 const poppins = Poppins({
-  weight: ["400", "600", "800"],
+  weight: ["400", "600", "700", "800"],
   subsets: ["latin"],
   variable: "--font-poppins",
+  display: "swap",
+  preload: false,
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,7 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
     "default";
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/store/config`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+    const res = await fetch(`${apiUrl}/store/config`, {
       headers: { "x-tenant-slug": tenantSlug },
       next: { revalidate: 60 },
     });
@@ -43,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
         siteName: config.name || "E-Commerce",
       },
     };
-  } catch (err) {
+  } catch {
     return {
       title: "E-Commerce Store",
       description: "Your specialized online store",
@@ -69,6 +73,7 @@ export default async function RootLayout({
         style={{ fontFamily: "var(--font-poppins), sans-serif" }}
       >
         <TenantProvider initialSlug={tenantSlug}>
+          <AnnouncementBarWrapper />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

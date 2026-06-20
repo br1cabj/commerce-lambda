@@ -5,7 +5,6 @@ import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { api } from "@/lib/api";
 import { MessageCircle, CreditCard, Wallet } from "lucide-react";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
@@ -15,7 +14,7 @@ type PaymentMethod = "whatsapp" | "mercadopago" | "stripe";
 export default function CheckoutPage() {
   const { config } = useTenant();
   const { items, totalAmount, clearCart } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isHydrated } = useAuth();
   const router = useRouter();
 
   const [street, setStreet] = useState("");
@@ -37,13 +36,14 @@ export default function CheckoutPage() {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isAuthenticated) {
       if (typeof window !== "undefined") {
         localStorage.setItem("redirectAfterLogin", "/checkout");
       }
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isHydrated, router]);
 
   useEffect(() => {
     if (isAuthenticated && items.length === 0) {
@@ -124,7 +124,7 @@ export default function CheckoutPage() {
       price: item.price,
     }));
 
-    const orderData: any = {
+    const orderData: Record<string, unknown> = {
       products: orderProducts,
       shippingAddress: { street, number, city, province, zipCode },
       shippingCost: 0,
@@ -182,7 +182,7 @@ export default function CheckoutPage() {
     }));
 
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         products: orderProducts,
         shippingAddress: { street, number, city, province, zipCode },
       };
@@ -215,7 +215,7 @@ export default function CheckoutPage() {
     }));
 
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         products: orderProducts,
         shippingAddress: { street, number, city, province, zipCode },
       };

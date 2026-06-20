@@ -17,6 +17,8 @@ import errorHandler from "./middleware/errorHandler.js";
 import superAdminRoutes from "./routes/superAdmin.routes.js";
 import tenantConfigRoutes from "./routes/tenantConfig.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
+import homeConfigRoutes from "./routes/homeConfig.js";
+import templateRoutes from "./routes/templates.js";
 import paymentsRoutes, {
   handleStripeWebhook,
   handleMercadoPagoWebhook,
@@ -71,6 +73,17 @@ app.use("/api/users/forgot-password", authLimiter);
 
 const tmpDir = os.tmpdir();
 
+app.post(
+  "/api/payments/webhook/stripe",
+  express.raw({ type: "application/json" }),
+  handleStripeWebhook,
+);
+app.post(
+  "/api/payments/webhook/mercadopago",
+  express.json(),
+  handleMercadoPagoWebhook,
+);
+
 app.use(express.json({ limit: "10mb" }));
 
 app.use(
@@ -92,19 +105,10 @@ app.use("/api/coupons", couponsRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/shipping", shippingRoutes);
 app.use("/api/store", tenantConfigRoutes);
+app.use("/api/store/home-config", homeConfigRoutes);
+app.use("/api/templates", templateRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/super", superAdminRoutes);
-
-app.post(
-  "/api/payments/webhook/stripe",
-  express.raw({ type: "application/json" }),
-  handleStripeWebhook,
-);
-app.post(
-  "/api/payments/webhook/mercadopago",
-  express.json(),
-  handleMercadoPagoWebhook,
-);
 
 app.use(errorHandler);
 
