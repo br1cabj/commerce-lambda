@@ -15,6 +15,12 @@ const productSchema = new mongoose.Schema(
     sku: { type: String, trim: true },
     slug: { type: String, lowercase: true, trim: true, sparse: true },
     description: { type: String, default: "" },
+    packageData: {
+      weight: { type: Number, default: 0 },
+      length: { type: Number, default: 0 },
+      width: { type: Number, default: 0 },
+      height: { type: Number, default: 0 }
+    },
     brand: { type: String, required: true, trim: true },
     model: { type: String, required: true, trim: true },
     price: { type: Number, required: true, min: 0 },

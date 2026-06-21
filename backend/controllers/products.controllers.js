@@ -123,6 +123,10 @@ export const createProduct = async (req, res) => {
       isNew,
       isBestSeller,
       sku,
+      packageWeight,
+      packageLength,
+      packageWidth,
+      packageHeight,
     } = req.body;
 
     const baseSlug = `${brand}-${model}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
@@ -138,6 +142,12 @@ export const createProduct = async (req, res) => {
       description: description || "",
       sku: sku || "",
       slug,
+      packageData: {
+        weight: Number(packageWeight) || 0,
+        length: Number(packageLength) || 0,
+        width: Number(packageWidth) || 0,
+        height: Number(packageHeight) || 0
+      },
       earnedPoints: earnedPoints || 0,
       isFeatured: isFeatured || false,
       isNew: isNew || false,
@@ -255,8 +265,13 @@ export const updateProduct = async (req, res) => {
       earnedPoints,
       isFeatured,
       isNew,
+      isNew,
       isBestSeller,
       sku,
+      packageWeight,
+      packageLength,
+      packageWidth,
+      packageHeight,
     } = req.body;
 
     const productData = {};
@@ -271,6 +286,15 @@ export const updateProduct = async (req, res) => {
     if (isFeatured !== undefined) productData.isFeatured = isFeatured;
     if (isNew !== undefined) productData.isNew = isNew;
     if (isBestSeller !== undefined) productData.isBestSeller = isBestSeller;
+    
+    if (packageWeight !== undefined || packageLength !== undefined || packageWidth !== undefined || packageHeight !== undefined) {
+      productData.packageData = {
+        weight: packageWeight !== undefined ? Number(packageWeight) : 0,
+        length: packageLength !== undefined ? Number(packageLength) : 0,
+        width: packageWidth !== undefined ? Number(packageWidth) : 0,
+        height: packageHeight !== undefined ? Number(packageHeight) : 0,
+      };
+    }
 
     if (sizes !== undefined) {
       try {

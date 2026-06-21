@@ -59,6 +59,11 @@ export default function AdminSettingsPage() {
     config?.settings.features.emailMarketing || false,
   );
 
+  const localCarrierMethod = config?.settings?.shippingMethods?.find(m => m.type === "local_carrier")?.config || {};
+  const [shippingProvider, setShippingProvider] = useState(localCarrierMethod.provider || "correo_argentino");
+  const [shippingApiKey, setShippingApiKey] = useState(localCarrierMethod.apiKey || "");
+  const [shippingOriginZip, setShippingOriginZip] = useState(localCarrierMethod.originZipCode || "");
+
   useEffect(() => {
     if (!isHydrated) return;
     if (isAuthenticated && !isAdmin) {
@@ -87,6 +92,11 @@ export default function AdminSettingsPage() {
       setCoupons(config.settings.features.coupons);
       setReviews(config.settings.features.reviews);
       setEmailMarketing(config.settings.features.emailMarketing);
+
+      const lc = config.settings.shippingMethods?.find((m: any) => m.type === "local_carrier")?.config || {};
+      setShippingProvider(lc.provider || "correo_argentino");
+      setShippingApiKey(lc.apiKey || "");
+      setShippingOriginZip(lc.originZipCode || "");
     }
   }, [config]);
 
@@ -159,6 +169,17 @@ export default function AdminSettingsPage() {
             phone,
             currency,
             features: { loyaltyPoints, coupons, reviews, emailMarketing },
+            shippingMethods: [
+              {
+                type: "local_carrier",
+                enabled: !!shippingApiKey,
+                config: {
+                  provider: shippingProvider,
+                  apiKey: shippingApiKey,
+                  originZipCode: shippingOriginZip
+                }
+              }
+            ]
           },
         },
         config.slug,
@@ -475,12 +496,53 @@ export default function AdminSettingsPage() {
       {activeTab === "shipping" && (
         <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
           <h2 className="text-lg font-bold">Shipping Configuration</h2>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm text-gray-600">
-              Shipping costs are currently arranged manually via WhatsApp. Flat
-              rate and carrier integrations are coming soon.
+          
+          <div className="bg-gray-50 rounded-lg p-4 mb-4">
+            <h3 className="font-bold text-sm mb-2">Carrier Integration</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Connect your local carrier (e.g., Correo Argentino, FedEx) to automatically quote shipping costs at checkout based on package dimensions and weight.
             </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-1">Provider</label>
+                <select
+                  value={shippingProvider}
+                  onChange={(e) => setShippingProvider(e.target.value)}
+                  className="w-full px-3 py-2 border rounded bg-white"
+                >
+                  <option value="correo_argentino">Correo Argentino</option>
+                  <option value="andreani">Andreani</option>
+                  <option value="fedex">FedEx</option>
+                  <option value="custom">Custom Flat Rate</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">API Key</label>
+                <input
+                  type="password"
+                  value={shippingApiKey}
+                  onChange={(e) => setShippingApiKey(e.target.value)}
+                  placeholder="Enter API Key"
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">Origin Zip Code</label>
+                <input
+                  type="text"
+                  value={shippingOriginZip}
+                  onChange={(e) => setShippingOriginZip(e.target.value)}
+                  placeholder="e.g. 1425"
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <p className="text-xs text-gray-500 mt-1">Used to calculate distance to customer.</p>
+              </div>
+            </div>
           </div>
+
           <button
             onClick={saveSettings}
             disabled={saving}

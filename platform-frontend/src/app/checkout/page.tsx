@@ -36,6 +36,10 @@ export default function CheckoutPage() {
   const [couponMessage, setCouponMessage] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
+  const [shippingCost, setShippingCost] = useState(0);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [shippingName, setShippingName] = useState("");
+
   useEffect(() => {
     if (!isHydrated) return;
     if (!isAuthenticated) {
@@ -52,8 +56,37 @@ export default function CheckoutPage() {
     }
   }, [isAuthenticated, items.length, router]);
 
+  useEffect(() => {
+    if (zipCode.length >= 4 && config) {
+      const fetchShipping = async () => {
+        setShippingLoading(true);
+        try {
+          const data = await api.post("/shipping/calculate", {
+            postalCodeDestination: zipCode,
+            weight: items.reduce((acc, item) => acc + (item.quantity * 1), 0) // Assume 1kg per item for now since frontend cart doesn't store weight
+          }, config.slug) as any;
+          
+          setShippingCost(data.price || 0);
+          setShippingName(data.productName || "Envío");
+        } catch (err) {
+          console.error("Shipping error:", err);
+          setShippingCost(0);
+          setShippingName("");
+        } finally {
+          setShippingLoading(false);
+        }
+      };
+
+      const debounceId = setTimeout(fetchShipping, 1000);
+      return () => clearTimeout(debounceId);
+    } else {
+      setShippingCost(0);
+      setShippingName("");
+    }
+  }, [zipCode, items, config]);
+
   const discountAmount = totalAmount * (discountPercent / 100);
-  const finalTotal = totalAmount - discountAmount;
+  const finalTotal = totalAmount - discountAmount + shippingCost;
 
   const availableMethods: PaymentMethod[] = useMemo(() => {
     const methods = (config?.settings.paymentMethods || [])
@@ -132,7 +165,7 @@ export default function CheckoutPage() {
     const orderData: Record<string, unknown> = {
       products: orderProducts,
       shippingAddress: { street, number, city, province, zipCode },
-      shippingCost: 0,
+      shippingCost,
     };
     if (couponApplied && couponCode) {
       orderData.couponCode = couponCode;
@@ -153,6 +186,9 @@ export default function CheckoutPage() {
         wspText += `- ${item.model} (Size: ${item.size}) x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}\n`;
       });
       wspText += `\n*Shipping Address:*\n${street} ${number}, ${city}, ${province} (${zipCode})\n\n`;
+      if (shippingCost > 0) {
+        wspText += `*Shipping (${shippingName}):* $${shippingCost.toLocaleString()}\n`;
+      }
       if (discountPercent > 0) {
         wspText += `*Discount:* -${discountPercent}% (-$${discountAmount.toLocaleString()})\n`;
       }
@@ -441,22 +477,25 @@ export default function CheckoutPage() {
           </form>
         </div>
 
-        <OrderSummary
-          items={items}
-          config={config}
-          totalAmount={totalAmount}
-          finalTotal={finalTotal}
-          discountPercent={discountPercent}
-          discountAmount={discountAmount}
-          couponCode={couponCode}
-          couponApplied={couponApplied}
-          applyingCoupon={applyingCoupon}
-          couponMessage={couponMessage}
-          setCouponCode={setCouponCode}
-          setCouponMessage={setCouponMessage}
-          applyCoupon={applyCoupon}
-          removeCoupon={removeCoupon}
-        />
+            <OrderSummary
+              items={items}
+              config={config}
+              totalAmount={totalAmount}
+              finalTotal={finalTotal}
+              shippingCost={shippingCost}
+              shippingName={shippingName}
+              shippingLoading={shippingLoading}
+              discountPercent={discountPercent}
+              discountAmount={discountAmount}
+              couponCode={couponCode}
+              couponApplied={couponApplied}
+              applyingCoupon={applyingCoupon}
+              couponMessage={couponMessage}
+              setCouponCode={setCouponCode}
+              setCouponMessage={setCouponMessage}
+              applyCoupon={applyCoupon}
+              removeCoupon={removeCoupon}
+            />
       </div>
     </div>
   );

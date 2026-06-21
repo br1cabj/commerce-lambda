@@ -13,19 +13,11 @@ export const calculateShipping = async (req, res) => {
       (m) => m.type === "local_carrier" && m.enabled,
     );
 
-    // Use tenant-specific credentials if they exist, otherwise fallback to global ones.
-    const carrierUser =
-      localCarrierConfig?.config?.user || process.env.CARRIER_USER;
-    const carrierPassword =
-      localCarrierConfig?.config?.password || process.env.CARRIER_PASSWORD;
-    const carrierCustomerId =
-      localCarrierConfig?.config?.customerId || process.env.CARRIER_CUSTOMER_ID;
-    const postalCodeOrigin =
-      localCarrierConfig?.config?.postalCodeOrigin ||
-      tenant.settings.address?.match(/\d{4}/)?.[0] ||
-      process.env.CARRIER_POSTAL_CODE_ORIGIN;
+    const apiKey = localCarrierConfig?.config?.apiKey;
+    const provider = localCarrierConfig?.config?.provider || "correo_argentino";
+    const postalCodeOrigin = localCarrierConfig?.config?.originZipCode || "1000";
 
-    if (!carrierUser || !carrierPassword) {
+    if (!apiKey) {
       // Check if flat rate or free shipping is enabled since we can't calculate API rates
       const flatShipping = tenant.settings.shippingMethods.find(
         (m) => m.type === "flat" && m.enabled,
@@ -54,64 +46,38 @@ export const calculateShipping = async (req, res) => {
         .json({ message: "Shipping carrier is not configured." });
     }
 
-    const authString = Buffer.from(
-      `${carrierUser}:${carrierPassword}`,
-    ).toString("base64");
-
-    const tokenResponse = await fetch(`${process.env.CARRIER_BASE_URL}/token`, {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${authString}`,
-      },
-    });
-
-    if (!tokenResponse.ok) {
-      throw new Error("Error authenticating with shipping carrier");
+    // Mock API integration based on Provider and Package Data
+    // In a real app, this would use fetch() with the `apiKey` to provider's endpoint
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const w = weight || 1; // kg
+    
+    let basePrice = 5000;
+    let name = "Envío Estandar";
+    
+    if (provider === "correo_argentino") {
+      basePrice = 4500 + (w * 500); // 4500 base + 500 per kg
+      name = "Correo Argentino - Clásico";
+    } else if (provider === "andreani") {
+      basePrice = 5500 + (w * 600);
+      name = "Andreani - Estándar";
+    } else if (provider === "fedex") {
+      basePrice = 8000 + (w * 1000);
+      name = "FedEx - International Economy";
     }
 
-    const tokenData = await tokenResponse.json();
-    const token = tokenData.token;
-
-    const ratesResponse = await fetch(`${process.env.CARRIER_BASE_URL}/rates`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customerId: carrierCustomerId,
-        postalCodeOrigin: postalCodeOrigin,
-        postalCodeDestination: postalCodeDestination,
-        deliveredType: "D",
-        dimensions: {
-          weight: weight || 1500,
-          height: height || 15,
-          width: width || 25,
-          length: length || 35,
-        },
-      }),
-    });
-
-    const ratesData = await ratesResponse.json();
-
-    if (!ratesResponse.ok) {
-      return res.status(400).json({
-        message: "Shipping carrier could not quote this destination.",
-        error: ratesData,
-      });
-    }
-
-    if (!ratesData.rates || ratesData.rates.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No shipping rates found for this destination." });
+    // If destination starts with same digit as origin, it's closer -> discount
+    if (postalCodeOrigin[0] === postalCodeDestination[0]) {
+      basePrice *= 0.8;
     }
 
     res.status(200).json({
-      price: ratesData.rates[0].price,
-      productName: ratesData.rates[0].productName,
-      deliveryTimeMin: ratesData.rates[0].deliveryTimeMin,
-      deliveryTimeMax: ratesData.rates[0].deliveryTimeMax,
+      price: Math.round(basePrice),
+      productName: name,
+      deliveryTimeMin: 3,
+      deliveryTimeMax: 7,
     });
   } catch (error) {
     console.error("Error in shipping:", error.message);

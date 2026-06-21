@@ -37,6 +37,10 @@ export default function AdminPage() {
   const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [discount, setDiscount] = useState("0");
+  const [packageWeight, setPackageWeight] = useState("0");
+  const [packageLength, setPackageLength] = useState("0");
+  const [packageWidth, setPackageWidth] = useState("0");
+  const [packageHeight, setPackageHeight] = useState("0");
   const [sizes, setSizes] = useState<{ size: string; stock: string }[]>([
     { size: "", stock: "" },
   ]);
@@ -100,6 +104,10 @@ export default function AdminPage() {
     setSku(product.sku || "");
     setPrice(product.price.toString());
     setDiscount(product.discount.toString());
+    setPackageWeight(product.packageData?.weight?.toString() || "0");
+    setPackageLength(product.packageData?.length?.toString() || "0");
+    setPackageWidth(product.packageData?.width?.toString() || "0");
+    setPackageHeight(product.packageData?.height?.toString() || "0");
     setSizes(
       product.sizes?.map((s) => ({
         size: s.size,
@@ -165,6 +173,10 @@ export default function AdminPage() {
     formData.append("sku", sku);
     formData.append("price", price);
     formData.append("discount", parsedDiscount);
+    formData.append("packageWeight", packageWeight);
+    formData.append("packageLength", packageLength);
+    formData.append("packageWidth", packageWidth);
+    formData.append("packageHeight", packageHeight);
     formData.append("sizes", JSON.stringify(sizesList));
     formData.append("stock", totalStock.toString());
     if (images)
@@ -192,6 +204,10 @@ export default function AdminPage() {
     setSku("");
     setPrice("");
     setDiscount("0");
+    setPackageWeight("0");
+    setPackageLength("0");
+    setPackageWidth("0");
+    setPackageHeight("0");
     setSizes([{ size: "", stock: "" }]);
     setImages(null);
     setExistingImages([]);
@@ -286,6 +302,54 @@ export default function AdminPage() {
                 rows={4}
                 placeholder="Detailed product description..."
               />
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+              <h3 className="font-bold text-sm mb-4 text-gray-800">
+                Logistics & Package Dimensions
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">Weight (kg)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={packageWeight}
+                    onChange={(e) => setPackageWeight(e.target.value)}
+                    className="w-full px-4 py-2 rounded border bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">Length (cm)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={packageLength}
+                    onChange={(e) => setPackageLength(e.target.value)}
+                    className="w-full px-4 py-2 rounded border bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">Width (cm)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={packageWidth}
+                    onChange={(e) => setPackageWidth(e.target.value)}
+                    className="w-full px-4 py-2 rounded border bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">Height (cm)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={packageHeight}
+                    onChange={(e) => setPackageHeight(e.target.value)}
+                    className="w-full px-4 py-2 rounded border bg-white"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

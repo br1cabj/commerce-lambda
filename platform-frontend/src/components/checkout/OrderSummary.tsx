@@ -17,6 +17,9 @@ interface OrderSummaryProps {
   config: TenantConfig;
   totalAmount: number;
   finalTotal: number;
+  shippingCost: number;
+  shippingName: string;
+  shippingLoading: boolean;
   discountPercent: number;
   discountAmount: number;
   couponCode: string;
@@ -34,6 +37,9 @@ export function OrderSummary({
   config,
   totalAmount,
   finalTotal,
+  shippingCost,
+  shippingName,
+  shippingLoading,
   discountPercent,
   discountAmount,
   couponCode,
@@ -127,15 +133,19 @@ export function OrderSummary({
         </div>
       )}
       <div className="flex justify-between mb-4 text-gray-500 text-sm pb-4 border-b">
-        <span>Shipping</span>
+        <span>Shipping {shippingName ? `(${shippingName})` : ''}</span>
         <span className="font-bold text-gray-800 text-right">
-          {config.settings.shippingMethods.find(
+          {shippingLoading ? (
+            <span className="animate-pulse">Calculating...</span>
+          ) : shippingCost > 0 ? (
+            `$${shippingCost.toLocaleString()}`
+          ) : config.settings.shippingMethods.find(
             (m: { type: string; enabled: boolean }) =>
               m.type === "free" && m.enabled,
           ) ? (
             <span className="text-emerald-600">Free Shipping</span>
           ) : (
-            "Calculated at checkout"
+            "Enter zip code to calculate"
           )}
         </span>
       </div>
