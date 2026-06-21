@@ -185,7 +185,7 @@ export default function CheckoutPage() {
       wspText += `*ID:* ${dni}\n\n`;
       wspText += `*Order Details:*\n`;
       items.forEach((item) => {
-        wspText += `- ${item.model} (Size: ${item.size}) x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}\n`;
+        wspText += `- ${item.model} (Option: ${item.size}) x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}\n`;
       });
       wspText += `\n*Shipping Address:*\n${street} ${number}, ${city}, ${province} (${zipCode})\n\n`;
       if (shippingCost > 0) {

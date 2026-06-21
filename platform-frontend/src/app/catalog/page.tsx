@@ -176,7 +176,7 @@ export default function CatalogPage() {
           <hr className="border-gray-200 mb-6" />
 
           <div>
-            <h4 className="font-bold text-xs mb-3">SIZE</h4>
+            <h4 className="font-bold text-xs mb-3">OPTION</h4>
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => setSelectedSize("")}

@@ -98,7 +98,7 @@ export default function CartPage() {
                   </h3>
                 </Link>
                 <p className="text-sm font-medium text-gray-500 mt-1">
-                  Size: <span className="text-gray-800">{item.size}</span>
+                  Option: <span className="text-gray-800">{item.size}</span>
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <button

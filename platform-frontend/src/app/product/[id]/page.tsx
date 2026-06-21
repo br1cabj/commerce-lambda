@@ -213,7 +213,7 @@ export default function ProductPage() {
 
           {product.sizes && product.sizes.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-bold mb-2">Select Size</h3>
+              <h3 className="font-bold mb-2">Select Option</h3>
               <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                 {product.sizes.map((s) => (
                   <button

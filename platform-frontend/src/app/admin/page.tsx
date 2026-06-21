@@ -219,7 +219,7 @@ export default function AdminPage() {
       }));
 
     if (sizesList.length === 0) {
-      return setError("You must provide at least one valid size with stock.");
+      return setError("You must provide at least one valid variant/option with stock.");
     }
 
     const totalStock = sizesList.reduce((acc, s) => acc + s.stock, 0);
@@ -671,7 +671,7 @@ export default function AdminPage() {
                 onClick={addSizeRow}
                 className="mt-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-semibold text-gray-800 transition-colors"
               >
-                + Add Size Option
+                + Add Variant/Option
               </button>
             </div>
             <div className="flex gap-4 pt-4">

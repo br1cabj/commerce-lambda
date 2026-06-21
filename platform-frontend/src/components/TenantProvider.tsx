@@ -23,7 +23,6 @@ export function TenantProvider({ children, initialSlug, initialConfig }: TenantP
   if (initialConfig && !config && !hasInitialized) {
     setHasInitialized(true);
     setConfig(initialConfig);
-    initializedRef.current = true;
   }
 
   useEffect(() => {
@@ -43,11 +42,11 @@ export function TenantProvider({ children, initialSlug, initialConfig }: TenantP
       }
     }
 
-    if (tenantSlug && !initializedRef.current) {
+    if (tenantSlug && !config && !initializedRef.current) {
       initializedRef.current = true;
       fetchConfig(tenantSlug);
     }
-  }, [fetchConfig, initialSlug]);
+  }, [fetchConfig, initialSlug, config]);
 
   if (loading && !config) {
     return (
