@@ -59,10 +59,10 @@ export default function AdminSettingsPage() {
     config?.settings.features.emailMarketing || false,
   );
 
-  const localCarrierMethod = config?.settings?.shippingMethods?.find(m => m.type === "local_carrier")?.config || {};
-  const [shippingProvider, setShippingProvider] = useState(localCarrierMethod.provider || "correo_argentino");
-  const [shippingApiKey, setShippingApiKey] = useState(localCarrierMethod.apiKey || "");
-  const [shippingOriginZip, setShippingOriginZip] = useState(localCarrierMethod.originZipCode || "");
+  const localCarrierMethod = (config?.settings?.shippingMethods?.find(m => m.type === "local_carrier")?.config || {}) as Record<string, string>;
+  const [shippingProvider, setShippingProvider] = useState<string>(localCarrierMethod.provider || "correo_argentino");
+  const [shippingApiKey, setShippingApiKey] = useState<string>(localCarrierMethod.apiKey || "");
+  const [shippingOriginZip, setShippingOriginZip] = useState<string>(localCarrierMethod.originZipCode || "");
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -93,7 +93,7 @@ export default function AdminSettingsPage() {
       setReviews(config.settings.features.reviews);
       setEmailMarketing(config.settings.features.emailMarketing);
 
-      const lc = config.settings.shippingMethods?.find((m: any) => m.type === "local_carrier")?.config || {};
+      const lc = (config.settings.shippingMethods?.find((m) => m.type === "local_carrier")?.config || {}) as Record<string, string>;
       setShippingProvider(lc.provider || "correo_argentino");
       setShippingApiKey(lc.apiKey || "");
       setShippingOriginZip(lc.originZipCode || "");

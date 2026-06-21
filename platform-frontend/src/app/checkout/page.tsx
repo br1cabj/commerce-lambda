@@ -61,10 +61,10 @@ export default function CheckoutPage() {
       const fetchShipping = async () => {
         setShippingLoading(true);
         try {
-          const data = await api.post("/shipping/calculate", {
+          const data = (await api.post("/shipping/calculate", {
             postalCodeDestination: zipCode,
             weight: items.reduce((acc, item) => acc + (item.quantity * 1), 0) // Assume 1kg per item for now since frontend cart doesn't store weight
-          }, config.slug) as any;
+          }, config.slug)) as { price?: number; productName?: string };
           
           setShippingCost(data.price || 0);
           setShippingName(data.productName || "Envío");
@@ -80,8 +80,10 @@ export default function CheckoutPage() {
       const debounceId = setTimeout(fetchShipping, 1000);
       return () => clearTimeout(debounceId);
     } else {
-      setShippingCost(0);
-      setShippingName("");
+      Promise.resolve().then(() => {
+        setShippingCost(0);
+        setShippingName("");
+      });
     }
   }, [zipCode, items, config]);
 

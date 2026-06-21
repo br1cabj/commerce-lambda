@@ -20,6 +20,7 @@ const webhookEventSchema = new mongoose.Schema(
     processedAt: {
       type: Date,
       default: Date.now,
+      index: { expires: "30d" },
     },
   },
   {

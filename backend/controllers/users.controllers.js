@@ -2,6 +2,7 @@ import { transporter } from "../config/mailer.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { invalidateUserCache } from "../middleware/verifyToken.js";
 
 const escapeHtml = (str) => {
   return String(str)
@@ -69,7 +70,7 @@ export const loginUser = async (req, res) => {
     });
 
     // Dummy hash to equalize timing (prevent enumeration)
-    const dummyHash = "$2a$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const dummyHash = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7GP93kvRov1gxNwq3hpGQCW";
     
     if (!userFound) {
       // Run dummy compare
@@ -145,6 +146,7 @@ export const updatePassword = async (req, res) => {
     userFound.password = hashedPassword;
     userFound.tokenVersion += 1;
     await userFound.save();
+    invalidateUserCache(userFound._id);
 
     res.status(200).json({ message: "Password updated successfully!" });
   } catch (error) {
@@ -236,6 +238,7 @@ export const resetPassword = async (req, res) => {
     userFound.password = hashedPassword;
     userFound.tokenVersion += 1;
     await userFound.save();
+    invalidateUserCache(userFound._id);
 
     res
       .status(200)

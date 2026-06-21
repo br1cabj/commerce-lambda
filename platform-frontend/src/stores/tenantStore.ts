@@ -283,7 +283,7 @@ function getStoredLanguage(): "en" | "es" | null {
   try {
     const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
     if (stored === "en" || stored === "es") return stored;
-  } catch (e) {
+  } catch {
     // Ignore access errors
   }
   return null;

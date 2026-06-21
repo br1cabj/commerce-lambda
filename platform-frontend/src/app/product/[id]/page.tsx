@@ -9,17 +9,7 @@ import { ShoppingCart, Truck } from "lucide-react";
 import Image from "next/image";
 import { api } from "@/lib/api";
 
-interface Product {
-  _id: string;
-  model: string;
-  brand: string;
-  price: number;
-  discount: number;
-  images: string[];
-  sizes: { size: string; stock: number }[];
-  stock: number;
-  category: string;
-}
+import type { Product } from "@/types";
 
 export default function ProductPage() {
   const { config } = useTenant();

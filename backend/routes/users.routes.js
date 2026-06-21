@@ -28,7 +28,7 @@ const authLimiter = rateLimit({
 
 router.use(identifyTenant);
 
-router.post("/register", validateSchema(registerSchema), registerUser);
+router.post("/register", authLimiter, validateSchema(registerSchema), registerUser);
 router.post("/login", authLimiter, validateSchema(loginSchema), loginUser);
 router.post("/forgot-password", authLimiter, forgotPassword);
 router.put("/update-password", verifyToken, updatePassword);

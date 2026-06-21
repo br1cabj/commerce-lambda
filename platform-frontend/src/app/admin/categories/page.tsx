@@ -47,7 +47,9 @@ export default function AdminCategoriesPage() {
   const loadCategories = useCallback(async () => {
     if (!config) return [];
     try {
-      const data = await api.get("/categories?limit=100", config.slug) as any;
+      const data = (await api.get("/categories?limit=100", config.slug)) as {
+        results: Category[];
+      };
       return data?.results || [];
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading categories");
@@ -236,7 +238,7 @@ export default function AdminCategoriesPage() {
                 <label className="block text-sm font-medium mb-1">Display Style</label>
                 <select
                   value={displayStyle}
-                  onChange={(e) => setDisplayStyle(e.target.value as any)}
+                  onChange={(e) => setDisplayStyle(e.target.value as "image" | "icon" | "gradient")}
                   className="w-full px-3 py-2 border rounded bg-white"
                 >
                   <option value="image">Image Background</option>

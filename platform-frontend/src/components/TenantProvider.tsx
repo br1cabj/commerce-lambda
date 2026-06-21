@@ -1,20 +1,28 @@
 "use client";
 
-import { useEffect, useRef, createContext, useContext } from "react";
+import { useEffect, useState, createContext, useContext } from "react";
 import { useTenant } from "@/hooks/useTenant";
+import type { TenantConfig } from "@/stores/tenantStore";
 
 interface TenantProviderProps {
   children: React.ReactNode;
   initialSlug?: string | null;
+  initialConfig?: TenantConfig | null;
 }
 
 const TenantContext = createContext<{ tenantSlug: string | null }>({
   tenantSlug: null,
 });
 
-export function TenantProvider({ children, initialSlug }: TenantProviderProps) {
-  const { config, loading, error, fetchConfig } = useTenant();
-  const initializedRef = useRef(false);
+export function TenantProvider({ children, initialSlug, initialConfig }: TenantProviderProps) {
+  const { config, loading, error, fetchConfig, setConfig } = useTenant();
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Synchronously initialize the store with pre-fetched server-side config
+  if (initialConfig && !config && !hasInitialized) {
+    setHasInitialized(true);
+    setConfig(initialConfig);
+  }
 
   useEffect(() => {
     let tenantSlug: string | null = initialSlug || null;

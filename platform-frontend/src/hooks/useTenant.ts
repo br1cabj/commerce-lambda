@@ -22,9 +22,6 @@ export function useTenant() {
         const data = (await api.get("/store", slug)) as TenantConfig;
         if (abortControllerRef.current?.signal.aborted) return;
         setConfig(data);
-        if (data.theme) {
-          applyTheme(data.theme);
-        }
       } catch (err) {
         if (abortControllerRef.current?.signal.aborted) return;
         const message =
@@ -40,16 +37,10 @@ export function useTenant() {
   );
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty(
-      "--font-family",
-      config?.theme.fontFamily || "Poppins",
-    );
-
-    return () => {
-      root.style.removeProperty("--font-family");
-    };
-  }, [config?.theme.fontFamily]);
+    if (config?.theme) {
+      applyTheme(config.theme);
+    }
+  }, [config?.theme]);
 
   useEffect(() => {
     return () => {
@@ -59,7 +50,7 @@ export function useTenant() {
     };
   }, []);
 
-  return { config, loading, error, fetchConfig };
+  return { config, loading, error, fetchConfig, setConfig };
 }
 
 function applyTheme(theme: TenantConfig["theme"]) {

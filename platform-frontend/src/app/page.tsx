@@ -63,17 +63,17 @@ export default async function Home() {
   const slug = await getTenantSlug();
   if (!slug) return null;
 
-  const config = await fetchConfig(slug);
-  if (!config) return null;
-
-  const [featuredData, newData, bestSellersData, offersData, reviews] =
+  const [config, featuredData, newData, bestSellersData, offersData, reviews] =
     await Promise.all([
+      fetchConfig(slug),
       fetchProducts(slug, "isFeatured=true&limit=8"),
       fetchProducts(slug, "sort=createdAt&order=desc&limit=8"),
       fetchProducts(slug, "sort=salesCount&order=desc&limit=8"),
       fetchProducts(slug, "minDiscount=20&limit=8"),
       fetchReviews(slug),
     ]);
+
+  if (!config) return null;
 
   const featuredProducts: Product[] = featuredData?.results || [];
   const newProducts: Product[] = newData?.results || [];

@@ -20,6 +20,14 @@ interface Product {
   images: string[];
   isFeatured: boolean;
   sizes: { size: string; stock: number }[];
+  description?: string;
+  sku?: string;
+  packageData?: {
+    weight?: number;
+    length?: number;
+    width?: number;
+    height?: number;
+  };
 }
 
 export default function AdminPage() {
@@ -65,7 +73,9 @@ export default function AdminPage() {
   const loadCategories = useCallback(async () => {
     if (!config) return [];
     try {
-      const data = (await api.get("/categories?limit=100", config.slug)) as any;
+      const data = (await api.get("/categories?limit=100", config.slug)) as {
+        results: { name: string; slug: string }[];
+      };
       return data.results || [];
     } catch (err) {
       console.error("Error loading categories:", err);
@@ -84,8 +94,8 @@ export default function AdminPage() {
       if (!ignore) {
         setProducts(prods);
         setCategoriesList(cats);
-        if (cats.length > 0 && !category) {
-          setCategory(cats[0].slug);
+        if (cats.length > 0) {
+          setCategory((current) => current || cats[0].slug);
         }
       }
     });
@@ -94,7 +104,7 @@ export default function AdminPage() {
     };
   }, [isAuthenticated, isAdmin, router, loadProducts, loadCategories, isHydrated]);
 
-  const handleEdit = (product: any) => {
+  const handleEdit = (product: Product) => {
     setError("");
     setEditingProduct(product);
     setName(product.model);

@@ -16,22 +16,23 @@ const sanitizeHtml = (str) => {
 export const getAllReviews = async (req, res) => {
   try {
     const { page = 1, limit: rawLimit = 20 } = req.query;
-    const limit = Math.min(Number(rawLimit) || 20, 100);
-    const skip = (page - 1) * limit;
+    const limitNumber = Math.min(Math.max(1, Number(rawLimit) || 20), 100);
+    const pageNumber = Math.max(1, Number(page) || 1);
+    const skip = (pageNumber - 1) * limitNumber;
 
     const [reviews, total] = await Promise.all([
       Review.find({ tenantId: req.tenant._id })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(limitNumber),
       Review.countDocuments({ tenantId: req.tenant._id }),
     ]);
 
     res.status(200).json({
       info: {
         total,
-        currentPage: Number(page),
-        totalPages: Math.ceil(total / limit),
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
       },
       results: reviews,
     });
@@ -49,6 +50,9 @@ export const createReview = async (req, res) => {
     if (req.files && req.files.image) {
       const file = req.files.image;
       if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+        try {
+          await fs.unlink(file.tempFilePath);
+        } catch (e) {}
         return res.status(400).json({
           message: `Invalid file type. Allowed: ${ALLOWED_IMAGE_TYPES.join(", ")}`,
         });

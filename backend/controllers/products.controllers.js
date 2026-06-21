@@ -26,8 +26,11 @@ export const getAllProducts = async (req, res) => {
       sort,
       order,
       minDiscount,
+      minPrice,
+      maxPrice,
     } = req.query;
-    const limit = Math.min(Number(rawLimit) || 10, 100);
+    const limitNumber = Math.min(Math.max(1, Number(rawLimit) || 10), 100);
+    const pageNumber = Math.max(1, Number(page) || 1);
     let queryFilters = { tenantId: req.tenant._id, isDeleted: false };
 
     if (brand) {
@@ -38,8 +41,13 @@ export const getAllProducts = async (req, res) => {
     if (isFeatured === "true") queryFilters.isFeatured = true;
     if (category) queryFilters.category = category;
     if (minDiscount) queryFilters.discount = { $gte: Number(minDiscount) };
+    if (minPrice || maxPrice) {
+      queryFilters.price = {};
+      if (minPrice) queryFilters.price.$gte = Number(minPrice);
+      if (maxPrice) queryFilters.price.$lte = Number(maxPrice);
+    }
 
-    const skip = (page - 1) * limit;
+    const skip = (pageNumber - 1) * limitNumber;
     const ALLOWED_SORT_FIELDS = [
       "createdAt",
       "price",
@@ -58,18 +66,18 @@ export const getAllProducts = async (req, res) => {
       Product.find(queryFilters)
         .sort(sortOptions)
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(limitNumber),
       Product.countDocuments(queryFilters),
     ]);
-    const totalPages = Math.ceil(totalProducts / limit);
+    const totalPages = Math.ceil(totalProducts / limitNumber);
 
     res.status(200).json({
       info: {
         totalProducts,
         totalPages,
-        currentPage: Number(page),
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
+        currentPage: pageNumber,
+        hasNextPage: pageNumber < totalPages,
+        hasPrevPage: pageNumber > 1,
       },
       results: products,
     });

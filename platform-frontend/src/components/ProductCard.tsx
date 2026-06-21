@@ -71,7 +71,7 @@ export function ProductCard({ product, accentColor }: ProductCardProps) {
           e.stopPropagation();
           setIsWishlisted(!isWishlisted);
         }}
-        className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center transition-all duration-300 hover:scale-110 opacity-0 group-hover:opacity-100"
+        className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center transition-all duration-300 hover:scale-110 opacity-100 md:opacity-0 md:group-hover:opacity-100"
         aria-label="Add to wishlist"
       >
         <Heart
@@ -105,6 +105,7 @@ export function ProductCard({ product, accentColor }: ProductCardProps) {
               src={mainImg}
               alt={product.model}
               fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className={`object-contain p-6 mix-blend-multiply group-hover:scale-110 transition-transform duration-700 ease-out ${
                 imageLoaded ? "opacity-100" : "opacity-0"
               }`}

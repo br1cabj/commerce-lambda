@@ -3,22 +3,23 @@ import Category from "../models/Category.js";
 export const getAllCategories = async (req, res) => {
   try {
     const { isActive, page = 1, limit: rawLimit = 20 } = req.query;
-    const limit = Math.min(Number(rawLimit) || 20, 100);
+    const limitNumber = Math.min(Math.max(1, Number(rawLimit) || 20), 100);
+    const pageNumber = Math.max(1, Number(page) || 1);
     let query = { tenantId: req.tenant._id };
     if (isActive !== undefined) query.isActive = isActive === "true";
 
-    const skip = (page - 1) * limit;
+    const skip = (pageNumber - 1) * limitNumber;
 
     const [categories, total] = await Promise.all([
-      Category.find(query).sort({ order: 1 }).skip(skip).limit(Number(limit)),
+      Category.find(query).sort({ order: 1 }).skip(skip).limit(limitNumber),
       Category.countDocuments(query),
     ]);
 
     res.status(200).json({
       info: {
         total,
-        currentPage: Number(page),
-        totalPages: Math.ceil(total / limit),
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
       },
       results: categories,
     });

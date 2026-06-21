@@ -178,22 +178,23 @@ export const validateCoupon = async (req, res) => {
 export const getAllCoupons = async (req, res) => {
   try {
     const { page = 1, limit: rawLimit = 20 } = req.query;
-    const limit = Math.min(Number(rawLimit) || 20, 100);
-    const skip = (page - 1) * limit;
+    const limitNumber = Math.min(Math.max(1, Number(rawLimit) || 20), 100);
+    const pageNumber = Math.max(1, Number(page) || 1);
+    const skip = (pageNumber - 1) * limitNumber;
 
     const [coupons, total] = await Promise.all([
       Coupon.find({ tenantId: req.tenant._id })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(limitNumber),
       Coupon.countDocuments({ tenantId: req.tenant._id }),
     ]);
 
     res.status(200).json({
       info: {
         total,
-        currentPage: Number(page),
-        totalPages: Math.ceil(total / limit),
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
       },
       results: coupons,
     });

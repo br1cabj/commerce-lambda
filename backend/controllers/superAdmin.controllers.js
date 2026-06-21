@@ -67,15 +67,16 @@ export const createTenant = async (req, res) => {
 export const getAllTenants = async (req, res) => {
   try {
     const { page = 1, limit: rawLimit = 20, isActive } = req.query;
-    const limit = Math.min(Number(rawLimit) || 20, 100);
+    const limitNumber = Math.min(Math.max(1, Number(rawLimit) || 20), 100);
+    const pageNumber = Math.max(1, Number(page) || 1);
     let query = {};
     if (isActive !== undefined) query.isActive = isActive === "true";
 
-    const skip = (page - 1) * limit;
+    const skip = (pageNumber - 1) * limitNumber;
     const tenants = await Tenant.find(query)
       .populate("owner", "name email")
       .skip(skip)
-      .limit(Number(limit))
+      .limit(limitNumber)
       .sort({ createdAt: -1 });
 
     const total = await Tenant.countDocuments(query);
@@ -83,8 +84,8 @@ export const getAllTenants = async (req, res) => {
     res.status(200).json({
       info: {
         total,
-        currentPage: Number(page),
-        totalPages: Math.ceil(total / limit),
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
       },
       results: tenants,
     });

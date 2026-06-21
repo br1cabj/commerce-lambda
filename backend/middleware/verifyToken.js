@@ -21,6 +21,12 @@ const setCachedUser = (id, data) => {
   userCache.set(id, { data, timestamp: Date.now() });
 };
 
+export const invalidateUserCache = (id) => {
+  if (id) {
+    userCache.delete(id.toString());
+  }
+};
+
 export const verifyToken = async (req, res, next) => {
   const token = req.header("auth-token");
 

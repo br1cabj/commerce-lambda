@@ -62,17 +62,7 @@ const globalLimiter = rateLimit({
 });
 app.use("/api/", globalLimiter);
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: "Too many authentication attempts, please try again in 15 minutes.",
-});
-
-app.use("/api/users/login", authLimiter);
-app.use("/api/users/register", authLimiter);
-app.use("/api/users/forgot-password", authLimiter);
+// Rate limits are managed directly inside the routers (e.g. users.routes.js)
 
 const tmpDir = os.tmpdir();
 

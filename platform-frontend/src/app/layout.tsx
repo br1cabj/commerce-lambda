@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
       process.env.INTERNAL_API_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
       "http://localhost:3001/api";
-    const res = await fetch(`${apiUrl}/store/config`, {
+    const res = await fetch(`${apiUrl}/store`, {
       headers: { 
         "x-tenant-slug": tenantSlug,
         "x-tenant-domain": tenantDomain
@@ -74,6 +74,29 @@ export default async function RootLayout({
     headersList.get("x-tenant-slug") ||
     process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
     null;
+  const tenantDomain = headersList.get("x-tenant-domain") || "";
+
+  let initialConfig = null;
+  if (tenantSlug) {
+    try {
+      const apiUrl =
+        process.env.INTERNAL_API_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://localhost:3001/api";
+      const res = await fetch(`${apiUrl}/store`, {
+        headers: { 
+          "x-tenant-slug": tenantSlug,
+          "x-tenant-domain": tenantDomain
+        },
+        next: { revalidate: 60 },
+      });
+      if (res.ok) {
+        initialConfig = await res.json();
+      }
+    } catch (err) {
+      console.error("Error pre-fetching tenant config in RootLayout:", err);
+    }
+  }
 
   return (
     <html lang="en" className={`${poppins.variable} h-full antialiased`}>
@@ -81,7 +104,7 @@ export default async function RootLayout({
         className="min-h-full flex flex-col"
         style={{ fontFamily: "var(--font-poppins), sans-serif" }}
       >
-        <TenantProvider initialSlug={tenantSlug}>
+        <TenantProvider initialSlug={tenantSlug} initialConfig={initialConfig}>
           <AnnouncementBarWrapper />
           <Navbar />
           <main className="flex-1">{children}</main>

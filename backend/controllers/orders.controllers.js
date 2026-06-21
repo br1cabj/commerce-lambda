@@ -182,8 +182,9 @@ export const createOrder = async (req, res) => {
 export const getMyOrders = async (req, res) => {
   try {
     const { page = 1, limit: rawLimit = 20 } = req.query;
-    const limit = Math.min(Number(rawLimit) || 20, 100);
-    const skip = (page - 1) * limit;
+    const limitNumber = Math.min(Math.max(1, Number(rawLimit) || 20), 100);
+    const pageNumber = Math.max(1, Number(page) || 1);
+    const skip = (pageNumber - 1) * limitNumber;
 
     const [orders, total] = await Promise.all([
       Order.find({
@@ -192,7 +193,7 @@ export const getMyOrders = async (req, res) => {
       })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
+        .limit(limitNumber),
       Order.countDocuments({
         tenantId: req.tenant._id,
         user: req.user.id,
@@ -202,8 +203,8 @@ export const getMyOrders = async (req, res) => {
     res.status(200).json({
       info: {
         total,
-        currentPage: Number(page),
-        totalPages: Math.ceil(total / limit),
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
       },
       results: orders,
     });
@@ -216,28 +217,29 @@ export const getMyOrders = async (req, res) => {
 export const getAllOrders = async (req, res) => {
   try {
     const { page = 1, limit: rawLimit = 20, status } = req.query;
-    const limit = Math.min(Number(rawLimit) || 20, 100);
+    const limitNumber = Math.min(Math.max(1, Number(rawLimit) || 20), 100);
+    const pageNumber = Math.max(1, Number(page) || 1);
     let query = { tenantId: req.tenant._id };
     if (status && VALID_ORDER_STATUSES.includes(status)) {
       query.status = status;
     }
 
-    const skip = (page - 1) * limit;
+    const skip = (pageNumber - 1) * limitNumber;
 
     const [orders, total] = await Promise.all([
       Order.find(query)
         .populate("user", "name email")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
+        .limit(limitNumber),
       Order.countDocuments(query),
     ]);
 
     res.status(200).json({
       info: {
         total,
-        currentPage: Number(page),
-        totalPages: Math.ceil(total / limit),
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
       },
       results: orders,
     });

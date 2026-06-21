@@ -4,18 +4,9 @@ import { useEffect, useState } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { ProductCard } from "@/components/ProductCard";
 import { api } from "@/lib/api";
+import { SlidersHorizontal } from "lucide-react";
 
-interface Product {
-  _id: string;
-  model: string;
-  brand: string;
-  price: number;
-  discount: number;
-  images: string[];
-  sizes: { size: string; stock: number }[];
-  stock: number;
-  category: string;
-}
+import type { Product } from "@/types";
 
 export default function CatalogPage() {
   const { config } = useTenant();
@@ -25,6 +16,7 @@ export default function CatalogPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -34,26 +26,35 @@ export default function CatalogPage() {
         const params = new URLSearchParams({ limit: "100" });
         if (selectedBrand) params.set("brand", selectedBrand);
         if (selectedSize) params.set("size", selectedSize);
-        if (sortBy) params.set("sort", sortBy);
-        if (priceRange.max < 1000) params.set("maxPrice", priceRange.max.toString());
+        
+        // Map frontend sorting options to backend contract
+        if (sortBy === "price_asc") {
+          params.set("sort", "price");
+          params.set("order", "asc");
+        } else if (sortBy === "price_desc") {
+          params.set("sort", "price");
+          params.set("order", "desc");
+        } else if (sortBy === "newest") {
+          params.set("sort", "createdAt");
+          params.set("order", "desc");
+        } else {
+          params.set("sort", sortBy);
+        }
+
+        // Apply price range filter in API query
+        if (priceRange.min > 0) {
+          params.set("minPrice", priceRange.min.toString());
+        }
+        if (priceRange.max < 1000) {
+          params.set("maxPrice", priceRange.max.toString());
+        }
 
         const data = (await api.get(
           `/products?${params.toString()}`,
           config.slug,
         )) as { results: Product[] };
         
-        let filtered = data.results || [];
-        
-        // Frontend fallback for sorting if backend doesn't support it yet
-        if (sortBy === 'price_asc') {
-          filtered.sort((a, b) => a.price - b.price);
-        } else if (sortBy === 'price_desc') {
-          filtered.sort((a, b) => b.price - a.price);
-        }
-        
-        // Frontend fallback for price filtering
-        filtered = filtered.filter(p => p.price >= priceRange.min && p.price <= priceRange.max);
-        
+        const filtered = data.results || [];
         setProducts(filtered);
       } catch (err) {
         console.error("Error loading products:", err);
@@ -77,13 +78,22 @@ export default function CatalogPage() {
         <h1 className="text-2xl font-bold uppercase tracking-tight">
           All Products
         </h1>
-        <span className="text-gray-500 text-sm">
-          {products.length} Products
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            className="lg:hidden flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters {mobileFiltersOpen ? "✕" : ""}
+          </button>
+          <span className="text-gray-500 text-sm font-medium">
+            {products.length} Products
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="bg-white rounded-xl shadow-sm border p-6 h-fit sticky top-24">
+        <div className={`bg-white rounded-xl shadow-sm border p-6 h-fit sticky top-24 ${mobileFiltersOpen ? "block" : "hidden lg:block"}`}>
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-sm uppercase">Filters</h3>
             <button
