@@ -19,6 +19,8 @@ export interface Product {
   salesCount?: number;
   category?: string;
   description?: string;
+  sku?: string;
+  slug?: string;
 }
 
 export interface Review {

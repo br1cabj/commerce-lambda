@@ -161,6 +161,16 @@ export default function ProductPage() {
             {product.model}
           </h1>
 
+          {product.sku && (
+            <p className="text-sm text-gray-400 mt-1 font-medium">SKU: {product.sku}</p>
+          )}
+
+          {product.description && (
+            <div className="mt-6 prose prose-sm text-gray-600 max-w-none whitespace-pre-line">
+              {product.description}
+            </div>
+          )}
+
           <div className="mt-6">
             {product.discount > 0 ? (
               <div className="flex items-center gap-4">

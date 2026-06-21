@@ -12,6 +12,9 @@ const productSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    sku: { type: String, trim: true },
+    slug: { type: String, lowercase: true, trim: true, sparse: true },
+    description: { type: String, default: "" },
     brand: { type: String, required: true, trim: true },
     model: { type: String, required: true, trim: true },
     price: { type: Number, required: true, min: 0 },
@@ -43,7 +46,8 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ tenantId: 1, isDeleted: 1 });
 productSchema.index({ tenantId: 1, category: 1 });
 productSchema.index({ tenantId: 1, isFeatured: 1 });
+productSchema.index({ tenantId: 1, slug: 1 });
 productSchema.index({ tenantId: 1, brand: 1, model: 1 });
-productSchema.index({ tenantId: 1, brand: "text", model: "text", category: "text" });
+productSchema.index({ tenantId: 1, brand: "text", model: "text", category: "text", description: "text" });
 
 export default mongoose.model("Product", productSchema);

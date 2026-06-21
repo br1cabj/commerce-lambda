@@ -93,7 +93,7 @@ export function ProductCard({ product, accentColor }: ProductCardProps) {
 
       {/* Image */}
       <Link
-        href={`/product/${product._id}`}
+        href={`/product/${product.slug || product._id}`}
         className="block relative h-56 bg-gray-50 flex items-center justify-center overflow-hidden"
       >
         {mainImg ? (
@@ -132,7 +132,7 @@ export function ProductCard({ product, accentColor }: ProductCardProps) {
         <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">
           {product.brand}
         </p>
-        <Link href={`/product/${product._id}`} className="flex-1">
+        <Link href={`/product/${product.slug || product._id}`} className="flex-1">
           <h3 className="font-semibold text-gray-800 text-base leading-snug hover:opacity-80 transition-opacity line-clamp-2">
             {product.model}
           </h3>

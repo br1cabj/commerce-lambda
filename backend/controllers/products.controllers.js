@@ -82,11 +82,17 @@ export const getAllProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const productFound = await Product.findOne({
-      _id: id,
+    const query = {
       tenantId: req.tenant._id,
       isDeleted: false,
-    });
+    };
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      query.$or = [{ _id: id }, { slug: id }];
+    } else {
+      query.slug = id;
+    }
+
+    const productFound = await Product.findOne(query);
 
     if (!productFound)
       return res.status(404).json({ message: "Product not found." });
@@ -116,7 +122,11 @@ export const createProduct = async (req, res) => {
       isFeatured,
       isNew,
       isBestSeller,
+      sku,
     } = req.body;
+
+    const baseSlug = `${brand}-${model}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
     const productData = {
       tenantId: req.tenant._id,
@@ -125,7 +135,9 @@ export const createProduct = async (req, res) => {
       price,
       discount: discount || 0,
       category,
-      description,
+      description: description || "",
+      sku: sku || "",
+      slug,
       earnedPoints: earnedPoints || 0,
       isFeatured: isFeatured || false,
       isNew: isNew || false,
@@ -244,6 +256,7 @@ export const updateProduct = async (req, res) => {
       isFeatured,
       isNew,
       isBestSeller,
+      sku,
     } = req.body;
 
     const productData = {};
@@ -253,6 +266,7 @@ export const updateProduct = async (req, res) => {
     if (discount !== undefined) productData.discount = discount;
     if (category !== undefined) productData.category = category;
     if (description !== undefined) productData.description = description;
+    if (sku !== undefined) productData.sku = sku;
     if (earnedPoints !== undefined) productData.earnedPoints = earnedPoints;
     if (isFeatured !== undefined) productData.isFeatured = isFeatured;
     if (isNew !== undefined) productData.isNew = isNew;

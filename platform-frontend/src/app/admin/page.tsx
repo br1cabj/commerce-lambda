@@ -33,6 +33,8 @@ export default function AdminPage() {
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [discount, setDiscount] = useState("0");
   const [sizes, setSizes] = useState<{ size: string; stock: string }[]>([
@@ -40,6 +42,7 @@ export default function AdminPage() {
   ]);
   const [images, setImages] = useState<FileList | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [categoriesList, setCategoriesList] = useState<{name: string, slug: string}[]>([]);
   const [error, setError] = useState("");
 
   const loadProducts = useCallback(async () => {
@@ -55,6 +58,17 @@ export default function AdminPage() {
     }
   }, [config]);
 
+  const loadCategories = useCallback(async () => {
+    if (!config) return [];
+    try {
+      const data = (await api.get("/categories?limit=100", config.slug)) as any;
+      return data.results || [];
+    } catch (err) {
+      console.error("Error loading categories:", err);
+      return [];
+    }
+  }, [config]);
+
   useEffect(() => {
     if (!isHydrated) return;
     if (!isAuthenticated || !isAdmin) {
@@ -62,20 +76,28 @@ export default function AdminPage() {
       return;
     }
     let ignore = false;
-    loadProducts().then((result) => {
-      if (!ignore) setProducts(result);
+    Promise.all([loadProducts(), loadCategories()]).then(([prods, cats]) => {
+      if (!ignore) {
+        setProducts(prods);
+        setCategoriesList(cats);
+        if (cats.length > 0 && !category) {
+          setCategory(cats[0].slug);
+        }
+      }
     });
     return () => {
       ignore = true;
     };
-  }, [isAuthenticated, isAdmin, router, loadProducts, isHydrated]);
+  }, [isAuthenticated, isAdmin, router, loadProducts, loadCategories, isHydrated]);
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = (product: any) => {
     setError("");
     setEditingProduct(product);
     setName(product.model);
     setBrand(product.brand);
     setCategory(product.category || "");
+    setDescription(product.description || "");
+    setSku(product.sku || "");
     setPrice(product.price.toString());
     setDiscount(product.discount.toString());
     setSizes(
@@ -139,6 +161,8 @@ export default function AdminPage() {
     formData.append("model", name);
     formData.append("brand", brand);
     formData.append("category", category);
+    formData.append("description", description);
+    formData.append("sku", sku);
     formData.append("price", price);
     formData.append("discount", parsedDiscount);
     formData.append("sizes", JSON.stringify(sizesList));
@@ -163,7 +187,9 @@ export default function AdminPage() {
   const resetForm = () => {
     setName("");
     setBrand("");
-    setCategory("");
+    setCategory(categoriesList.length > 0 ? categoriesList[0].slug : "");
+    setDescription("");
+    setSku("");
     setPrice("");
     setDiscount("0");
     setSizes([{ size: "", stock: "" }]);
@@ -199,44 +225,69 @@ export default function AdminPage() {
               : "Add New Product"}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Model
-                </label>
+                <label className="block text-sm font-medium mb-1">Name / Model *</label>
                 <input
                   type="text"
+                  required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border bg-gray-50 focus:bg-white transition-colors"
-                  required
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="e.g. Air Max 90"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Brand
-                </label>
+                <label className="block text-sm font-medium mb-1">Brand *</label>
                 <input
                   type="text"
+                  required
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border bg-gray-50 focus:bg-white transition-colors"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Category
-                </label>
-                <input
-                  type="text"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border bg-gray-50 focus:bg-white transition-colors"
-                  required
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="e.g. Nike"
                 />
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Category *</label>
+                <select
+                  required
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-3 py-2 border rounded bg-white"
+                >
+                  <option value="" disabled>Select a category</option>
+                  {categoriesList.map((cat) => (
+                    <option key={cat.slug} value={cat.slug}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">SKU (Optional)</label>
+                <input
+                  type="text"
+                  value={sku}
+                  onChange={(e) => setSku(e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="e.g. NK-AM90-001"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-3 py-2 border rounded"
+                rows={4}
+                placeholder="Detailed product description..."
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -296,7 +347,7 @@ export default function AdminPage() {
             </div>
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
               <h3 className="font-extrabold text-sm mb-4 text-gray-800">
-                Sizes & Stock
+                Variants & Stock
               </h3>
               {sizes.map((s, i) => (
                 <div key={i} className="flex gap-3 mb-3">
@@ -304,7 +355,7 @@ export default function AdminPage() {
                     type="text"
                     value={s.size}
                     onChange={(e) => updateSize(i, "size", e.target.value)}
-                    placeholder="Size (e.g., L, 42)"
+                    placeholder="Variant (e.g. Red, XL, 128GB)"
                     className="flex-1 px-4 py-2.5 rounded-lg border text-sm"
                     required
                   />
