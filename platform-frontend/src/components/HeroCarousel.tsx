@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
@@ -21,9 +21,13 @@ export function HeroCarousel({
   const { t } = useTranslations();
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const enabledSlides = slides
-    .filter((s) => s.enabled)
-    .sort((a, b) => a.order - b.order);
+  const enabledSlides = useMemo(
+    () =>
+      slides
+        .filter((s) => s.enabled)
+        .sort((a, b) => a.order - b.order),
+    [slides],
+  );
 
   useEffect(() => {
     if (enabledSlides.length <= 1) return;
@@ -48,23 +52,29 @@ export function HeroCarousel({
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + enabledSlides.length) % enabledSlides.length);
+    setCurrentSlide(
+      (prev) => (prev - 1 + enabledSlides.length) % enabledSlides.length,
+    );
   };
 
   return (
-    <section className="relative h-[500px] md:h-[600px] flex items-center justify-center overflow-hidden bg-gray-900">
+    <section
+      className="relative h-[500px] md:h-[600px] flex items-center justify-center overflow-hidden bg-gray-900"
+      aria-roledescription="carousel"
+      aria-label="Hero carousel"
+    >
       {slide.imageUrl && (
         <Image
           src={slide.imageUrl}
           alt={t(slide.title)}
           fill
           className="absolute inset-0 object-cover opacity-40 transition-opacity duration-500"
-          unoptimized
+
           priority
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
-      
+
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 leading-tight">
           {t(slide.title)}
@@ -99,12 +109,14 @@ export function HeroCarousel({
           <button
             onClick={prevSlide}
             className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+            aria-label="Previous slide"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
           <button
             onClick={nextSlide}
             className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+            aria-label="Next slide"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
@@ -119,6 +131,7 @@ export function HeroCarousel({
                     ? "w-8 bg-white"
                     : "w-2 bg-white/50 hover:bg-white/70"
                 }`}
+                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>

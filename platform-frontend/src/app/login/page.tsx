@@ -6,6 +6,7 @@ import { useTenant } from "@/hooks/useTenant";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const { config } = useTenant();
@@ -23,11 +24,14 @@ export default function LoginPage() {
 
     try {
       await login(email, password, config?.slug || "");
+      toast.success(`Welcome back to ${config?.name}!`);
       const redirectUrl = localStorage.getItem("redirectAfterLogin") || "/";
       localStorage.removeItem("redirectAfterLogin");
-      router.push(redirectUrl);
+      const safePath = redirectUrl.startsWith("/") ? redirectUrl : "/";
+      router.push(safePath);
       router.refresh();
     } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Login failed");
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
@@ -50,7 +54,7 @@ export default function LoginPage() {
               width={64}
               height={64}
               className="rounded-full mx-auto mb-3 object-cover"
-              unoptimized
+
             />
           )}
           <h2 className="text-2xl font-bold">{config.name}</h2>

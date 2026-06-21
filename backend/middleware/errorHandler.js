@@ -1,14 +1,27 @@
-/**
- * Middleware centralizado para el manejo de errores.
- * Captura todos los errores de la aplicación y devuelve una respuesta estandarizada.
- */
 const errorHandler = (err, req, res, next) => {
-  console.error(`[Error] ${req.method} ${req.url}:`, err.message || err);
+  console.error(`[Error] ${req.method} ${req.url}:`, err);
 
-  const statusCode = err.statusCode || 500;
-  const message = err.message || "Error interno del servidor";
+  if (res.headersSent) {
+    return next(err);
+  }
 
-  // En desarrollo podemos enviar el stack, pero en producción es mejor no hacerlo.
+  let statusCode = err.statusCode || 500;
+  let message = err.message || "Internal server error";
+
+  if (err.name === "ValidationError") {
+    statusCode = 400;
+    const details = Object.values(err.errors || {})
+      .map((e) => e.message)
+      .join(", ");
+    message = details || message;
+  } else if (err.code === 11000) {
+    statusCode = 409;
+    message = "A record with this value already exists.";
+  } else if (err.name === "CastError") {
+    statusCode = 400;
+    message = "Invalid ID format.";
+  }
+
   const response = {
     status: "error",
     statusCode,

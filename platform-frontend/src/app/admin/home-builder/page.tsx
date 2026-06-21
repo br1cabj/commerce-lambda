@@ -17,7 +17,13 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
-import type { HeroSlide, Banner, TrustSignal, Translation, CategoriesConfig } from "@/stores/tenantStore";
+import type {
+  HeroSlide,
+  Banner,
+  TrustSignal,
+  Translation,
+  CategoriesConfig,
+} from "@/stores/tenantStore";
 
 interface TranslationInputProps {
   value: Translation;
@@ -31,7 +37,9 @@ function TranslationInput({ value, onChange, label }: TranslationInputProps) {
       <label className="block text-sm font-bold text-gray-700">{label}</label>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <span className="text-xs font-semibold text-gray-500 uppercase">English</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase">
+            English
+          </span>
           <input
             type="text"
             value={value.en}
@@ -41,7 +49,9 @@ function TranslationInput({ value, onChange, label }: TranslationInputProps) {
           />
         </div>
         <div>
-          <span className="text-xs font-semibold text-gray-500 uppercase">Español</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase">
+            Español
+          </span>
           <input
             type="text"
             value={value.es}
@@ -57,22 +67,30 @@ function TranslationInput({ value, onChange, label }: TranslationInputProps) {
 
 export default function AdminHomeBuilderPage() {
   const { config, fetchConfig } = useTenant();
-  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
+  const { isAuthenticated, isAdmin, isHydrated } = useAuth();
   const router = useRouter();
 
-  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(config?.homeConfig?.heroSlides || []);
-  const [banners, setBanners] = useState<Banner[]>(config?.homeConfig?.banners || []);
-  const [trustSignals] = useState<TrustSignal[]>(config?.homeConfig?.trustSignals || []);
-  const [categoriesConfig, setCategoriesConfig] = useState<CategoriesConfig>(config?.homeConfig?.categoriesConfig || {
-    layout: "grid",
-    columns: 3,
-    showDescription: true,
-    showProductCount: false,
-    cardStyle: "overlay",
-    hoverEffect: "zoom",
-    borderRadius: "2xl",
-    maxHeight: "256px",
-  });
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(
+    config?.homeConfig?.heroSlides || [],
+  );
+  const [banners, setBanners] = useState<Banner[]>(
+    config?.homeConfig?.banners || [],
+  );
+  const [trustSignals] = useState<TrustSignal[]>(
+    config?.homeConfig?.trustSignals || [],
+  );
+  const [categoriesConfig, setCategoriesConfig] = useState<CategoriesConfig>(
+    config?.homeConfig?.categoriesConfig || {
+      layout: "grid",
+      columns: 3,
+      showDescription: true,
+      showProductCount: false,
+      cardStyle: "overlay",
+      hoverEffect: "zoom",
+      borderRadius: "2xl",
+      maxHeight: "256px",
+    },
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -99,13 +117,15 @@ export default function AdminHomeBuilderPage() {
             categoriesConfig,
           },
         },
-        config.slug
+        config.slug,
       );
       await fetchConfig(config.slug);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error saving configuration");
+      setError(
+        err instanceof Error ? err.message : "Error saving configuration",
+      );
     } finally {
       setSaving(false);
     }
@@ -167,9 +187,9 @@ export default function AdminHomeBuilderPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold">Home Builder</h2>
-        <p className="text-gray-500 text-sm mt-1">
-          Configure your homepage content in multiple languages.
-        </p>
+          <p className="text-gray-500 text-sm mt-1">
+            Configure your homepage content in multiple languages.
+          </p>
         </div>
         <button
           onClick={saveAll}
@@ -218,16 +238,26 @@ export default function AdminHomeBuilderPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <GripVertical className="h-5 w-5 text-gray-400 cursor-move" />
-                  <span className="font-semibold text-sm">Slide {index + 1}</span>
+                  <span className="font-semibold text-sm">
+                    Slide {index + 1}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => updateHeroSlide(index, { enabled: !slide.enabled })}
+                    onClick={() =>
+                      updateHeroSlide(index, { enabled: !slide.enabled })
+                    }
                     className={`p-2 rounded ${
-                      slide.enabled ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"
+                      slide.enabled
+                        ? "bg-green-100 text-green-600"
+                        : "bg-gray-100 text-gray-400"
                     }`}
                   >
-                    {slide.enabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {slide.enabled ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
                   </button>
                   <button
                     onClick={() => removeHeroSlide(index)}
@@ -247,7 +277,9 @@ export default function AdminHomeBuilderPage() {
                 <TranslationInput
                   label="Subtitle"
                   value={slide.subtitle}
-                  onChange={(value) => updateHeroSlide(index, { subtitle: value })}
+                  onChange={(value) =>
+                    updateHeroSlide(index, { subtitle: value })
+                  }
                 />
               </div>
 
@@ -259,7 +291,9 @@ export default function AdminHomeBuilderPage() {
                   <input
                     type="text"
                     value={slide.imageUrl}
-                    onChange={(e) => updateHeroSlide(index, { imageUrl: e.target.value })}
+                    onChange={(e) =>
+                      updateHeroSlide(index, { imageUrl: e.target.value })
+                    }
                     className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
                     placeholder="https://example.com/image.jpg"
                   />
@@ -271,7 +305,11 @@ export default function AdminHomeBuilderPage() {
                   <input
                     type="number"
                     value={slide.order}
-                    onChange={(e) => updateHeroSlide(index, { order: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      updateHeroSlide(index, {
+                        order: parseInt(e.target.value),
+                      })
+                    }
                     className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
                   />
                 </div>
@@ -281,7 +319,9 @@ export default function AdminHomeBuilderPage() {
                 <TranslationInput
                   label="Primary CTA"
                   value={slide.ctaPrimary}
-                  onChange={(value) => updateHeroSlide(index, { ctaPrimary: value })}
+                  onChange={(value) =>
+                    updateHeroSlide(index, { ctaPrimary: value })
+                  }
                 />
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -290,7 +330,9 @@ export default function AdminHomeBuilderPage() {
                   <input
                     type="text"
                     value={slide.ctaPrimaryLink}
-                    onChange={(e) => updateHeroSlide(index, { ctaPrimaryLink: e.target.value })}
+                    onChange={(e) =>
+                      updateHeroSlide(index, { ctaPrimaryLink: e.target.value })
+                    }
                     className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
                     placeholder="/catalog"
                   />
@@ -301,7 +343,9 @@ export default function AdminHomeBuilderPage() {
                 <TranslationInput
                   label="Secondary CTA"
                   value={slide.ctaSecondary}
-                  onChange={(value) => updateHeroSlide(index, { ctaSecondary: value })}
+                  onChange={(value) =>
+                    updateHeroSlide(index, { ctaSecondary: value })
+                  }
                 />
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -310,7 +354,11 @@ export default function AdminHomeBuilderPage() {
                   <input
                     type="text"
                     value={slide.ctaSecondaryLink}
-                    onChange={(e) => updateHeroSlide(index, { ctaSecondaryLink: e.target.value })}
+                    onChange={(e) =>
+                      updateHeroSlide(index, {
+                        ctaSecondaryLink: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
                     placeholder="/catalog"
                   />
@@ -345,16 +393,26 @@ export default function AdminHomeBuilderPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <GripVertical className="h-5 w-5 text-gray-400 cursor-move" />
-                  <span className="font-semibold text-sm">Banner {index + 1}</span>
+                  <span className="font-semibold text-sm">
+                    Banner {index + 1}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => updateBanner(index, { enabled: !banner.enabled })}
+                    onClick={() =>
+                      updateBanner(index, { enabled: !banner.enabled })
+                    }
                     className={`p-2 rounded ${
-                      banner.enabled ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"
+                      banner.enabled
+                        ? "bg-green-100 text-green-600"
+                        : "bg-gray-100 text-gray-400"
                     }`}
                   >
-                    {banner.enabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {banner.enabled ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
                   </button>
                   <button
                     onClick={() => removeBanner(index)}
@@ -374,7 +432,9 @@ export default function AdminHomeBuilderPage() {
                 <TranslationInput
                   label="Description"
                   value={banner.description}
-                  onChange={(value) => updateBanner(index, { description: value })}
+                  onChange={(value) =>
+                    updateBanner(index, { description: value })
+                  }
                 />
               </div>
 
@@ -386,7 +446,9 @@ export default function AdminHomeBuilderPage() {
                   <input
                     type="text"
                     value={banner.imageUrl}
-                    onChange={(e) => updateBanner(index, { imageUrl: e.target.value })}
+                    onChange={(e) =>
+                      updateBanner(index, { imageUrl: e.target.value })
+                    }
                     className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
                     placeholder="https://example.com/banner.jpg"
                   />
@@ -398,7 +460,9 @@ export default function AdminHomeBuilderPage() {
                   <input
                     type="text"
                     value={banner.link}
-                    onChange={(e) => updateBanner(index, { link: e.target.value })}
+                    onChange={(e) =>
+                      updateBanner(index, { link: e.target.value })
+                    }
                     className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
                     placeholder="/catalog"
                   />
@@ -410,7 +474,9 @@ export default function AdminHomeBuilderPage() {
                   <input
                     type="number"
                     value={banner.order}
-                    onChange={(e) => updateBanner(index, { order: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      updateBanner(index, { order: parseInt(e.target.value) })
+                    }
                     className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
                   />
                 </div>
@@ -431,19 +497,34 @@ export default function AdminHomeBuilderPage() {
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Layout</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Layout
+            </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
                 { value: "grid", label: "Grid", icon: "⊞" },
                 { value: "masonry", label: "Masonry", icon: "▦" },
-                { value: "horizontal-scroll", label: "Horizontal Scroll", icon: "←→" },
+                {
+                  value: "horizontal-scroll",
+                  label: "Horizontal Scroll",
+                  icon: "←→",
+                },
                 { value: "cards-icon", label: "Cards with Icons", icon: "🎯" },
-                { value: "cards-image", label: "Cards with Images", icon: "🖼️" },
+                {
+                  value: "cards-image",
+                  label: "Cards with Images",
+                  icon: "🖼️",
+                },
                 { value: "list", label: "List", icon: "☰" },
               ].map((layout) => (
                 <button
                   key={layout.value}
-                  onClick={() => setCategoriesConfig({ ...categoriesConfig, layout: layout.value as CategoriesConfig["layout"] })}
+                  onClick={() =>
+                    setCategoriesConfig({
+                      ...categoriesConfig,
+                      layout: layout.value as CategoriesConfig["layout"],
+                    })
+                  }
                   className={`p-4 rounded-lg border-2 text-center transition-all ${
                     categoriesConfig.layout === layout.value
                       ? "border-gray-900 bg-gray-50"
@@ -459,10 +540,17 @@ export default function AdminHomeBuilderPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Columns</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Columns
+              </label>
               <select
                 value={categoriesConfig.columns}
-                onChange={(e) => setCategoriesConfig({ ...categoriesConfig, columns: parseInt(e.target.value) })}
+                onChange={(e) =>
+                  setCategoriesConfig({
+                    ...categoriesConfig,
+                    columns: parseInt(e.target.value),
+                  })
+                }
                 className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
               >
                 <option value={2}>2 Columns</option>
@@ -473,10 +561,17 @@ export default function AdminHomeBuilderPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Card Style</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Card Style
+              </label>
               <select
                 value={categoriesConfig.cardStyle}
-                onChange={(e) => setCategoriesConfig({ ...categoriesConfig, cardStyle: e.target.value as CategoriesConfig["cardStyle"] })}
+                onChange={(e) =>
+                  setCategoriesConfig({
+                    ...categoriesConfig,
+                    cardStyle: e.target.value as CategoriesConfig["cardStyle"],
+                  })
+                }
                 className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
               >
                 <option value="overlay">Overlay (text on image)</option>
@@ -487,10 +582,18 @@ export default function AdminHomeBuilderPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Hover Effect</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Hover Effect
+              </label>
               <select
                 value={categoriesConfig.hoverEffect}
-                onChange={(e) => setCategoriesConfig({ ...categoriesConfig, hoverEffect: e.target.value as CategoriesConfig["hoverEffect"] })}
+                onChange={(e) =>
+                  setCategoriesConfig({
+                    ...categoriesConfig,
+                    hoverEffect: e.target
+                      .value as CategoriesConfig["hoverEffect"],
+                  })
+                }
                 className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
               >
                 <option value="zoom">Zoom In</option>
@@ -501,10 +604,17 @@ export default function AdminHomeBuilderPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Border Radius</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Border Radius
+              </label>
               <select
                 value={categoriesConfig.borderRadius}
-                onChange={(e) => setCategoriesConfig({ ...categoriesConfig, borderRadius: e.target.value })}
+                onChange={(e) =>
+                  setCategoriesConfig({
+                    ...categoriesConfig,
+                    borderRadius: e.target.value,
+                  })
+                }
                 className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
               >
                 <option value="none">None (square)</option>
@@ -519,10 +629,17 @@ export default function AdminHomeBuilderPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Max Height</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Max Height
+              </label>
               <select
                 value={categoriesConfig.maxHeight}
-                onChange={(e) => setCategoriesConfig({ ...categoriesConfig, maxHeight: e.target.value })}
+                onChange={(e) =>
+                  setCategoriesConfig({
+                    ...categoriesConfig,
+                    maxHeight: e.target.value,
+                  })
+                }
                 className="w-full px-3 py-2 rounded-lg border bg-gray-50 text-sm"
               >
                 <option value="200px">200px (small)</option>
@@ -538,7 +655,12 @@ export default function AdminHomeBuilderPage() {
               <input
                 type="checkbox"
                 checked={categoriesConfig.showDescription}
-                onChange={(e) => setCategoriesConfig({ ...categoriesConfig, showDescription: e.target.checked })}
+                onChange={(e) =>
+                  setCategoriesConfig({
+                    ...categoriesConfig,
+                    showDescription: e.target.checked,
+                  })
+                }
                 className="w-4 h-4 rounded"
               />
               <span className="text-sm font-medium">Show Description</span>
@@ -548,7 +670,12 @@ export default function AdminHomeBuilderPage() {
               <input
                 type="checkbox"
                 checked={categoriesConfig.showProductCount}
-                onChange={(e) => setCategoriesConfig({ ...categoriesConfig, showProductCount: e.target.checked })}
+                onChange={(e) =>
+                  setCategoriesConfig({
+                    ...categoriesConfig,
+                    showProductCount: e.target.checked,
+                  })
+                }
                 className="w-4 h-4 rounded"
               />
               <span className="text-sm font-medium">Show Product Count</span>
@@ -561,10 +688,12 @@ export default function AdminHomeBuilderPage() {
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h3 className="text-lg font-bold mb-4">Trust Signals</h3>
         <p className="text-sm text-gray-500 mb-4">
-          Configure the trust signals displayed on your homepage. These help build confidence with your customers.
+          Configure the trust signals displayed on your homepage. These help
+          build confidence with your customers.
         </p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-          Trust signals are currently using default translations. To customize them, you&apos;ll need to update the translations in the code.
+          Trust signals are currently using default translations. To customize
+          them, you&apos;ll need to update the translations in the code.
         </div>
       </div>
     </div>

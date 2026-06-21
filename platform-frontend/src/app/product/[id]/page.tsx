@@ -136,7 +136,7 @@ export default function ProductPage() {
                   width={80}
                   height={80}
                   className="w-full h-full object-cover rounded-lg"
-                  unoptimized
+
                 />
               </button>
             ))}
@@ -148,7 +148,7 @@ export default function ProductPage() {
               width={500}
               height={400}
               className="max-h-[400px] max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
-              unoptimized
+
             />
           </div>
         </div>
@@ -209,37 +209,44 @@ export default function ProductPage() {
 
           <button
             onClick={handleAddToCart}
-            disabled={!selectedSize}
-            className="mt-6 w-full py-4 rounded-full font-bold text-lg text-white transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: config.theme.primaryColor }}
+            disabled={!selectedSize || product.stock === 0}
+            className={`mt-6 w-full py-4 rounded-full font-bold text-lg text-white transition-transform ${product.stock === 0 ? "bg-gray-400 cursor-not-allowed" : "hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"}`}
+            style={product.stock > 0 ? { backgroundColor: config.theme.primaryColor } : {}}
           >
-            <ShoppingCart className="h-5 w-5 inline mr-2" /> Add to Cart
+            <ShoppingCart className="h-5 w-5 inline mr-2" /> 
+            {product.stock === 0 ? "Sold Out / Agotado" : "Add to Cart"}
           </button>
 
           <div className="mt-8 border border-gray-100 rounded-2xl p-5 bg-white shadow-sm flex flex-col gap-4">
             {config.settings.shippingMethods.length > 0 ? (
-              config.settings.shippingMethods.map((method: { type: string; enabled: boolean; config: Record<string, unknown> }) => (
-                <div key={method.type} className="flex items-center gap-4">
-                  <Truck
-                    className="h-7 w-7 flex-shrink-0"
-                    style={{ color: config.theme.accentColor }}
-                  />
-                  <div>
-                    <h4 className="font-bold text-sm text-gray-800 uppercase tracking-wide">
-                      {method.type === "free"
-                        ? "Free Shipping"
-                        : method.type === "flat"
-                          ? "Flat Rate Shipping"
-                          : "Delivery Available"}
-                    </h4>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {method.type === "free"
-                        ? "Delivered directly to your door at no extra cost."
-                        : "Calculated at checkout based on your location."}
-                    </p>
+              config.settings.shippingMethods.map(
+                (method: {
+                  type: string;
+                  enabled: boolean;
+                  config: Record<string, unknown>;
+                }) => (
+                  <div key={method.type} className="flex items-center gap-4">
+                    <Truck
+                      className="h-7 w-7 flex-shrink-0"
+                      style={{ color: config.theme.accentColor }}
+                    />
+                    <div>
+                      <h4 className="font-bold text-sm text-gray-800 uppercase tracking-wide">
+                        {method.type === "free"
+                          ? "Free Shipping"
+                          : method.type === "flat"
+                            ? "Flat Rate Shipping"
+                            : "Delivery Available"}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {method.type === "free"
+                          ? "Delivered directly to your door at no extra cost."
+                          : "Calculated at checkout based on your location."}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))
+                ),
+              )
             ) : (
               <div className="flex items-center gap-4">
                 <Truck

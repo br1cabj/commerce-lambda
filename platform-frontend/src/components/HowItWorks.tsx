@@ -53,7 +53,10 @@ export function HowItWorks({
     {
       icon: PartyPopper,
       title: { en: "Enjoy!", es: "¡Disfruta!" },
-      description: { en: "Love your new products", es: "Disfruta tus nuevos productos" },
+      description: {
+        en: "Love your new products",
+        es: "Disfruta tus nuevos productos",
+      },
       number: "04",
     },
   ];

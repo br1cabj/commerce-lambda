@@ -28,7 +28,12 @@ const productSchema = new mongoose.Schema(
     discount: { type: Number, default: 0, min: 0, max: 100 },
     earnedPoints: { type: Number, default: 0, min: 0 },
     isFeatured: { type: Boolean, default: false },
+    isNew: { type: Boolean, default: false },
+    isBestSeller: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
+    salesCount: { type: Number, default: 0, min: 0 },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
+    numReviews: { type: Number, default: 0, min: 0 },
   },
   {
     timestamps: true,
@@ -38,5 +43,7 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ tenantId: 1, isDeleted: 1 });
 productSchema.index({ tenantId: 1, category: 1 });
 productSchema.index({ tenantId: 1, isFeatured: 1 });
+productSchema.index({ tenantId: 1, brand: 1, model: 1 });
+productSchema.index({ tenantId: 1, brand: "text", model: "text", category: "text" });
 
 export default mongoose.model("Product", productSchema);

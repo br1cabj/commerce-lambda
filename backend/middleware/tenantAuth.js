@@ -18,11 +18,9 @@ export const isAdminForTenant = (req, res, next) => {
     req.user.tenantId &&
     req.user.tenantId.toString() !== req.tenant._id.toString()
   ) {
-    return res
-      .status(403)
-      .json({
-        message: "Access denied. You do not have access to this store.",
-      });
+    return res.status(403).json({
+      message: "Access denied. You do not have access to this store.",
+    });
   }
 
   next();
@@ -30,11 +28,9 @@ export const isAdminForTenant = (req, res, next) => {
 
 export const isSuperAdmin = (req, res, next) => {
   if (!req.user || req.user.role !== "super_admin") {
-    return res
-      .status(403)
-      .json({
-        message: "Access denied. Platform administrator privileges required.",
-      });
+    return res.status(403).json({
+      message: "Access denied. Platform administrator privileges required.",
+    });
   }
   next();
 };

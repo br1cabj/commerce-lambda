@@ -28,7 +28,10 @@ export function NewsletterSection({
       setSubmitted(true);
       setEmail("");
     } catch (error) {
-      console.error("Newsletter subscription error:", error instanceof Error ? error.message : "Unknown error");
+      console.error(
+        "Newsletter subscription error:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
     } finally {
       setLoading(false);
     }
@@ -40,12 +43,21 @@ export function NewsletterSection({
       style={{ backgroundColor: primaryColor }}
     >
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: accentColor }} />
-        <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: accentColor }} />
+        <div
+          className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl"
+          style={{ backgroundColor: accentColor }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl"
+          style={{ backgroundColor: accentColor }}
+        />
       </div>
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-6" style={{ backgroundColor: `${accentColor}30` }}>
+        <div
+          className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-6"
+          style={{ backgroundColor: `${accentColor}30` }}
+        >
           <Mail className="h-8 w-8" style={{ color: accentColor }} />
         </div>
 
@@ -58,11 +70,19 @@ export function NewsletterSection({
 
         {submitted ? (
           <div className="flex items-center justify-center gap-3 text-white bg-white/10 backdrop-blur-sm rounded-full px-6 py-4 max-w-md mx-auto">
-            <CheckCircle className="h-6 w-6 flex-shrink-0" style={{ color: accentColor }} />
-            <span className="font-semibold">{t(translations?.newsletter?.success)}</span>
+            <CheckCircle
+              className="h-6 w-6 flex-shrink-0"
+              style={{ color: accentColor }}
+            />
+            <span className="font-semibold">
+              {t(translations?.newsletter?.success)}
+            </span>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+          >
             <input
               type="email"
               value={email}

@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { TenantProvider } from "@/components/TenantProvider";
 import { AnnouncementBarWrapper } from "@/components/AnnouncementBarWrapper";
 import { headers } from "next/headers";
+import { Toaster } from "react-hot-toast";
 
 const poppins = Poppins({
   weight: ["400", "600", "700", "800"],
@@ -22,10 +23,18 @@ export async function generateMetadata(): Promise<Metadata> {
     process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
     "default";
 
+  const tenantDomain = headersList.get("x-tenant-domain") || "";
+
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+    const apiUrl =
+      process.env.INTERNAL_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:3001/api";
     const res = await fetch(`${apiUrl}/store/config`, {
-      headers: { "x-tenant-slug": tenantSlug },
+      headers: { 
+        "x-tenant-slug": tenantSlug,
+        "x-tenant-domain": tenantDomain
+      },
       next: { revalidate: 60 },
     });
 
@@ -77,6 +86,7 @@ export default async function RootLayout({
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
+          <Toaster position="bottom-right" toastOptions={{ duration: 4000 }} />
         </TenantProvider>
       </body>
     </html>

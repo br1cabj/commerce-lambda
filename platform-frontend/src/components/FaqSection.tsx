@@ -52,37 +52,51 @@ export function FaqSection({
           <p className="text-gray-600 text-lg">{t(subtitle)}</p>
         </div>
 
-        <div className="space-y-3">
-          {enabledFaqs.map((faq, index) => (
-            <div
-              key={faq.id}
-              className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-200 hover:border-gray-300"
-            >
-              <button
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
-              >
-                <span className="font-semibold text-gray-900 pr-4">
-                  {t(faq.question)}
-                </span>
-                <ChevronDown
-                  className={`h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200 ${
-                    openIndex === index ? "rotate-180" : ""
-                  }`}
-                  style={openIndex === index ? { color: accentColor } : {}}
-                />
-              </button>
+        <div className="space-y-3" role="list">
+          {enabledFaqs.map((faq, index) => {
+            const isOpen = openIndex === index;
+            const panelId = `faq-panel-${faq.id}`;
+            const buttonId = `faq-button-${faq.id}`;
+            return (
               <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  openIndex === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                }`}
+                key={faq.id}
+                className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-200 hover:border-gray-300"
+                role="listitem"
               >
-                <div className="px-5 pb-5 text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
-                  {t(faq.answer)}
+                <button
+                  id={buttonId}
+                  onClick={() =>
+                    setOpenIndex(isOpen ? null : index)
+                  }
+                  className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                >
+                  <span className="font-semibold text-gray-900 pr-4">
+                    {t(faq.question)}
+                  </span>
+                  <ChevronDown
+                    className={`h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200 ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
+                    style={isOpen ? { color: accentColor } : {}}
+                  />
+                </button>
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={buttonId}
+                  className={`overflow-hidden transition-all duration-300 ${
+                    isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="px-5 pb-5 text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
+                    {t(faq.answer)}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="text-center mt-8">

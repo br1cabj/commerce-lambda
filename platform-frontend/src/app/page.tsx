@@ -1,22 +1,8 @@
 import { headers } from "next/headers";
 import { HomeClient } from "@/components/HomeClient";
 import { HomeStructuredData } from "@/components/HomeStructuredData";
-
-interface Product {
-  _id: string;
-  model: string;
-  brand: string;
-  price: number;
-  discount: number;
-  images: string[];
-  sizes: { size: string; stock: number }[];
-  stock: number;
-  isFeatured: boolean;
-  isNew?: boolean;
-  isBestSeller?: boolean;
-  createdAt?: string;
-  salesCount?: number;
-}
+import { getApiUrl } from "@/lib/serverApi";
+import type { Product } from "@/types";
 
 async function getTenantSlug() {
   const headersList = await headers();
@@ -29,8 +15,9 @@ async function getTenantSlug() {
 
 async function fetchConfig(slug: string) {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
-    const res = await fetch(`${apiUrl}/store/config/${slug}`, {
+    const apiUrl = getApiUrl();
+    const res = await fetch(`${apiUrl}/store/home-config`, {
+      headers: { "x-tenant-slug": slug },
       next: { revalidate: 60 },
     });
     if (!res.ok) return null;
@@ -40,9 +27,12 @@ async function fetchConfig(slug: string) {
   }
 }
 
-async function fetchProducts(slug: string, params: string = "isFeatured=true&limit=8") {
+async function fetchProducts(
+  slug: string,
+  params: string = "isFeatured=true&limit=8",
+) {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+    const apiUrl = getApiUrl();
     const res = await fetch(`${apiUrl}/products?${params}`, {
       headers: { "x-tenant-slug": slug },
       next: { revalidate: 60 },
@@ -56,7 +46,7 @@ async function fetchProducts(slug: string, params: string = "isFeatured=true&lim
 
 async function fetchReviews(slug: string) {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+    const apiUrl = getApiUrl();
     const res = await fetch(`${apiUrl}/reviews?limit=3`, {
       headers: { "x-tenant-slug": slug },
       next: { revalidate: 60 },
@@ -76,13 +66,14 @@ export default async function Home() {
   const config = await fetchConfig(slug);
   if (!config) return null;
 
-  const [featuredData, newData, bestSellersData, offersData, reviews] = await Promise.all([
-    fetchProducts(slug, "isFeatured=true&limit=8"),
-    fetchProducts(slug, "sort=createdAt&order=desc&limit=8"),
-    fetchProducts(slug, "sort=salesCount&order=desc&limit=8"),
-    fetchProducts(slug, "minDiscount=20&limit=8"),
-    fetchReviews(slug),
-  ]);
+  const [featuredData, newData, bestSellersData, offersData, reviews] =
+    await Promise.all([
+      fetchProducts(slug, "isFeatured=true&limit=8"),
+      fetchProducts(slug, "sort=createdAt&order=desc&limit=8"),
+      fetchProducts(slug, "sort=salesCount&order=desc&limit=8"),
+      fetchProducts(slug, "minDiscount=20&limit=8"),
+      fetchReviews(slug),
+    ]);
 
   const featuredProducts: Product[] = featuredData?.results || [];
   const newProducts: Product[] = newData?.results || [];

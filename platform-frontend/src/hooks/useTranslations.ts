@@ -1,15 +1,17 @@
 "use client";
 
 import { useTenantStore, type Translation } from "@/stores/tenantStore";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useSyncExternalStore } from "react";
+
+const emptySubscribe = () => () => {};
+
+function useIsHydrated() {
+  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+}
 
 export function useTranslations() {
-  const [isHydrated, setIsHydrated] = useState(false);
+  const isHydrated = useIsHydrated();
   const { config, currentLanguage, setLanguage } = useTenantStore();
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   const t = useCallback(
     (translation: Translation | undefined): string => {
@@ -17,7 +19,7 @@ export function useTranslations() {
       const lang = isHydrated ? currentLanguage : "en";
       return translation[lang] || translation.en || "";
     },
-    [currentLanguage, isHydrated]
+    [currentLanguage, isHydrated],
   );
 
   const translations = config?.translations;

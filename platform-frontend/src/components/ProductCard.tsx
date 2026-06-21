@@ -2,24 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Heart, Eye } from "lucide-react";
 import { AddToCartButton } from "./AddToCartButton";
 import { useTranslations } from "@/hooks/useTranslations";
-
-interface Product {
-  _id: string;
-  model: string;
-  brand: string;
-  price: number;
-  discount: number;
-  images: string[];
-  sizes: { size: string; stock: number }[];
-  stock: number;
-  isFeatured?: boolean;
-  isNew?: boolean;
-  isBestSeller?: boolean;
-}
+import type { Product } from "@/types";
 
 interface ProductCardProps {
   product: Product;
@@ -31,18 +18,34 @@ export function ProductCard({ product, accentColor }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const finalPrice =
-    product.discount > 0
-      ? product.price - product.price * (product.discount / 100)
-      : product.price;
+  const finalPrice = useMemo(
+    () =>
+      product.discount > 0
+        ? product.price - product.price * (product.discount / 100)
+        : product.price,
+    [product.discount, product.price],
+  );
   const mainImg = product.images?.[0] || "";
-  const totalStock = product.sizes?.reduce((acc, s) => acc + s.stock, 0) || product.stock;
+  const totalStock = useMemo(
+    () =>
+      product.sizes?.reduce((acc, s) => acc + s.stock, 0) || product.stock,
+    [product.sizes, product.stock],
+  );
   const isLowStock = totalStock > 0 && totalStock <= 5;
 
   const badges = [];
-  if (product.isNew) badges.push({ label: t(translations?.common?.new) || "New", color: "#3b82f6" });
-  if (product.isBestSeller) badges.push({ label: t(translations?.common?.bestSeller) || "Best Seller", color: "#f59e0b" });
-  if (product.discount > 0) badges.push({ label: `-${product.discount}%`, color: "#ef4444" });
+  if (product.isNew)
+    badges.push({
+      label: t(translations?.common?.new) || "New",
+      color: "#3b82f6",
+    });
+  if (product.isBestSeller)
+    badges.push({
+      label: t(translations?.common?.bestSeller) || "Best Seller",
+      color: "#f59e0b",
+    });
+  if (product.discount > 0)
+    badges.push({ label: `-${product.discount}%`, color: "#ef4444" });
 
   return (
     <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative flex flex-col h-full">
@@ -81,7 +84,10 @@ export function ProductCard({ product, accentColor }: ProductCardProps) {
       {/* Low Stock Indicator */}
       {isLowStock && (
         <div className="absolute top-3 right-3 z-10 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-          {(t(translations?.common?.onlyLeft) || "Only {count} left").replace("{count}", String(totalStock))}
+          {(t(translations?.common?.onlyLeft) || "Only {count} left").replace(
+            "{count}",
+            String(totalStock),
+          )}
         </div>
       )}
 
@@ -102,7 +108,7 @@ export function ProductCard({ product, accentColor }: ProductCardProps) {
               className={`object-contain p-6 mix-blend-multiply group-hover:scale-110 transition-transform duration-700 ease-out ${
                 imageLoaded ? "opacity-100" : "opacity-0"
               }`}
-              unoptimized
+
               onLoad={() => setImageLoaded(true)}
             />
           </>

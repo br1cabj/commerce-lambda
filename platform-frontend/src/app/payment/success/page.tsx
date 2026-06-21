@@ -17,18 +17,31 @@ function PaymentSuccessContent() {
   const fetchOrderDetails = useCallback(async () => {
     if (!config) return "";
     try {
+      if (sessionId) {
+        const order = (await api.get(
+          `/orders/by-session/${sessionId}`,
+          config.slug,
+        )) as { _id: string } | null;
+        if (order?._id) return order._id;
+      }
+
       const orders = (await api.get(
         "/orders/my-orders",
         config.slug,
-      )) as Array<{ _id: string }>;
+      )) as Array<{ _id: string; createdAt: string }>;
+
       if (orders.length > 0) {
-        return orders[0]._id;
+        const sorted = orders.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+        return sorted[0]._id;
       }
     } catch (err) {
       console.error("Error fetching order:", err);
     }
     return "";
-  }, [config]);
+  }, [config, sessionId]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -40,7 +53,9 @@ function PaymentSuccessContent() {
         setLoading(false);
       }
     })();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [sessionId, fetchOrderDetails]);
 
   if (!config) return null;

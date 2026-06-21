@@ -26,11 +26,19 @@ export const registerSchema = Joi.object({
     "string.email": "Must be a valid email",
     "string.empty": "Email is required",
   }),
-  password: Joi.string().min(6).max(128).required().messages({
-    "string.min": "Password must have at least 6 characters",
-    "string.max": "Password must have at most 128 characters",
-    "string.empty": "Password is required",
-  }),
+  password: Joi.string()
+    .min(6)
+    .max(128)
+    .pattern(/[A-Z]/, "uppercase")
+    .pattern(/[a-z]/, "lowercase")
+    .pattern(/[0-9]/, "digit")
+    .required()
+    .messages({
+      "string.min": "Password must have at least 6 characters",
+      "string.max": "Password must have at most 128 characters",
+      "string.empty": "Password is required",
+      "string.pattern.name": "Password must contain at least one {#name} character",
+    }),
   phone: Joi.string().optional().allow(""),
 });
 
@@ -45,11 +53,19 @@ export const loginSchema = Joi.object({
 });
 
 export const passwordSchema = Joi.object({
-  newPassword: Joi.string().min(6).max(128).required().messages({
-    "string.min": "Password must have at least 6 characters",
-    "string.max": "Password must have at most 128 characters",
-    "string.empty": "Password is required",
-  }),
+  newPassword: Joi.string()
+    .min(6)
+    .max(128)
+    .pattern(/[A-Z]/, "uppercase")
+    .pattern(/[a-z]/, "lowercase")
+    .pattern(/[0-9]/, "digit")
+    .required()
+    .messages({
+      "string.min": "Password must have at least 6 characters",
+      "string.max": "Password must have at most 128 characters",
+      "string.empty": "Password is required",
+      "string.pattern.name": "Password must contain at least one {#name} character",
+    }),
 });
 
 export const ALLOWED_IMAGE_TYPES = [

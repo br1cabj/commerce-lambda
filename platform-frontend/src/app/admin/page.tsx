@@ -5,12 +5,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import {
-  Plus,
-  Edit,
-  Trash,
-  Star,
-} from "lucide-react";
+import { Plus, Edit, Trash, Star } from "lucide-react";
 import Image from "next/image";
 import { AdminNav } from "@/components/admin/AdminNav";
 
@@ -29,7 +24,7 @@ interface Product {
 
 export default function AdminPage() {
   const { config } = useTenant();
-  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
+  const { isAuthenticated, isAdmin, isHydrated } = useAuth();
   const router = useRouter();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -70,7 +65,9 @@ export default function AdminPage() {
     loadProducts().then((result) => {
       if (!ignore) setProducts(result);
     });
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [isAuthenticated, isAdmin, router, loadProducts, isHydrated]);
 
   const handleEdit = (product: Product) => {
@@ -121,14 +118,18 @@ export default function AdminPage() {
       return setError("Price must be a positive number.");
     }
     const parsedDiscount = discount === "" ? "0" : discount;
-    if (isNaN(Number(parsedDiscount)) || Number(parsedDiscount) < 0 || Number(parsedDiscount) > 100) {
+    if (
+      isNaN(Number(parsedDiscount)) ||
+      Number(parsedDiscount) < 0 ||
+      Number(parsedDiscount) > 100
+    ) {
       return setError("Discount must be a valid percentage between 0 and 100.");
     }
 
     const sizesList = sizes
       .filter((s) => s.size.trim() !== "" && s.stock !== "")
       .map((s) => ({ size: s.size.trim(), stock: Number(s.stock) }));
-      
+
     if (sizesList.length === 0) {
       return setError("You must provide at least one valid size with stock.");
     }
@@ -285,7 +286,7 @@ export default function AdminPage() {
                           width={48}
                           height={48}
                           className="object-cover rounded-md border"
-                          unoptimized
+
                         />
                       ))}
                     </div>
@@ -393,7 +394,7 @@ export default function AdminPage() {
                     width={40}
                     height={40}
                     className="object-cover rounded"
-                    unoptimized
+
                   />
                 </td>
                 <td className="px-4 py-3">

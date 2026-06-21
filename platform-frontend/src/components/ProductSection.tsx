@@ -3,22 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { useTranslations } from "@/hooks/useTranslations";
 import type { Translation } from "@/stores/tenantStore";
-
-interface Product {
-  _id: string;
-  model: string;
-  brand: string;
-  price: number;
-  discount: number;
-  images: string[];
-  sizes: { size: string; stock: number }[];
-  stock: number;
-  isFeatured?: boolean;
-  isNew?: boolean;
-  isBestSeller?: boolean;
-  createdAt?: string;
-  salesCount?: number;
-}
+import type { Product } from "@/types";
 
 interface ProductSectionProps {
   title: Translation;
@@ -74,7 +59,8 @@ export function ProductSection({
             product={{
               ...product,
               isNew: badge === "new" ? true : product.isNew,
-              isBestSeller: badge === "bestseller" ? true : product.isBestSeller,
+              isBestSeller:
+                badge === "bestseller" ? true : product.isBestSeller,
             }}
             accentColor={accentColor}
           />

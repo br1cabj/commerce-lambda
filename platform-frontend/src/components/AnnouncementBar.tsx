@@ -62,9 +62,7 @@ export function AnnouncementBar({ accentColor }: AnnouncementBarProps) {
           <div
             key={index}
             className={`h-0.5 rounded-full transition-all duration-300 ${
-              index === currentIndex
-                ? "w-6 bg-white"
-                : "w-2 bg-white/40"
+              index === currentIndex ? "w-6 bg-white" : "w-2 bg-white/40"
             }`}
           />
         ))}

@@ -19,7 +19,7 @@ interface Review {
 
 export default function AdminReviewsPage() {
   const { config } = useTenant();
-  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
+  const { isAuthenticated, isAdmin, isHydrated } = useAuth();
   const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -58,7 +58,9 @@ export default function AdminReviewsPage() {
         setLoading(false);
       }
     })();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [isAuthenticated, isAdmin, router, loadReviews, isHydrated]);
 
   const createReview = async (e: React.FormEvent) => {
@@ -218,7 +220,7 @@ export default function AdminReviewsPage() {
                 height={48}
                 className="rounded-full object-cover border-2"
                 style={{ borderColor: config.theme.accentColor }}
-                unoptimized
+
               />
               <div className="flex-1">
                 <p className="font-bold">{review.clientName}</p>

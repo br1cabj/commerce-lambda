@@ -19,6 +19,7 @@ import tenantConfigRoutes from "./routes/tenantConfig.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
 import homeConfigRoutes from "./routes/homeConfig.js";
 import templateRoutes from "./routes/templates.js";
+import emailsRoutes from "./routes/emails.js";
 import paymentsRoutes, {
   handleStripeWebhook,
   handleMercadoPagoWebhook,
@@ -34,25 +35,27 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(helmet());
 
-const corsOrigin = process.env.FRONTEND_URL || "*";
-if (corsOrigin === "*") {
+const corsOrigin = process.env.FRONTEND_URL || false;
+if (!corsOrigin) {
   console.warn(
-    "WARNING: FRONTEND_URL is not set or is wildcard. CORS will allow all origins. This is NOT safe for production.",
+    "WARNING: FRONTEND_URL is not set. CORS will allow all origins. This is NOT safe for production.",
   );
 }
 
 const corsOptions = {
-  origin: corsOrigin,
-  credentials: corsOrigin !== "*",
+  origin: corsOrigin || true,
+  credentials: !!corsOrigin,
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: "Too many requests from this IP, please try again in 15 minutes.",
@@ -109,34 +112,48 @@ app.use("/api/store/home-config", homeConfigRoutes);
 app.use("/api/templates", templateRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/super", superAdminRoutes);
+app.use("/api/emails", emailsRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
 app.use(errorHandler);
 
-connectDB();
-
 const port = process.env.PORT || 3001;
-const server = app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
 
-const gracefulShutdown = async (signal) => {
-  console.log(`\n${signal} received. Starting graceful shutdown...`);
-  server.close(async () => {
-    console.log("HTTP server closed.");
-    try {
-      await mongoose.disconnect();
-      console.log("Database connection closed.");
-    } catch (err) {
-      console.error("Error closing database connection:", err);
-    }
-    process.exit(0);
-  });
+const startServer = async () => {
+  try {
+    await connectDB();
+    const server = app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
 
-  setTimeout(() => {
-    console.error("Forced shutdown after timeout.");
+    const gracefulShutdown = async (signal) => {
+      console.log(`\n${signal} received. Starting graceful shutdown...`);
+      server.close(async () => {
+        console.log("HTTP server closed.");
+        try {
+          await mongoose.disconnect();
+          console.log("Database connection closed.");
+        } catch (err) {
+          console.error("Error closing database connection:", err);
+        }
+        process.exit(0);
+      });
+
+      setTimeout(() => {
+        console.error("Forced shutdown after timeout.");
+        process.exit(1);
+      }, 10000);
+    };
+
+    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+  } catch (error) {
+    console.error("Failed to start server:", error);
     process.exit(1);
-  }, 10000);
+  }
 };
 
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+startServer();

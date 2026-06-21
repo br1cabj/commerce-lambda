@@ -18,7 +18,7 @@ interface Coupon {
 
 export default function AdminCouponsPage() {
   const { config } = useTenant();
-  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
+  const { isAuthenticated, isAdmin, isHydrated } = useAuth();
   const router = useRouter();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -56,7 +56,9 @@ export default function AdminCouponsPage() {
         setLoading(false);
       }
     })();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [isAuthenticated, isAdmin, router, loadCoupons, isHydrated]);
 
   const createCoupon = async (e: React.FormEvent) => {

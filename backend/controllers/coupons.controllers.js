@@ -52,25 +52,32 @@ export const toggleCoupon = async (req, res) => {
     couponFound.isActive = !couponFound.isActive;
     await couponFound.save();
 
-    res
-      .status(200)
-      .json({
-        message: `Coupon is now ${couponFound.isActive ? "ACTIVE" : "INACTIVE"}`,
-        coupon: couponFound,
-      });
+    res.status(200).json({
+      message: `Coupon is now ${couponFound.isActive ? "ACTIVE" : "INACTIVE"}`,
+      coupon: couponFound,
+    });
   } catch (error) {
     console.error("Error updating coupon:", error.message);
     res.status(500).json({ message: "Error updating coupon." });
   }
 };
 
+const escapeHtml = (str) => {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+};
+
 export const sendPromoEmail = async (req, res) => {
   try {
     const { title, message, discountCode } = req.body;
 
-    const allUsers = await User.find({ tenantId: req.tenant._id }).select(
-      "email name",
-    );
+    const allUsers = await User.find({ tenantId: req.tenant._id })
+      .select("email name")
+      .lean();
     const totalUsers = allUsers.length;
 
     if (totalUsers === 0) {
@@ -89,16 +96,16 @@ export const sendPromoEmail = async (req, res) => {
       const promises = batch.map(async (user) => {
         try {
           await transporter.sendMail({
-            from: `"${req.tenant.name}" <${process.env.EMAIL_USER}>`,
+            from: `"${escapeHtml(req.tenant.name)}" <${process.env.EMAIL_USER}>`,
             to: user.email,
-            subject: title,
+            subject: escapeHtml(title),
             html: `
                             <div style="font-family: Arial, sans-serif; text-align: center; color: #333;">
-                                <h2>Hello ${user.name}!</h2>
-                                <p>${message}</p>
+                                <h2>Hello ${escapeHtml(user.name)}!</h2>
+                                <p>${escapeHtml(message)}</p>
                                 <div style="background-color: #f4f4f4; padding: 20px; border-radius: 10px; margin: 20px 0;">
                                     <p style="margin: 0; font-size: 16px;">Your gift code is:</p>
-                                    <h1 style="color: #fca311; letter-spacing: 2px; margin: 10px 0;">${discountCode}</h1>
+                                    <h1 style="color: #fca311; letter-spacing: 2px; margin: 10px 0;">${escapeHtml(discountCode)}</h1>
                                 </div>
                                 <p>We look forward to seeing you in the store!</p>
                             </div>
@@ -170,15 +177,17 @@ export const validateCoupon = async (req, res) => {
 
 export const getAllCoupons = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit: rawLimit = 20 } = req.query;
+    const limit = Math.min(Number(rawLimit) || 20, 100);
     const skip = (page - 1) * limit;
 
-    const coupons = await Coupon.find({ tenantId: req.tenant._id })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    const total = await Coupon.countDocuments({ tenantId: req.tenant._id });
+    const [coupons, total] = await Promise.all([
+      Coupon.find({ tenantId: req.tenant._id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Coupon.countDocuments({ tenantId: req.tenant._id }),
+    ]);
 
     res.status(200).json({
       info: {

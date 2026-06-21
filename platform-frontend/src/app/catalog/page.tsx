@@ -23,6 +23,8 @@ export default function CatalogPage() {
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -32,12 +34,27 @@ export default function CatalogPage() {
         const params = new URLSearchParams({ limit: "100" });
         if (selectedBrand) params.set("brand", selectedBrand);
         if (selectedSize) params.set("size", selectedSize);
+        if (sortBy) params.set("sort", sortBy);
+        if (priceRange.max < 1000) params.set("maxPrice", priceRange.max.toString());
 
         const data = (await api.get(
           `/products?${params.toString()}`,
           config.slug,
         )) as { results: Product[] };
-        setProducts(data.results || []);
+        
+        let filtered = data.results || [];
+        
+        // Frontend fallback for sorting if backend doesn't support it yet
+        if (sortBy === 'price_asc') {
+          filtered.sort((a, b) => a.price - b.price);
+        } else if (sortBy === 'price_desc') {
+          filtered.sort((a, b) => b.price - a.price);
+        }
+        
+        // Frontend fallback for price filtering
+        filtered = filtered.filter(p => p.price >= priceRange.min && p.price <= priceRange.max);
+        
+        setProducts(filtered);
       } catch (err) {
         console.error("Error loading products:", err);
       } finally {
@@ -45,7 +62,7 @@ export default function CatalogPage() {
       }
     };
     loadProducts();
-  }, [config, selectedBrand, selectedSize]);
+  }, [config, selectedBrand, selectedSize, sortBy, priceRange]);
 
   if (!config) return null;
 
@@ -73,12 +90,47 @@ export default function CatalogPage() {
               onClick={() => {
                 setSelectedBrand("");
                 setSelectedSize("");
+                setSortBy("newest");
+                setPriceRange({ min: 0, max: 1000 });
               }}
               className="text-xs text-gray-500 hover:underline"
             >
               Clear
             </button>
           </div>
+
+          <div className="mb-6">
+            <h4 className="font-bold text-xs mb-3">SORT BY</h4>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full text-sm border-gray-200 rounded-lg focus:ring-gray-900 focus:border-gray-900"
+            >
+              <option value="newest">Newest Arrivals</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
+          </div>
+
+          <hr className="border-gray-200 mb-6" />
+
+          <div className="mb-6">
+            <h4 className="font-bold text-xs mb-3 flex justify-between">
+              <span>MAX PRICE</span>
+              <span>${priceRange.max}</span>
+            </h4>
+            <input 
+              type="range" 
+              min="0" 
+              max="1000" 
+              step="10"
+              value={priceRange.max}
+              onChange={(e) => setPriceRange({ ...priceRange, max: parseInt(e.target.value) })}
+              className="w-full accent-gray-900"
+            />
+          </div>
+
+          <hr className="border-gray-200 mb-6" />
 
           <div className="mb-6">
             <h4 className="font-bold text-xs mb-3">BRAND</h4>

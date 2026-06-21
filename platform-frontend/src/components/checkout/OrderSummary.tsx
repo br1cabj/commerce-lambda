@@ -43,7 +43,7 @@ export function OrderSummary({
   setCouponCode,
   setCouponMessage,
   applyCoupon,
-  removeCoupon
+  removeCoupon,
 }: OrderSummaryProps) {
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6 h-fit sticky top-24">
@@ -57,7 +57,7 @@ export function OrderSummary({
               width={48}
               height={48}
               className="object-contain bg-gray-50 rounded"
-              unoptimized
+
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate">{item.model}</p>
@@ -74,9 +74,7 @@ export function OrderSummary({
 
       {config.settings.features.coupons && (
         <div className="mb-4 bg-gray-50 rounded-lg p-3 border">
-          <label className="text-xs font-bold mb-2 block">
-            Discount Code
-          </label>
+          <label className="text-xs font-bold mb-2 block">Discount Code</label>
           <div className="flex gap-2">
             <input
               type="text"
@@ -125,16 +123,15 @@ export function OrderSummary({
       {discountPercent > 0 && (
         <div className="flex justify-between mb-2 text-red-500 text-sm">
           <span>Discount ({discountPercent}%)</span>
-          <span className="font-bold">
-            -${discountAmount.toLocaleString()}
-          </span>
+          <span className="font-bold">-${discountAmount.toLocaleString()}</span>
         </div>
       )}
       <div className="flex justify-between mb-4 text-gray-500 text-sm pb-4 border-b">
         <span>Shipping</span>
         <span className="font-bold text-gray-800 text-right">
           {config.settings.shippingMethods.find(
-            (m: { type: string; enabled: boolean }) => m.type === "free" && m.enabled,
+            (m: { type: string; enabled: boolean }) =>
+              m.type === "free" && m.enabled,
           ) ? (
             <span className="text-emerald-600">Free Shipping</span>
           ) : (

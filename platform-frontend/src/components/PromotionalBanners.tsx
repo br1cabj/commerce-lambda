@@ -11,7 +11,10 @@ interface PromotionalBannersProps {
   accentColor: string;
 }
 
-export function PromotionalBanners({ banners, accentColor }: PromotionalBannersProps) {
+export function PromotionalBanners({
+  banners,
+  accentColor,
+}: PromotionalBannersProps) {
   const { t, translations } = useTranslations();
 
   const enabledBanners = banners
@@ -24,8 +27,8 @@ export function PromotionalBanners({ banners, accentColor }: PromotionalBannersP
     enabledBanners.length === 1
       ? "grid-cols-1"
       : enabledBanners.length === 2
-      ? "grid-cols-1 md:grid-cols-2"
-      : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+        ? "grid-cols-1 md:grid-cols-2"
+        : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -42,7 +45,7 @@ export function PromotionalBanners({ banners, accentColor }: PromotionalBannersP
                 alt={t(banner.title)}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
-                unoptimized
+
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30" />

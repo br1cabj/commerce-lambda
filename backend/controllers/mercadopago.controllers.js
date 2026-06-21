@@ -6,12 +6,20 @@ import Tenant from "../models/Tenant.js";
 import WebhookEvent from "../models/WebhookEvent.js";
 import Coupon from "../models/Coupon.js";
 import { MercadoPagoConfig, Preference } from "mercadopago";
+import { sendOrderConfirmationEmail } from "../utils/emailService.js";
 
 export const createMercadoPagoPreference = async (req, res) => {
   try {
-    const { products, shippingAddress, couponCode } = req.body;
+    const { products, shippingAddress, couponCode, shippingCost } = req.body;
     const userId = req.user.id;
     const tenant = req.tenant;
+
+    if (
+      shippingCost !== undefined &&
+      (typeof shippingCost !== "number" || shippingCost < 0)
+    ) {
+      return res.status(400).json({ message: "Invalid shipping cost." });
+    }
 
     const mpConfig = tenant.settings.paymentMethods.find(
       (m) => m.type === "mercadopago" && m.enabled,
@@ -88,7 +96,9 @@ export const createMercadoPagoPreference = async (req, res) => {
       ) {
         const user = await User.findById(userId);
         if (coupon.pointsRequired > 0 && user.points < coupon.pointsRequired) {
-          return res.status(400).json({ message: "Not enough points for this coupon." });
+          return res
+            .status(400)
+            .json({ message: "Not enough points for this coupon." });
         }
 
         discountApplied = totalAmount * (coupon.discountPercentage / 100);
@@ -106,6 +116,17 @@ export const createMercadoPagoPreference = async (req, res) => {
       }
     }
 
+    if (shippingCost > 0) {
+      totalAmount += shippingCost;
+      items.push({
+        id: "shipping",
+        title: "Shipping Cost",
+        unit_price: shippingCost,
+        quantity: 1,
+        currency_id: tenant.settings.currency === "ARS" ? "ARS" : "USD",
+      });
+    }
+
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const orderId = `temp_mp_${Date.now()}_${userId}`;
 
@@ -119,13 +140,14 @@ export const createMercadoPagoPreference = async (req, res) => {
           pending: `${frontendUrl}/payment/pending`,
         },
         auto_return: "approved",
-        notification_url: `${process.env.BACKEND_URL || "http://localhost:3001"}/api/payments/webhook/mercadopago`,
+        notification_url: `${process.env.BACKEND_URL || "http://localhost:3001"}/api/payments/webhook/mercadopago?tenantId=${tenant._id.toString()}`,
         metadata: {
           userId,
           tenantId: tenant._id.toString(),
           shippingAddress: JSON.stringify(shippingAddress),
           orderProducts: JSON.stringify(orderProducts),
           totalAmount,
+          shippingCost: shippingCost || 0,
           couponCode: finalCouponCode || "",
           discountApplied: discountApplied || 0,
           orderId,
@@ -153,9 +175,21 @@ export const handleMercadoPagoWebhook = async (req, res) => {
         return res.status(200).json({ message: "OK" });
       }
 
-      const tenant = await Tenant.findOne({
-        "settings.paymentMethods.type": "mercadopago",
-      });
+      const tenantIdFromQuery = req.query.tenantId;
+
+      let tenant;
+      if (tenantIdFromQuery) {
+        tenant = await Tenant.findById(tenantIdFromQuery);
+      }
+      
+      if (!tenant) {
+        tenant = await Tenant.findOne({
+          "settings.paymentMethods": {
+            $elemMatch: { type: "mercadopago", enabled: true },
+          },
+        });
+      }
+
       if (!tenant) return res.status(200).json({ message: "OK" });
 
       const mpConfig = tenant.settings.paymentMethods.find(
@@ -171,6 +205,20 @@ export const handleMercadoPagoWebhook = async (req, res) => {
         headers: { Authorization: `Bearer ${mpConfig.config.accessToken}` },
       });
       const payment = await paymentResponse.json();
+
+      // Now we have the payment, let's verify if the tenant matches the metadata
+      if (payment.metadata?.tenant_id) { // MP lowercases metadata keys
+        const correctTenant = await Tenant.findById(payment.metadata.tenant_id);
+        if (correctTenant && correctTenant._id.toString() !== tenant._id.toString()) {
+           // We used the wrong token to fetch! We must fetch again with the correct token.
+           tenant = correctTenant;
+           const correctMpConfig = tenant.settings.paymentMethods.find((m) => m.type === "mercadopago" && m.enabled);
+           if (correctMpConfig) {
+             const retryResponse = await fetch(paymentUrl, { headers: { Authorization: `Bearer ${correctMpConfig.config.accessToken}` } });
+             Object.assign(payment, await retryResponse.json());
+           }
+        }
+      }
 
       if (payment.status === "approved") {
         const metadata = payment.metadata;
@@ -201,7 +249,7 @@ export const handleMercadoPagoWebhook = async (req, res) => {
           for (let item of orderProducts) {
             const product = await Product.findOneAndUpdate(
               { _id: item.product, stock: { $gte: item.quantity } },
-              { $inc: { stock: -item.quantity } },
+              { $inc: { stock: -item.quantity, salesCount: item.quantity } },
             ).session(session);
 
             if (!product) {
@@ -210,14 +258,14 @@ export const handleMercadoPagoWebhook = async (req, res) => {
           }
 
           if (metadata.couponCode) {
-            const coupon = await Coupon.findOne({
-              code: metadata.couponCode,
-              tenantId: metadata.tenantId,
-            }).session(session);
-            if (coupon) {
-              coupon.usedCount += 1;
-              await coupon.save({ session });
-            }
+            const coupon = await Coupon.findOneAndUpdate(
+              {
+                code: metadata.couponCode,
+                tenantId: metadata.tenantId,
+              },
+              { $inc: { usedCount: 1 } },
+              { session, new: true }
+            );
           }
 
           const newOrder = new Order({
@@ -225,7 +273,7 @@ export const handleMercadoPagoWebhook = async (req, res) => {
             user: metadata.userId,
             products: orderProducts,
             shippingAddress,
-            shippingCost: 0,
+            shippingCost: metadata.shippingCost || 0,
             totalAmount: metadata.totalAmount,
             couponCode: metadata.couponCode || null,
             discountApplied: metadata.discountApplied || 0,
@@ -239,23 +287,34 @@ export const handleMercadoPagoWebhook = async (req, res) => {
           const userFound = await User.findById(metadata.userId);
           if (userFound) {
             let totalEarnedPoints = 0;
+            const productIds = orderProducts.map(i => i.product);
+            const productsInfo = await Product.find({ _id: { $in: productIds } }).session(session);
             for (let item of orderProducts) {
-              const product = await Product.findById(item.product);
+              const product = productsInfo.find(p => p._id.toString() === item.product.toString());
               totalEarnedPoints += (product?.earnedPoints || 0) * item.quantity;
             }
             let pointsToDeduct = 0;
             if (metadata.couponCode) {
-              const c = await Coupon.findOne({ code: metadata.couponCode, tenantId: metadata.tenantId }).session(session);
+              const c = await Coupon.findOne({
+                code: metadata.couponCode,
+                tenantId: metadata.tenantId,
+              }).session(session);
               if (c) pointsToDeduct = c.pointsRequired || 0;
             }
+            const pointsDelta = totalEarnedPoints - pointsToDeduct;
             await User.updateOne(
               { _id: metadata.userId },
-              { $inc: { points: totalEarnedPoints - pointsToDeduct } },
+              pointsDelta >= 0
+                ? { $inc: { points: pointsDelta } }
+                : [ { $set: { points: { $max: [0, { $add: ["$points", pointsDelta] }] } } } ]
             ).session(session);
           }
 
           await session.commitTransaction();
           console.log(`Order created from MercadoPago: ${savedOrder._id}`);
+          if (userFound) {
+            sendOrderConfirmationEmail(tenant, userFound, savedOrder);
+          }
         } catch (error) {
           await session.abortTransaction();
           throw error;

@@ -1,0 +1,39 @@
+export interface ProductSize {
+  size: string;
+  stock: number;
+}
+
+export interface Product {
+  _id: string;
+  model: string;
+  brand: string;
+  price: number;
+  discount: number;
+  images: string[];
+  sizes: ProductSize[];
+  stock: number;
+  isFeatured?: boolean;
+  isNew?: boolean;
+  isBestSeller?: boolean;
+  createdAt?: string;
+  salesCount?: number;
+  category?: string;
+  description?: string;
+}
+
+export interface Review {
+  _id: string;
+  clientName: string;
+  clientRole: string;
+  message: string;
+  image: string;
+  rating: number;
+}
+
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  image?: string;
+  icon?: string;
+}

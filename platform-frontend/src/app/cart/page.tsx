@@ -5,13 +5,43 @@ import { useTenant } from "@/hooks/useTenant";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingCart, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function CartPage() {
   const { config } = useTenant();
-  const { items, removeItem, updateQuantity, totalAmount } =
-    useCart();
+  const { items, removeItem, updateQuantity, totalAmount } = useCart();
   const router = useRouter();
+  const [timeLeft, setTimeLeft] = useState(600);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [items.length]);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [items.length]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   if (!config) return null;
 
@@ -52,7 +82,7 @@ export default function CartPage() {
                   width={128}
                   height={128}
                   className="max-h-full max-w-full object-contain mix-blend-multiply"
-                  unoptimized
+
                 />
               </div>
               <div className="flex-1">
@@ -109,6 +139,10 @@ export default function CartPage() {
         </div>
 
         <div className="bg-gray-50 rounded-2xl p-7 h-fit sticky top-24 border border-gray-100">
+          <div className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-xl mb-6 font-semibold border border-red-100">
+            <Clock className="h-5 w-5 animate-pulse" />
+            <span>Items reserved for: {formatTime(timeLeft)}</span>
+          </div>
           <h3 className="font-extrabold text-xl mb-6 text-gray-800">
             Order Summary
           </h3>
@@ -122,7 +156,8 @@ export default function CartPage() {
             <span>Shipping</span>
             <span className="font-bold text-gray-800 text-right">
               {config.settings.shippingMethods.find(
-                (m: { type: string; enabled: boolean }) => m.type === "free" && m.enabled,
+                (m: { type: string; enabled: boolean }) =>
+                  m.type === "free" && m.enabled,
               ) ? (
                 <span className="text-emerald-600">Free Shipping</span>
               ) : (

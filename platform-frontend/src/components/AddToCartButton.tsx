@@ -1,20 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useTranslations } from "@/hooks/useTranslations";
-
-interface Product {
-  _id: string;
-  model: string;
-  brand: string;
-  price: number;
-  discount: number;
-  images: string[];
-  sizes: { size: string; stock: number }[];
-  stock: number;
-}
+import type { Product } from "@/types";
 
 export function AddToCartButton({
   product,
@@ -26,6 +16,13 @@ export function AddToCartButton({
   const { addItem } = useCart();
   const { t, translations } = useTranslations();
   const [added, setAdded] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const handleAddToCart = () => {
     const finalPrice =
@@ -47,7 +44,8 @@ export function AddToCartButton({
     });
 
     setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setAdded(false), 2000);
   };
 
   return (

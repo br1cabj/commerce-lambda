@@ -8,5 +8,9 @@ export function AnnouncementBarWrapper() {
 
   if (!config) return null;
 
-  return <AnnouncementBar accentColor={config.theme.accentColor} />;
+  return (
+    <div id="global-announcement">
+      <AnnouncementBar accentColor={config.theme.accentColor} />
+    </div>
+  );
 }

@@ -1,22 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { useTranslations } from "@/hooks/useTranslations";
 import type { Translation } from "@/stores/tenantStore";
-
-interface Product {
-  _id: string;
-  model: string;
-  brand: string;
-  price: number;
-  discount: number;
-  images: string[];
-  sizes: { size: string; stock: number }[];
-  stock: number;
-}
+import type { Product } from "@/types";
 
 interface SpecialOffersProps {
   title: Translation;
@@ -29,10 +19,14 @@ interface SpecialOffersProps {
   endDate?: string;
 }
 
-function CountdownTimer({ endDate, accentColor }: { endDate: string; accentColor: string }) {
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-
-  function calculateTimeLeft() {
+function CountdownTimer({
+  endDate,
+  accentColor,
+}: {
+  endDate: string;
+  accentColor: string;
+}) {
+  const [timeLeft, setTimeLeft] = useState(() => {
     const difference = new Date(endDate).getTime() - new Date().getTime();
     if (difference <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
     return {
@@ -41,14 +35,24 @@ function CountdownTimer({ endDate, accentColor }: { endDate: string; accentColor
       minutes: Math.floor((difference / 1000 / 60) % 60),
       seconds: Math.floor((difference / 1000) % 60),
     };
-  }
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
+      const difference = new Date(endDate).getTime() - new Date().getTime();
+      if (difference <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+      });
     }, 1000);
     return () => clearInterval(timer);
-  });
+  }, [endDate]);
 
   const timeUnits = [
     { label: "d", value: timeLeft.days },
@@ -69,7 +73,9 @@ function CountdownTimer({ endDate, accentColor }: { endDate: string; accentColor
             >
               {String(unit.value).padStart(2, "0")}
             </span>
-            <span className="text-xs text-gray-500 font-medium">{unit.label}</span>
+            <span className="text-xs text-gray-500 font-medium">
+              {unit.label}
+            </span>
           </div>
         ))}
       </div>
@@ -90,11 +96,15 @@ export function SpecialOffers({
   const { t } = useTranslations();
 
   const offerProducts = products.filter((p) => p.discount > 0);
-  if (offerProducts.length === 0) return null;
 
-  const defaultEndDate = new Date();
-  defaultEndDate.setDate(defaultEndDate.getDate() + 3);
-  const timerEndDate = endDate || defaultEndDate.toISOString();
+  const timerEndDate = useMemo(() => {
+    if (endDate) return endDate;
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return d.toISOString();
+  }, [endDate]);
+
+  if (offerProducts.length === 0) return null;
 
   return (
     <section className="py-16 bg-gradient-to-b from-gray-50 to-white">

@@ -2,63 +2,79 @@
 
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
-import { useMemo, useState, useEffect } from "react";
+import { useSyncExternalStore, useCallback } from "react";
+
+const emptySubscribe = () => () => {};
+
+function useIsHydrated() {
+  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+}
 
 export function useAuth() {
-  const [isHydrated, setIsHydrated] = useState(false);
-  const store = useAuthStore();
+  const isHydrated = useIsHydrated();
+  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const logoutStore = useAuthStore((s) => s.logout);
 
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  const login = async (email: string, password: string, tenantSlug: string) => {
-    const data = (await api.post(
-      "/users/login",
-      { email, password },
-      tenantSlug,
-    )) as {
-      token: string;
-      user: {
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-        tenantId?: string;
+  const login = useCallback(
+    async (email: string, password: string, tenantSlug: string) => {
+      const data = (await api.post(
+        "/users/login",
+        { email, password },
+        tenantSlug,
+      )) as {
+        token: string;
+        user: {
+          id: string;
+          name: string;
+          email: string;
+          role: string;
+          tenantId?: string;
+        };
       };
-    };
 
-    store.setAuth(data.token, data.user);
-    localStorage.setItem("token", data.token);
+      setAuth(data.token, data.user);
+      localStorage.setItem("token", data.token);
 
-    return data;
-  };
-
-  const register = async (
-    name: string,
-    email: string,
-    password: string,
-    tenantSlug: string,
-  ) => {
-    await api.post("/users/register", { name, email, password }, tenantSlug);
-  };
-
-  const authState = useMemo(
-    () => ({
-      isAuthenticated: isHydrated ? store.isAuthenticated() : false,
-      isAdmin: isHydrated ? store.isAdmin() : false,
-      isSuperAdmin: isHydrated ? store.isSuperAdmin() : false,
-    }),
-    [store, isHydrated],
+      return data;
+    },
+    [setAuth],
   );
 
+  const register = useCallback(
+    async (
+      name: string,
+      email: string,
+      password: string,
+      tenantSlug: string,
+    ) => {
+      await api.post(
+        "/users/register",
+        { name, email, password },
+        tenantSlug,
+      );
+    },
+    [],
+  );
+
+  const logout = useCallback(() => {
+    logoutStore();
+  }, [logoutStore]);
+
+  const isAuthenticated = isHydrated && !!token;
+  const isAdmin = isHydrated && (user?.role === "admin" || user?.role === "administrador");
+  const isSuperAdmin = isHydrated && user?.role === "super_admin";
+
   return {
-    token: isHydrated ? store.token : null,
-    user: isHydrated ? store.user : null,
+    token: isHydrated ? token : null,
+    user: isHydrated ? user : null,
     login,
     register,
-    logout: store.logout,
-    ...authState,
+    logout,
+    isAuthenticated,
+    isAdmin,
+    isSuperAdmin,
     isHydrated,
   };
 }

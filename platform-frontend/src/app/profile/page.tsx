@@ -48,7 +48,10 @@ export default function ProfilePage() {
         };
         if (!cancelled) setPoints(profileData.points || 0);
 
-        const ordersResponse = await api.get("/orders/my-orders", config.slug) as { results: Order[] };
+        const ordersResponse = (await api.get(
+          "/orders/my-orders",
+          config.slug,
+        )) as { results: Order[] };
         if (!cancelled) setOrders(ordersResponse.results || []);
       } catch (err) {
         console.error("Error loading profile:", err);
@@ -59,7 +62,7 @@ export default function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [config, isAuthenticated, router]);
+  }, [config, isAuthenticated, router, isHydrated]);
 
   if (!config || !user || !isAuthenticated) return null;
 

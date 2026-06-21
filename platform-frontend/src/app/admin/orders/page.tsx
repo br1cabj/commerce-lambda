@@ -26,7 +26,7 @@ interface Order {
 
 export default function AdminOrdersPage() {
   const { config } = useTenant();
-  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
+  const { isAuthenticated, isAdmin, isHydrated } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +61,9 @@ export default function AdminOrdersPage() {
         setLoading(false);
       }
     })();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [isAuthenticated, isAdmin, router, loadOrders, isHydrated]);
 
   const updateStatus = async (

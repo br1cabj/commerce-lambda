@@ -6,7 +6,8 @@ import Category from "../models/Category.js";
 import Product from "../models/Product.js";
 import Review from "../models/Review.js";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/ecommerce";
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://localhost:27017/ecommerce";
 
 async function removeDemo() {
   try {
@@ -15,7 +16,7 @@ async function removeDemo() {
     console.log("✅ Connected to database");
 
     const tenant = await Tenant.findOne({ slug: "demo" });
-    
+
     if (!tenant) {
       console.log("⚠️  Demo tenant not found. Nothing to remove.");
       process.exit(0);
@@ -28,7 +29,9 @@ async function removeDemo() {
     const usersResult = await User.deleteMany({ tenantId: tenant._id });
     console.log(`   ✅ Deleted ${usersResult.deletedCount} users`);
 
-    const categoriesResult = await Category.deleteMany({ tenantId: tenant._id });
+    const categoriesResult = await Category.deleteMany({
+      tenantId: tenant._id,
+    });
     console.log(`   ✅ Deleted ${categoriesResult.deletedCount} categories`);
 
     const productsResult = await Product.deleteMany({ tenantId: tenant._id });
@@ -42,8 +45,12 @@ async function removeDemo() {
     console.log(`   ✅ Deleted tenant: ${tenant.name}`);
 
     console.log("\n🎉 Demo data removed successfully!");
-    console.log("\n💡 The demo tenant and all its data have been completely removed.");
-    console.log("   You can run 'npm run seed:demo' again if you need it back.");
+    console.log(
+      "\n💡 The demo tenant and all its data have been completely removed.",
+    );
+    console.log(
+      "   You can run 'npm run seed:demo' again if you need it back.",
+    );
 
     process.exit(0);
   } catch (error) {

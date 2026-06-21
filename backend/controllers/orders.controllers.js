@@ -3,6 +3,10 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import Coupon from "../models/Coupon.js";
+import {
+  sendOrderConfirmationEmail,
+  sendOrderStatusEmail,
+} from "../utils/emailService.js";
 
 const VALID_ORDER_STATUSES = [
   "Pendiente",
@@ -25,6 +29,14 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Products are required." });
     }
 
+    if (
+      shippingCost !== undefined &&
+      (typeof shippingCost !== "number" || shippingCost < 0)
+    ) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "Invalid shipping cost." });
+    }
+
     let totalAmount = 0;
     let totalEarnedPoints = 0;
     const orderProducts = [];
@@ -43,13 +55,6 @@ export const createOrder = async (req, res) => {
           .json({ message: "A product in your cart does not exist" });
       }
 
-      if (productFound.stock < item.quantity) {
-        await session.abortTransaction();
-        return res
-          .status(400)
-          .json({ message: `Insufficient stock for ${productFound.model}.` });
-      }
-
       const unitPrice =
         productFound.discount > 0
           ? productFound.price -
@@ -59,10 +64,21 @@ export const createOrder = async (req, res) => {
       totalAmount += unitPrice * item.quantity;
       totalEarnedPoints += (productFound.earnedPoints || 0) * item.quantity;
 
-      await Product.updateOne(
-        { _id: productFound._id },
-        { $inc: { stock: -item.quantity } },
-      ).session(session);
+      const updated = await Product.findOneAndUpdate(
+        {
+          _id: productFound._id,
+          stock: { $gte: item.quantity },
+        },
+        { $inc: { stock: -item.quantity, salesCount: item.quantity } },
+        { session, new: true },
+      );
+
+      if (!updated) {
+        await session.abortTransaction();
+        return res
+          .status(400)
+          .json({ message: `Insufficient stock for ${productFound.model}.` });
+      }
 
       orderProducts.push({
         product: productFound._id,
@@ -76,28 +92,37 @@ export const createOrder = async (req, res) => {
     let pointsToDeduct = 0;
 
     if (couponCode) {
-      const coupon = await Coupon.findOne({
-        code: couponCode.toUpperCase(),
-        tenantId: req.tenant._id,
-      }).session(session);
-      if (
-        coupon &&
-        coupon.isActive &&
-        (!coupon.expiresAt || new Date(coupon.expiresAt) > new Date()) &&
-        (!coupon.maxUses || coupon.usedCount < coupon.maxUses)
-      ) {
+      const coupon = await Coupon.findOneAndUpdate(
+        {
+          code: couponCode.toUpperCase(),
+          tenantId: req.tenant._id,
+          isActive: true,
+          $or: [
+            { expiresAt: null },
+            { expiresAt: { $gt: new Date() } },
+          ],
+          $or: [
+            { maxUses: null },
+            { $expr: { $lt: ["$usedCount", "$maxUses"] } },
+          ],
+        },
+        { $inc: { usedCount: 1 } },
+        { session, new: true },
+      );
+
+      if (coupon) {
         const user = await User.findById(userId).session(session);
         if (coupon.pointsRequired > 0 && user.points < coupon.pointsRequired) {
           await session.abortTransaction();
-          return res.status(400).json({ message: "Not enough points for this coupon." });
+          return res
+            .status(400)
+            .json({ message: "Not enough points for this coupon." });
         }
         pointsToDeduct = coupon.pointsRequired || 0;
 
         discountApplied = totalAmount * (coupon.discountPercentage / 100);
         totalAmount -= discountApplied;
         finalCouponCode = coupon.code;
-        coupon.usedCount += 1;
-        await coupon.save({ session });
       }
     }
 
@@ -116,9 +141,20 @@ export const createOrder = async (req, res) => {
 
     const savedOrder = await newOrder.save({ session });
 
+    const pointsDelta = totalEarnedPoints - pointsToDeduct;
     await User.updateOne(
       { _id: userId },
-      { $inc: { points: totalEarnedPoints - pointsToDeduct } },
+      pointsDelta >= 0
+        ? { $inc: { points: pointsDelta } }
+        : [
+            {
+              $set: {
+                points: {
+                  $max: [0, { $add: ["$points", pointsDelta] }],
+                },
+              },
+            },
+          ],
     ).session(session);
 
     await session.commitTransaction();
@@ -129,6 +165,11 @@ export const createOrder = async (req, res) => {
       order: savedOrder,
       pointsEarned: totalEarnedPoints,
     });
+
+    const user = await User.findById(userId);
+    if (user && req.tenant) {
+      sendOrderConfirmationEmail(req.tenant, user, savedOrder);
+    }
   } catch (error) {
     await session.abortTransaction();
     console.error("Error creating order:", error.message);
@@ -140,21 +181,23 @@ export const createOrder = async (req, res) => {
 
 export const getMyOrders = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit: rawLimit = 20 } = req.query;
+    const limit = Math.min(Number(rawLimit) || 20, 100);
     const skip = (page - 1) * limit;
 
-    const orders = await Order.find({
-      tenantId: req.tenant._id,
-      user: req.user.id,
-    })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    const total = await Order.countDocuments({
-      tenantId: req.tenant._id,
-      user: req.user.id,
-    });
+    const [orders, total] = await Promise.all([
+      Order.find({
+        tenantId: req.tenant._id,
+        user: req.user.id,
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments({
+        tenantId: req.tenant._id,
+        user: req.user.id,
+      }),
+    ]);
 
     res.status(200).json({
       info: {
@@ -172,7 +215,8 @@ export const getMyOrders = async (req, res) => {
 
 export const getAllOrders = async (req, res) => {
   try {
-    const { page = 1, limit = 20, status } = req.query;
+    const { page = 1, limit: rawLimit = 20, status } = req.query;
+    const limit = Math.min(Number(rawLimit) || 20, 100);
     let query = { tenantId: req.tenant._id };
     if (status && VALID_ORDER_STATUSES.includes(status)) {
       query.status = status;
@@ -180,13 +224,14 @@ export const getAllOrders = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    const orders = await Order.find(query)
-      .populate("user", "name email")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    const total = await Order.countDocuments(query);
+    const [orders, total] = await Promise.all([
+      Order.find(query)
+        .populate("user", "name email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments(query),
+    ]);
 
     res.status(200).json({
       info: {
@@ -208,11 +253,9 @@ export const updateOrderStatus = async (req, res) => {
     const { status, trackingCode } = req.body;
 
     if (!status || !VALID_ORDER_STATUSES.includes(status)) {
-      return res
-        .status(400)
-        .json({
-          message: `Invalid status. Must be one of: ${VALID_ORDER_STATUSES.join(", ")}`,
-        });
+      return res.status(400).json({
+        message: `Invalid status. Must be one of: ${VALID_ORDER_STATUSES.join(", ")}`,
+      });
     }
 
     const order = await Order.findOne({ _id: id, tenantId: req.tenant._id });
@@ -227,7 +270,7 @@ export const updateOrderStatus = async (req, res) => {
         for (let item of order.products) {
           await Product.updateOne(
             { _id: item.product },
-            { $inc: { stock: item.quantity } },
+            { $inc: { stock: item.quantity, salesCount: -item.quantity } },
           ).session(session);
         }
         order.status = status;
@@ -249,6 +292,11 @@ export const updateOrderStatus = async (req, res) => {
     res
       .status(200)
       .json({ message: "Order status updated successfully.", order });
+
+    const user = await User.findById(order.user);
+    if (user && req.tenant) {
+      sendOrderStatusEmail(req.tenant, user, order);
+    }
   } catch (error) {
     console.error("Error updating status:", error.message);
     res.status(500).json({ message: "Error updating status." });
@@ -271,7 +319,7 @@ export const deleteOrder = async (req, res) => {
         for (let item of order.products) {
           await Product.updateOne(
             { _id: item.product },
-            { $inc: { stock: item.quantity } },
+            { $inc: { stock: item.quantity, salesCount: -item.quantity } },
           ).session(session);
         }
         await order.deleteOne({ session });

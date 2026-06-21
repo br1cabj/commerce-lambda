@@ -1,0 +1,11 @@
+
+# Junk files
+*.log
+.DS_Store
+Thumbs.db
+# Build outputs
+.next/
+dist/
+build/
+# Node modules
+node_modules/

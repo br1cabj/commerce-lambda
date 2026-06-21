@@ -14,14 +14,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     "default";
 
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
-    const res = await fetch(
-      `${apiUrl}/products/${resolvedParams.id}`,
-      {
-        headers: { "x-tenant-slug": tenantSlug },
-        next: { revalidate: 60 },
-      },
-    );
+    const apiUrl =
+      process.env.INTERNAL_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:3001/api";
+    const res = await fetch(`${apiUrl}/products/${resolvedParams.id}`, {
+      headers: { "x-tenant-slug": tenantSlug },
+      next: { revalidate: 60 },
+    });
 
     if (!res.ok) throw new Error("Failed to fetch product");
 

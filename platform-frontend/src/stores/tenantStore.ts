@@ -39,7 +39,22 @@ export interface TrustSignal {
 
 export interface SectionConfig {
   id: string;
-  type: "hero" | "trust" | "categories" | "featured" | "banners" | "flash" | "new" | "bestseller" | "reviews" | "newsletter" | "brands" | "why-choose-us" | "payment-methods" | "how-it-works" | "faq";
+  type:
+    | "hero"
+    | "trust"
+    | "categories"
+    | "featured"
+    | "banners"
+    | "flash"
+    | "new"
+    | "bestseller"
+    | "reviews"
+    | "newsletter"
+    | "brands"
+    | "why-choose-us"
+    | "payment-methods"
+    | "how-it-works"
+    | "faq";
   enabled: boolean;
   order: number;
   config: Record<string, unknown>;
@@ -201,7 +216,13 @@ export interface TenantCategory {
 }
 
 export interface CategoriesConfig {
-  layout: "grid" | "masonry" | "horizontal-scroll" | "cards-icon" | "cards-image" | "list";
+  layout:
+    | "grid"
+    | "masonry"
+    | "horizontal-scroll"
+    | "cards-icon"
+    | "cards-image"
+    | "list";
   columns: number;
   showDescription: boolean;
   showProductCount: boolean;
@@ -259,8 +280,12 @@ const LANGUAGE_STORAGE_KEY = "ecommerce-language";
 
 function getStoredLanguage(): "en" | "es" | null {
   if (typeof window === "undefined") return null;
-  const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (stored === "en" || stored === "es") return stored;
+  try {
+    const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (stored === "en" || stored === "es") return stored;
+  } catch (e) {
+    // Ignore access errors
+  }
   return null;
 }
 
@@ -268,14 +293,14 @@ export const useTenantStore = create<TenantState>()((set) => ({
   config: null,
   loading: false,
   error: null,
-  currentLanguage: getStoredLanguage() || "en",
+  currentLanguage: "en", // Default to "en" to prevent hydration mismatch
 
   setConfig: (config) => {
     const storedLang = getStoredLanguage();
-    set({ 
-      config, 
+    set({
+      config,
       error: null,
-      currentLanguage: storedLang || config.homeConfig?.defaultLanguage || "en"
+      currentLanguage: storedLang || config.homeConfig?.defaultLanguage || "en",
     });
   },
   setLoading: (loading) => set({ loading }),

@@ -33,11 +33,12 @@ interface TemplateDetail extends Template {
 
 export default function AdminTemplatesPage() {
   const { config, fetchConfig } = useTenant();
-  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
+  const { isAuthenticated, isAdmin, isHydrated } = useAuth();
   const router = useRouter();
 
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateDetail | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<TemplateDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
@@ -68,23 +69,34 @@ export default function AdminTemplatesPage() {
         setLoading(false);
       }
     })();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [isAuthenticated, isAdmin, router, loadTemplates, isHydrated]);
 
   const loadTemplateDetail = async (templateId: string) => {
     if (!config) return;
     try {
-      const data = (await api.get(`/templates/${templateId}`, config.slug)) as TemplateDetail;
+      const data = (await api.get(
+        `/templates/${templateId}`,
+        config.slug,
+      )) as TemplateDetail;
       setSelectedTemplate(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error loading template details");
+      setError(
+        err instanceof Error ? err.message : "Error loading template details",
+      );
     }
   };
 
   const applyTemplate = async (templateId: string) => {
     if (!config) return;
-    
-    if (!confirm("This will overwrite your current theme and translations. Continue?")) {
+
+    if (
+      !confirm(
+        "This will overwrite your current theme and translations. Continue?",
+      )
+    ) {
       return;
     }
 
@@ -150,7 +162,9 @@ export default function AdminTemplatesPage() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h3 className="text-lg font-bold">{template.name}</h3>
-                <p className="text-sm text-gray-500 mt-1">{template.description}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {template.description}
+                </p>
               </div>
               <Palette className="h-6 w-6 text-gray-400" />
             </div>
@@ -182,8 +196,12 @@ export default function AdminTemplatesPage() {
             <div className="p-6">
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h3 className="text-2xl font-bold">{selectedTemplate.name}</h3>
-                  <p className="text-gray-500 mt-1">{selectedTemplate.description}</p>
+                  <h3 className="text-2xl font-bold">
+                    {selectedTemplate.name}
+                  </h3>
+                  <p className="text-gray-500 mt-1">
+                    {selectedTemplate.description}
+                  </p>
                 </div>
                 <button
                   onClick={() => setSelectedTemplate(null)}
@@ -200,21 +218,28 @@ export default function AdminTemplatesPage() {
                     <div className="flex items-center gap-2">
                       <div
                         className="w-12 h-12 rounded-lg border-2 border-gray-200"
-                        style={{ backgroundColor: selectedTemplate.theme.primaryColor }}
+                        style={{
+                          backgroundColor: selectedTemplate.theme.primaryColor,
+                        }}
                       ></div>
                       <span className="text-sm text-gray-600">Primary</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div
                         className="w-12 h-12 rounded-lg border-2 border-gray-200"
-                        style={{ backgroundColor: selectedTemplate.theme.secondaryColor }}
+                        style={{
+                          backgroundColor:
+                            selectedTemplate.theme.secondaryColor,
+                        }}
                       ></div>
                       <span className="text-sm text-gray-600">Secondary</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div
                         className="w-12 h-12 rounded-lg border-2 border-gray-200"
-                        style={{ backgroundColor: selectedTemplate.theme.accentColor }}
+                        style={{
+                          backgroundColor: selectedTemplate.theme.accentColor,
+                        }}
                       ></div>
                       <span className="text-sm text-gray-600">Accent</span>
                     </div>
@@ -226,8 +251,12 @@ export default function AdminTemplatesPage() {
                   <div className="space-y-3">
                     {selectedTemplate.heroSlides.map((slide, index) => (
                       <div key={index} className="bg-gray-50 rounded-lg p-4">
-                        <p className="font-semibold text-lg">{slide.title.en}</p>
-                        <p className="text-sm text-gray-600 mt-1">{slide.subtitle.en}</p>
+                        <p className="font-semibold text-lg">
+                          {slide.title.en}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {slide.subtitle.en}
+                        </p>
                         <div className="flex gap-2 mt-2">
                           <span className="text-xs bg-gray-200 px-2 py-1 rounded">
                             {slide.ctaPrimary.en}

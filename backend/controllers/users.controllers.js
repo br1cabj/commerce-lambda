@@ -3,11 +3,24 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+const escapeHtml = (str) => {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+};
+
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
 
-    const userExists = await User.findOne({ tenantId: req.tenant._id, email });
+    const normalizedEmail = email.toLowerCase().trim();
+    const userExists = await User.findOne({
+      tenantId: req.tenant._id,
+      email: normalizedEmail,
+    });
     if (userExists) {
       return res
         .status(400)
@@ -20,7 +33,7 @@ export const registerUser = async (req, res) => {
     const newUser = new User({
       tenantId: req.tenant._id,
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       phone,
     });
@@ -46,12 +59,24 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const userFound = await User.findOne({ tenantId: req.tenant._id, email });
+    const normalizedEmail = email.toLowerCase().trim();
+    const userFound = await User.findOne({
+      email: normalizedEmail,
+      $or: [
+        { tenantId: req.tenant._id },
+        { tenantId: null, role: "super_admin" },
+      ],
+    });
 
+    // Dummy hash to equalize timing (prevent enumeration)
+    const dummyHash = "$2a$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    
     if (!userFound) {
+      // Run dummy compare
+      await bcrypt.compare(password, dummyHash);
       return res
-        .status(404)
-        .json({ message: "User not found. Check your email." });
+        .status(401)
+        .json({ message: "Invalid email or password." });
     }
 
     const isPasswordCorrect = await bcrypt.compare(
@@ -60,7 +85,11 @@ export const loginUser = async (req, res) => {
     );
 
     if (!isPasswordCorrect) {
-      return res.status(401).json({ message: "Incorrect password." });
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET environment variable is not configured");
     }
 
     const token = jwt.sign(
@@ -70,7 +99,7 @@ export const loginUser = async (req, res) => {
         tenantId: userFound.tenantId,
         tokenVersion: userFound.tokenVersion,
       },
-      process.env.JWT_SECRET || "supersecret123",
+      process.env.JWT_SECRET,
       { expiresIn: "1d" },
     );
 
@@ -127,41 +156,49 @@ export const updatePassword = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
 
-    const userFound = await User.findOne({ tenantId: req.tenant._id, email });
+    const userFound = await User.findOne({
+      tenantId: req.tenant._id,
+      email: normalizedEmail,
+    });
     if (!userFound) {
       return res
-        .status(404)
-        .json({ message: "No account exists with that email." });
+        .status(200)
+        .json({ message: "If an account exists, you will receive an email with instructions." });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET environment variable is not configured");
     }
 
     const resetToken = jwt.sign(
       { id: userFound._id, tenantId: userFound.tenantId },
-      process.env.JWT_SECRET || "supersecret123",
+      process.env.JWT_SECRET,
       { expiresIn: "15m" },
     );
 
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-    await transporter.sendMail({
-      from: `"${req.tenant.name}" <${process.env.EMAIL_USER}>`,
+    transporter.sendMail({
+      from: `"${escapeHtml(req.tenant.name)}" <${process.env.EMAIL_USER}>`,
       to: userFound.email,
       subject: "Password Reset Request",
       html: `
                 <div style="font-family: Arial, sans-serif; text-align: center; color: #333;">
-                    <h2>Hello ${userFound.name}!</h2>
+                    <h2>Hello ${escapeHtml(userFound.name)}!</h2>
                     <p>We received a request to reset your password.</p>
                     <p>Click the button below to create a new password (this link expires in 15 minutes):</p>
                     <a href="${resetLink}" style="background-color: #fca311; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 15px 0;">Reset my password</a>
                     <p style="font-size: 12px; color: #999;">If you didn't request this, ignore this email. Your account is safe.</p>
                 </div>
             `,
-    });
+    }).catch(err => console.error("Error sending recovery email asynchronously:", err.message));
 
     res
       .status(200)
-      .json({ message: "Check your inbox! We sent you the instructions." });
+      .json({ message: "If an account exists, you will receive an email with instructions." });
   } catch (error) {
     console.error("Error in forgotPassword:", error.message);
     res.status(500).json({ message: "Error sending recovery email." });
@@ -179,7 +216,11 @@ export const resetPassword = async (req, res) => {
         .json({ message: "Password must have at least 6 characters." });
     }
 
-    const verified = jwt.verify(token, process.env.JWT_SECRET || "supersecret123");
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET environment variable is not configured");
+    }
+
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
 
     const userFound = await User.findOne({
       _id: verified.id,
@@ -201,12 +242,9 @@ export const resetPassword = async (req, res) => {
       .json({ message: "Your password has been reset successfully!" });
   } catch (error) {
     console.error("Error in resetPassword:", error.message);
-    res
-      .status(400)
-      .json({
-        message:
-          "The link is invalid or has expired. Please request a new one.",
-      });
+    res.status(400).json({
+      message: "The link is invalid or has expired. Please request a new one.",
+    });
   }
 };
 

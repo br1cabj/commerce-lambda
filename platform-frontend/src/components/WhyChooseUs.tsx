@@ -23,7 +23,10 @@ interface WhyChooseUsProps {
   primaryColor: string;
 }
 
-const defaultIcons: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+const defaultIcons: Record<
+  string,
+  React.ComponentType<{ className?: string; style?: React.CSSProperties }>
+> = {
   Award,
   Clock,
   Headphones,
@@ -37,10 +40,26 @@ const defaultIcons: Record<string, React.ComponentType<{ className?: string; sty
 };
 
 const defaultBenefits = [
-  { icon: "Truck", titleKey: "Free Shipping", descKey: "On all orders over $50" },
-  { icon: "Shield", titleKey: "Secure Payment", descKey: "100% protected transactions" },
-  { icon: "RotateCcw", titleKey: "Easy Returns", descKey: "30-day return policy" },
-  { icon: "Headphones", titleKey: "24/7 Support", descKey: "Always here to help" },
+  {
+    icon: "Truck",
+    titleKey: "Free Shipping",
+    descKey: "On all orders over $50",
+  },
+  {
+    icon: "Shield",
+    titleKey: "Secure Payment",
+    descKey: "100% protected transactions",
+  },
+  {
+    icon: "RotateCcw",
+    titleKey: "Easy Returns",
+    descKey: "30-day return policy",
+  },
+  {
+    icon: "Headphones",
+    titleKey: "24/7 Support",
+    descKey: "Always here to help",
+  },
 ];
 
 export function WhyChooseUs({
@@ -52,23 +71,24 @@ export function WhyChooseUs({
 }: WhyChooseUsProps) {
   const { t } = useTranslations();
 
-  const enabledBenefits = benefits.length > 0
-    ? benefits.filter((b) => b.enabled).sort((a, b) => a.order - b.order)
-    : defaultBenefits.map((b, i) => ({
-        id: `default-${i}`,
-        icon: b.icon,
-        title: { en: b.titleKey, es: b.titleKey },
-        description: { en: b.descKey, es: b.descKey },
-        enabled: true,
-        order: i,
-      }));
+  const enabledBenefits =
+    benefits.length > 0
+      ? benefits.filter((b) => b.enabled).sort((a, b) => a.order - b.order)
+      : defaultBenefits.map((b, i) => ({
+          id: `default-${i}`,
+          icon: b.icon,
+          title: { en: b.titleKey, es: b.titleKey },
+          description: { en: b.descKey, es: b.descKey },
+          enabled: true,
+          order: i,
+        }));
 
   const gridCols =
     enabledBenefits.length === 2
       ? "md:grid-cols-2"
       : enabledBenefits.length === 3
-      ? "md:grid-cols-3"
-      : "md:grid-cols-2 lg:grid-cols-4";
+        ? "md:grid-cols-3"
+        : "md:grid-cols-2 lg:grid-cols-4";
 
   return (
     <section className="py-16 bg-gradient-to-b from-white to-gray-50">

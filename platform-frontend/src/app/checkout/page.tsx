@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { MessageCircle, CreditCard, Wallet } from "lucide-react";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
+import toast from "react-hot-toast";
 
 type PaymentMethod = "whatsapp" | "mercadopago" | "stripe";
 
@@ -54,14 +55,15 @@ export default function CheckoutPage() {
   const discountAmount = totalAmount * (discountPercent / 100);
   const finalTotal = totalAmount - discountAmount;
 
-  const paymentMethods = config?.settings.paymentMethods || [];
-  const availableMethods: PaymentMethod[] = paymentMethods
-    .filter((m) => m.enabled)
-    .map((m) => m.type as PaymentMethod);
-
-  if (availableMethods.length === 0) {
-    availableMethods.push("whatsapp");
-  }
+  const availableMethods: PaymentMethod[] = useMemo(() => {
+    const methods = (config?.settings.paymentMethods || [])
+      .filter((m: { enabled: boolean }) => m.enabled)
+      .map((m: { type: string }) => m.type as PaymentMethod);
+    if (methods.length === 0) {
+      return ["whatsapp" as PaymentMethod];
+    }
+    return methods;
+  }, [config?.settings.paymentMethods]);
 
   if (!config || !isAuthenticated || items.length === 0) return null;
 
@@ -100,8 +102,11 @@ export default function CheckoutPage() {
       setDiscountPercent(data.discountPercentage);
       setCouponApplied(true);
       setCouponMessage(`${data.discountPercentage}% discount applied!`);
+      toast.success(`${data.discountPercentage}% discount applied!`, { icon: '🎟️' });
     } catch (err) {
-      setCouponMessage(err instanceof Error ? err.message : "Invalid coupon");
+      const msg = err instanceof Error ? err.message : "Invalid coupon";
+      setCouponMessage(msg);
+      toast.error(msg);
     } finally {
       setApplyingCoupon(false);
     }
@@ -156,6 +161,8 @@ export default function CheckoutPage() {
 
       clearCart();
 
+      toast.success("Order placed successfully! Redirecting to WhatsApp...");
+
       if (phoneNumber) {
         window.open(
           `https://wa.me/${phoneNumber}?text=${encodeURIComponent(wspText)}`,
@@ -165,7 +172,9 @@ export default function CheckoutPage() {
 
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error processing order");
+      const msg = err instanceof Error ? err.message : "Error processing order";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -199,7 +208,9 @@ export default function CheckoutPage() {
       clearCart();
       window.location.href = data.initPoint;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error creating payment");
+      const msg = err instanceof Error ? err.message : "Error creating payment";
+      setError(msg);
+      toast.error(msg);
       setLoading(false);
     }
   };
@@ -232,7 +243,9 @@ export default function CheckoutPage() {
       clearCart();
       window.location.href = data.url;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error creating payment");
+      const msg = err instanceof Error ? err.message : "Error creating payment";
+      setError(msg);
+      toast.error(msg);
       setLoading(false);
     }
   };
@@ -244,6 +257,7 @@ export default function CheckoutPage() {
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
+      toast.error(validationError);
       return;
     }
 

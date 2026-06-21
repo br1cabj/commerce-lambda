@@ -8,6 +8,7 @@ import {
   Settings,
   Home,
   Palette,
+  Mail,
 } from "lucide-react";
 
 const adminLinks = [
@@ -41,6 +42,11 @@ const adminLinks = [
     href: "/admin/settings",
     label: "Settings",
     icon: <Settings className="h-4 w-4" />,
+  },
+  {
+    href: "/admin/emails",
+    label: "Emails",
+    icon: <Mail className="h-4 w-4" />,
   },
 ];
 

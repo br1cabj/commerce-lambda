@@ -6,10 +6,12 @@ export function middleware(request: NextRequest) {
   const hostParts = hostname ? hostname.split(".") : [];
 
   let tenantSlug: string | null = null;
+  const isLocalhost = hostname?.includes("localhost") || hostname?.includes("127.0.0.1");
 
-  if (hostParts.length > 2) {
+  // Check if it's a subdomain (e.g. store.midominio.com) vs custom domain (e.g. mitienda.com)
+  if (hostParts.length > 2 && !isLocalhost) {
     tenantSlug = hostParts[0].toLowerCase();
-  } else {
+  } else if (isLocalhost) {
     tenantSlug = process.env.NEXT_PUBLIC_DEFAULT_TENANT || null;
   }
 
@@ -17,6 +19,11 @@ export function middleware(request: NextRequest) {
 
   if (tenantSlug) {
     response.headers.set("x-tenant-slug", tenantSlug);
+  }
+  
+  // Always pass the raw hostname so the backend can check for Custom Domains
+  if (hostname) {
+    response.headers.set("x-tenant-domain", hostname.split(":")[0]);
   }
 
   return response;

@@ -4,7 +4,8 @@ import { useTranslations } from "@/hooks/useTranslations";
 import { Globe } from "lucide-react";
 
 export function LanguageSelector() {
-  const { currentLanguage, setLanguage, supportedLanguages } = useTranslations();
+  const { currentLanguage, setLanguage, supportedLanguages } =
+    useTranslations();
 
   if (supportedLanguages.length <= 1) return null;
 

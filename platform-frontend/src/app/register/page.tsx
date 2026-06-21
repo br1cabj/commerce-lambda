@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
   const { config } = useTenant();
@@ -22,6 +23,7 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
       return setError("Passwords do not match");
     }
 
@@ -29,9 +31,12 @@ export default function RegisterPage() {
 
     try {
       await register(name, email, password, config?.slug || "");
+      toast.success("Account created successfully!");
       router.push("/login");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      const msg = err instanceof Error ? err.message : "Registration failed";
+      toast.error(msg);
+      setError(msg);
     } finally {
       setLoading(false);
     }

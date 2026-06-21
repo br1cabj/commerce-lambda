@@ -9,7 +9,10 @@ interface TrustSignalsProps {
   customSignals?: TrustSignalType[];
 }
 
-const defaultIcons: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+const defaultIcons: Record<
+  string,
+  React.ComponentType<{ className?: string; style?: React.CSSProperties }>
+> = {
   Truck,
   Shield,
   RotateCcw,
@@ -39,7 +42,10 @@ const defaultSignals = [
   },
 ];
 
-export function TrustSignals({ accentColor, customSignals }: TrustSignalsProps) {
+export function TrustSignals({
+  accentColor,
+  customSignals,
+}: TrustSignalsProps) {
   const { t, translations } = useTranslations();
 
   const signals = customSignals
@@ -53,8 +59,16 @@ export function TrustSignals({ accentColor, customSignals }: TrustSignalsProps) 
         }))
     : defaultSignals.map((s) => ({
         icon: s.icon,
-        title: t(translations?.trustSignals?.[s.titleKey as keyof typeof translations.trustSignals]),
-        description: t(translations?.trustSignals?.[s.descKey as keyof typeof translations.trustSignals]),
+        title: t(
+          translations?.trustSignals?.[
+            s.titleKey as keyof typeof translations.trustSignals
+          ],
+        ),
+        description: t(
+          translations?.trustSignals?.[
+            s.descKey as keyof typeof translations.trustSignals
+          ],
+        ),
       }));
 
   return (

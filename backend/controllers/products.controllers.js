@@ -18,24 +18,49 @@ export const getAllProducts = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 10,
+      limit: rawLimit = 10,
       brand,
       size,
       isFeatured,
       category,
+      sort,
+      order,
+      minDiscount,
     } = req.query;
+    const limit = Math.min(Number(rawLimit) || 10, 100);
     let queryFilters = { tenantId: req.tenant._id, isDeleted: false };
 
-    if (brand) queryFilters.brand = { $regex: brand, $options: "i" };
+    if (brand) {
+      const escapedBrand = brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      queryFilters.brand = { $regex: escapedBrand, $options: "i" };
+    }
     if (size) queryFilters["sizes.size"] = { $in: [String(size)] };
     if (isFeatured === "true") queryFilters.isFeatured = true;
     if (category) queryFilters.category = category;
+    if (minDiscount) queryFilters.discount = { $gte: Number(minDiscount) };
 
     const skip = (page - 1) * limit;
-    const products = await Product.find(queryFilters)
-      .skip(skip)
-      .limit(Number(limit));
-    const totalProducts = await Product.countDocuments(queryFilters);
+    const ALLOWED_SORT_FIELDS = [
+      "createdAt",
+      "price",
+      "model",
+      "brand",
+      "salesCount",
+      "discount",
+    ];
+    
+    const sortOptions = {};
+    const validSortBy = ALLOWED_SORT_FIELDS.includes(sort) ? sort : "createdAt";
+    const validOrder = order === "asc" ? 1 : -1;
+    sortOptions[validSortBy] = validOrder;
+
+    const [products, totalProducts] = await Promise.all([
+      Product.find(queryFilters)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(Number(limit)),
+      Product.countDocuments(queryFilters),
+    ]);
     const totalPages = Math.ceil(totalProducts / limit);
 
     res.status(200).json({
@@ -67,8 +92,8 @@ export const getProductById = async (req, res) => {
       return res.status(404).json({ message: "Product not found." });
     if (productFound.stock === 0)
       return res
-        .status(403)
-        .json({ message: "Product temporarily out of stock." });
+        .status(200)
+        .json({ message: "Product temporarily out of stock.", product: productFound });
 
     res.json(productFound);
   } catch (error) {
@@ -79,14 +104,38 @@ export const getProductById = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
-    const productData = { ...req.body, tenantId: req.tenant._id };
+    const {
+      model,
+      brand,
+      price,
+      discount,
+      category,
+      description,
+      sizes,
+      earnedPoints,
+      isFeatured,
+      isNew,
+      isBestSeller,
+    } = req.body;
 
-    if (productData.sizes) {
+    const productData = {
+      tenantId: req.tenant._id,
+      model,
+      brand,
+      price,
+      discount: discount || 0,
+      category,
+      description,
+      earnedPoints: earnedPoints || 0,
+      isFeatured: isFeatured || false,
+      isNew: isNew || false,
+      isBestSeller: isBestSeller || false,
+    };
+
+    if (sizes) {
       try {
         productData.sizes =
-          typeof productData.sizes === "string"
-            ? JSON.parse(productData.sizes)
-            : productData.sizes;
+          typeof sizes === "string" ? JSON.parse(sizes) : sizes;
       } catch (parseError) {
         return res
           .status(400)
@@ -106,14 +155,10 @@ export const createProduct = async (req, res) => {
       let files = req.files.images;
       if (!Array.isArray(files)) files = [files];
 
+      // Validar todos los archivos primero
       for (let file of files) {
         const validation = validateImageFile(file);
         if (!validation.valid) {
-          for (let uploaded of imagesArray) {
-            try {
-              await cloudinary.uploader.destroy(uploaded.public_id);
-            } catch (e) {}
-          }
           for (let f of files) {
             try {
               await fs.unlink(f.tempFilePath);
@@ -121,16 +166,21 @@ export const createProduct = async (req, res) => {
           }
           return res.status(400).json({ message: validation.error });
         }
+      }
 
+      // Subir todas las imagenes en paralelo
+      const uploadPromises = files.map(async (file) => {
         const result = await cloudinary.uploader.upload(file.tempFilePath, {
           resource_type: "image",
           transformation: [{ quality: "auto", fetch_format: "auto" }],
         });
-        imagesArray.push(result.secure_url);
         try {
           await fs.unlink(file.tempFilePath);
         } catch (e) {}
-      }
+        return result.secure_url;
+      });
+
+      imagesArray = await Promise.all(uploadPromises);
       productData.images = imagesArray;
     } else {
       productData.images = [
@@ -141,12 +191,10 @@ export const createProduct = async (req, res) => {
     const newProduct = new Product(productData);
     const productSaved = await newProduct.save();
 
-    res
-      .status(201)
-      .json({
-        message: "Product created successfully!",
-        product: productSaved,
-      });
+    res.status(201).json({
+      message: "Product created successfully!",
+      product: productSaved,
+    });
   } catch (error) {
     if (req.files && req.files.images) {
       let files = req.files.images;
@@ -184,14 +232,35 @@ export const deleteProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const productData = { ...req.body };
+    const {
+      model,
+      brand,
+      price,
+      discount,
+      category,
+      description,
+      sizes,
+      earnedPoints,
+      isFeatured,
+      isNew,
+      isBestSeller,
+    } = req.body;
 
-    if (productData.sizes) {
+    const productData = {};
+    if (model !== undefined) productData.model = model;
+    if (brand !== undefined) productData.brand = brand;
+    if (price !== undefined) productData.price = price;
+    if (discount !== undefined) productData.discount = discount;
+    if (category !== undefined) productData.category = category;
+    if (description !== undefined) productData.description = description;
+    if (earnedPoints !== undefined) productData.earnedPoints = earnedPoints;
+    if (isFeatured !== undefined) productData.isFeatured = isFeatured;
+    if (isNew !== undefined) productData.isNew = isNew;
+    if (isBestSeller !== undefined) productData.isBestSeller = isBestSeller;
+
+    if (sizes !== undefined) {
       try {
-        productData.sizes =
-          typeof productData.sizes === "string"
-            ? JSON.parse(productData.sizes)
-            : productData.sizes;
+        productData.sizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
       } catch (parseError) {
         return res
           .status(400)
@@ -208,6 +277,7 @@ export const updateProduct = async (req, res) => {
       let files = req.files.images;
       if (!Array.isArray(files)) files = [files];
 
+      // Validar todos los archivos primero
       for (let file of files) {
         const validation = validateImageFile(file);
         if (!validation.valid) {
@@ -218,16 +288,21 @@ export const updateProduct = async (req, res) => {
           }
           return res.status(400).json({ message: validation.error });
         }
+      }
 
+      // Subir todas las imagenes en paralelo
+      const uploadPromises = files.map(async (file) => {
         const result = await cloudinary.uploader.upload(file.tempFilePath, {
           resource_type: "image",
           transformation: [{ quality: "auto", fetch_format: "auto" }],
         });
-        imagesArray.push(result.secure_url);
         try {
           await fs.unlink(file.tempFilePath);
         } catch (e) {}
-      }
+        return result.secure_url;
+      });
+
+      imagesArray = await Promise.all(uploadPromises);
       productData.images = imagesArray;
     }
 

@@ -17,7 +17,7 @@ interface Order {
 
 export default function TrackingPage() {
   const { config } = useTenant();
-  const { isAuthenticated , isHydrated} = useAuth();
+  const { isAuthenticated } = useAuth();
   const [trackingInput, setTrackingInput] = useState("");
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
@@ -39,7 +39,10 @@ export default function TrackingPage() {
     setLoading(true);
     try {
       if (isAuthenticated) {
-        const ordersResponse = await api.get("/orders/my-orders", config.slug) as { results: Order[] };
+        const ordersResponse = (await api.get(
+          "/orders/my-orders",
+          config.slug,
+        )) as { results: Order[] };
         const orders = ordersResponse.results || [];
         const found = orders.find(
           (o) =>

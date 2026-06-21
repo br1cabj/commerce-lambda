@@ -16,12 +16,12 @@ const router = Router();
 router.use(verifyToken);
 router.use(isSuperAdmin);
 
-router.get("/", getAllTenants);
+router.get("/tenants", getAllTenants);
 router.get("/analytics", getPlatformAnalytics);
-router.get("/:id", getTenantById);
-router.post("/", createTenant);
-router.put("/:id", updateTenant);
-router.put("/:id/toggle-status", toggleTenantStatus);
-router.delete("/:id", deleteTenant);
+router.get("/tenants/:id", getTenantById);
+router.post("/tenants", createTenant);
+router.put("/tenants/:id", updateTenant);
+router.put("/tenants/:id/toggle-status", toggleTenantStatus);
+router.delete("/tenants/:id", deleteTenant);
 
 export default router;

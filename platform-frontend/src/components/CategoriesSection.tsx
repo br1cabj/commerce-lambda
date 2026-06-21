@@ -59,7 +59,13 @@ const iconComponents: Record<string, string> = {
   Crown: "👑",
 };
 
-function CategoryIcon({ icon, className }: { icon: string; className?: string }) {
+function CategoryIcon({
+  icon,
+  className,
+}: {
+  icon: string;
+  className?: string;
+}) {
   const emoji = iconComponents[icon];
   if (emoji) {
     return <span className={className}>{emoji}</span>;
@@ -81,12 +87,13 @@ export function CategoriesSection({
 
   if (!homeCategories || homeCategories.length === 0) return null;
 
-  const gridCols = {
-    2: "grid-cols-1 sm:grid-cols-2",
-    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-    4: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
-    6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
-  }[cfg.columns] || "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+  const gridCols =
+    {
+      2: "grid-cols-1 sm:grid-cols-2",
+      3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+      4: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
+      6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
+    }[cfg.columns] || "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
   const radiusClass = borderRadiusMap[cfg.borderRadius] || "rounded-2xl";
 
@@ -98,12 +105,13 @@ export function CategoriesSection({
 
     const commonClasses = `group relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 ${radiusClass}`;
 
-    const hoverClasses = {
-      zoom: "group-hover:scale-110",
-      slide: "group-hover:translate-y-[-4px]",
-      fade: "group-hover:opacity-80",
-      none: "",
-    }[cfg.hoverEffect] || "";
+    const hoverClasses =
+      {
+        zoom: "group-hover:scale-110",
+        slide: "group-hover:translate-y-[-4px]",
+        fade: "group-hover:opacity-80",
+        none: "",
+      }[cfg.hoverEffect] || "";
 
     if (cfg.layout === "horizontal-scroll") {
       return (
@@ -148,10 +156,15 @@ export function CategoriesSection({
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-gray-900 text-lg">{category.name}</h3>
             {cfg.showDescription && category.description && (
-              <p className="text-gray-500 text-sm mt-1 line-clamp-1">{category.description}</p>
+              <p className="text-gray-500 text-sm mt-1 line-clamp-1">
+                {category.description}
+              </p>
             )}
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-900 transition-colors" style={accentColor ? { color: accentColor } : {}} />
+          <ArrowRight
+            className="h-5 w-5 text-gray-400 group-hover:text-gray-900 transition-colors"
+            style={accentColor ? { color: accentColor } : {}}
+          />
         </Link>
       );
     }
@@ -219,15 +232,24 @@ export function CategoriesSection({
               >
                 <div
                   className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center text-4xl transition-transform duration-300 group-hover:scale-110"
-                  style={{ backgroundColor: cat.backgroundColor ? `${cat.backgroundColor}20` : `${accentColor}15` }}
+                  style={{
+                    backgroundColor: cat.backgroundColor
+                      ? `${cat.backgroundColor}20`
+                      : `${accentColor}15`,
+                  }}
                 >
-                  <CategoryIcon icon={cat.icon || "ShoppingBag"} className="text-4xl" />
+                  <CategoryIcon
+                    icon={cat.icon || "ShoppingBag"}
+                    className="text-4xl"
+                  />
                 </div>
                 <h3 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-gray-700">
                   {cat.name}
                 </h3>
                 {cfg.showDescription && cat.description && (
-                  <p className="text-gray-500 text-sm line-clamp-2">{cat.description}</p>
+                  <p className="text-gray-500 text-sm line-clamp-2">
+                    {cat.description}
+                  </p>
                 )}
               </Link>
             ))}
@@ -294,11 +316,18 @@ function CategoryCardContent({
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         </div>
         <div className="p-5 flex-1 flex flex-col">
-          <h3 className="font-bold text-gray-900 text-lg mb-1">{category.name}</h3>
+          <h3 className="font-bold text-gray-900 text-lg mb-1">
+            {category.name}
+          </h3>
           {cfg.showDescription && category.description && (
-            <p className="text-gray-500 text-sm line-clamp-2 mb-3">{category.description}</p>
+            <p className="text-gray-500 text-sm line-clamp-2 mb-3">
+              {category.description}
+            </p>
           )}
-          <div className="mt-auto flex items-center gap-2 font-semibold text-sm" style={{ color: accentColor }}>
+          <div
+            className="mt-auto flex items-center gap-2 font-semibold text-sm"
+            style={{ color: accentColor }}
+          >
             <span>{t(translations?.hero?.shopNow) || "Shop Now"}</span>
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </div>
@@ -309,7 +338,10 @@ function CategoryCardContent({
 
   return (
     <>
-      <div className="relative overflow-hidden" style={{ height: cfg.maxHeight }}>
+      <div
+        className="relative overflow-hidden"
+        style={{ height: cfg.maxHeight }}
+      >
         <CategoryImage
           category={category}
           displayStyle={displayStyle}
@@ -355,11 +387,18 @@ function CategoryCardContent({
 
       {cfg.cardStyle === "bottom" && (
         <div className="p-5">
-          <h3 className="font-bold text-gray-900 text-lg mb-1">{category.name}</h3>
+          <h3 className="font-bold text-gray-900 text-lg mb-1">
+            {category.name}
+          </h3>
           {cfg.showDescription && category.description && (
-            <p className="text-gray-500 text-sm line-clamp-2">{category.description}</p>
+            <p className="text-gray-500 text-sm line-clamp-2">
+              {category.description}
+            </p>
           )}
-          <div className="flex items-center gap-2 font-semibold text-sm mt-3" style={{ color: accentColor }}>
+          <div
+            className="flex items-center gap-2 font-semibold text-sm mt-3"
+            style={{ color: accentColor }}
+          >
             <span>{t(translations?.hero?.shopNow) || "Shop Now"}</span>
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </div>
@@ -371,9 +410,14 @@ function CategoryCardContent({
           <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 w-full">
             <h3 className="font-bold text-gray-900 text-lg">{category.name}</h3>
             {cfg.showDescription && category.description && (
-              <p className="text-gray-500 text-sm line-clamp-1 mt-1">{category.description}</p>
+              <p className="text-gray-500 text-sm line-clamp-1 mt-1">
+                {category.description}
+              </p>
             )}
-            <div className="flex items-center gap-2 font-semibold text-sm mt-2" style={{ color: accentColor }}>
+            <div
+              className="flex items-center gap-2 font-semibold text-sm mt-2"
+              style={{ color: accentColor }}
+            >
               <span>{t(translations?.hero?.shopNow) || "Shop Now"}</span>
               <ArrowRight className="h-4 w-4" />
             </div>
@@ -445,7 +489,9 @@ function CategoryImage({
             className={`${size === "large" ? "text-6xl" : "text-3xl"} opacity-80`}
           />
         ) : (
-          <span className={`${size === "large" ? "text-6xl" : "text-3xl"} text-white/80 font-bold`}>
+          <span
+            className={`${size === "large" ? "text-6xl" : "text-3xl"} text-white/80 font-bold`}
+          >
             {category.name.charAt(0)}
           </span>
         )}
@@ -460,14 +506,16 @@ function CategoryImage({
         alt={category.name}
         fill
         className={`object-cover ${hoverClasses} transition-transform duration-700`}
-        unoptimized
+
       />
     );
   }
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-      <span className="text-gray-400 text-6xl font-bold">{category.name.charAt(0)}</span>
+      <span className="text-gray-400 text-6xl font-bold">
+        {category.name.charAt(0)}
+      </span>
     </div>
   );
 }
@@ -496,7 +544,10 @@ function HorizontalScrollCarousel({ children }: { children: React.ReactNode }) {
     const el = scrollRef.current;
     if (!el) return;
     const amount = 280;
-    el.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
+    el.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
   };
 
   return (

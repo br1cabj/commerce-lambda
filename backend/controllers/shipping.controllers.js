@@ -35,23 +35,19 @@ export const calculateShipping = async (req, res) => {
       );
 
       if (freeShipping) {
-        return res
-          .status(200)
-          .json({
-            price: 0,
-            productName: "Free Shipping",
-            deliveryTimeMin: 2,
-            deliveryTimeMax: 5,
-          });
+        return res.status(200).json({
+          price: 0,
+          productName: "Free Shipping",
+          deliveryTimeMin: 2,
+          deliveryTimeMax: 5,
+        });
       } else if (flatShipping) {
-        return res
-          .status(200)
-          .json({
-            price: flatShipping.config?.price || 1500,
-            productName: "Standard Shipping",
-            deliveryTimeMin: 3,
-            deliveryTimeMax: 7,
-          });
+        return res.status(200).json({
+          price: flatShipping.config?.price || 1500,
+          productName: "Standard Shipping",
+          deliveryTimeMin: 3,
+          deliveryTimeMax: 7,
+        });
       }
       return res
         .status(400)
@@ -99,12 +95,10 @@ export const calculateShipping = async (req, res) => {
     const ratesData = await ratesResponse.json();
 
     if (!ratesResponse.ok) {
-      return res
-        .status(400)
-        .json({
-          message: "Shipping carrier could not quote this destination.",
-          error: ratesData,
-        });
+      return res.status(400).json({
+        message: "Shipping carrier could not quote this destination.",
+        error: ratesData,
+      });
     }
 
     if (!ratesData.rates || ratesData.rates.length === 0) {

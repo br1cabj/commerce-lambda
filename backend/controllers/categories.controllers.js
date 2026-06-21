@@ -2,18 +2,17 @@ import Category from "../models/Category.js";
 
 export const getAllCategories = async (req, res) => {
   try {
-    const { isActive, page = 1, limit = 20 } = req.query;
+    const { isActive, page = 1, limit: rawLimit = 20 } = req.query;
+    const limit = Math.min(Number(rawLimit) || 20, 100);
     let query = { tenantId: req.tenant._id };
     if (isActive !== undefined) query.isActive = isActive === "true";
 
     const skip = (page - 1) * limit;
 
-    const categories = await Category.find(query)
-      .sort({ order: 1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    const total = await Category.countDocuments(query);
+    const [categories, total] = await Promise.all([
+      Category.find(query).sort({ order: 1 }).skip(skip).limit(Number(limit)),
+      Category.countDocuments(query),
+    ]);
 
     res.status(200).json({
       info: {
@@ -46,7 +45,18 @@ export const getCategoryById = async (req, res) => {
 
 export const createCategory = async (req, res) => {
   try {
-    const { name, slug, description, imageUrl, icon, backgroundColor, displayStyle, showOnHome, parentId, order } = req.body;
+    const {
+      name,
+      slug,
+      description,
+      imageUrl,
+      icon,
+      backgroundColor,
+      displayStyle,
+      showOnHome,
+      parentId,
+      order,
+    } = req.body;
 
     const existingCategory = await Category.findOne({
       tenantId: req.tenant._id,
@@ -84,7 +94,30 @@ export const createCategory = async (req, res) => {
 export const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const {
+      name,
+      slug,
+      description,
+      imageUrl,
+      icon,
+      backgroundColor,
+      displayStyle,
+      showOnHome,
+      parentId,
+      order,
+    } = req.body;
+
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (slug !== undefined) updates.slug = slug;
+    if (description !== undefined) updates.description = description;
+    if (imageUrl !== undefined) updates.imageUrl = imageUrl;
+    if (icon !== undefined) updates.icon = icon;
+    if (backgroundColor !== undefined) updates.backgroundColor = backgroundColor;
+    if (displayStyle !== undefined) updates.displayStyle = displayStyle;
+    if (showOnHome !== undefined) updates.showOnHome = showOnHome;
+    if (parentId !== undefined) updates.parentId = parentId;
+    if (order !== undefined) updates.order = order;
 
     const updatedCategory = await Category.findOneAndUpdate(
       { _id: id, tenantId: req.tenant._id },

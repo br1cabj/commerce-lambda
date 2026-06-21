@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ type Tab = "theme" | "payments" | "shipping" | "features";
 
 export default function AdminSettingsPage() {
   const { config, fetchConfig } = useTenant();
-  const { isAuthenticated, isAdmin , isHydrated} = useAuth();
+  const { isAuthenticated, isAdmin, isHydrated } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("theme");
   const [saving, setSaving] = useState(false);
@@ -33,9 +33,11 @@ export default function AdminSettingsPage() {
     config?.theme.heroSubtitle || "",
   );
   const [logoUrl, setLogoUrl] = useState(config?.theme.logoUrl || "");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [heroImageUrl, setHeroImageUrl] = useState(
     config?.theme.heroImageUrl || "",
   );
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
 
   const [whatsappNumber, setWhatsappNumber] = useState(
     config?.settings.whatsappNumber || "",
@@ -88,29 +90,55 @@ export default function AdminSettingsPage() {
     }
   }, [config]);
 
+  const logoPreviewUrl = useMemo(
+    () => (logoFile ? URL.createObjectURL(logoFile) : null),
+    [logoFile],
+  );
+  const heroPreviewUrl = useMemo(
+    () => (heroImageFile ? URL.createObjectURL(heroImageFile) : null),
+    [heroImageFile],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl);
+      if (heroPreviewUrl) URL.revokeObjectURL(heroPreviewUrl);
+    };
+  }, [logoPreviewUrl, heroPreviewUrl]);
+
   if (!isAuthenticated || !isAdmin) return null;
   if (!config) return null;
 
   const saveTheme = async () => {
     setSaving(true);
     try {
-      await api.put(
-        "/store/theme",
-        {
-          theme: {
-            primaryColor,
-            secondaryColor,
-            accentColor,
-            heroTitle,
-            heroSubtitle,
-            logoUrl,
-            heroImageUrl,
-          },
-        },
-        config.slug,
+      const formData = new FormData();
+      formData.append(
+        "theme",
+        JSON.stringify({
+          primaryColor,
+          secondaryColor,
+          accentColor,
+          heroTitle,
+          heroSubtitle,
+          logoUrl,
+          heroImageUrl,
+        }),
       );
+
+      if (logoFile) {
+        formData.append("logo", logoFile);
+      }
+      if (heroImageFile) {
+        formData.append("heroImage", heroImageFile);
+      }
+
+      await api.put("/store/theme", formData, config.slug);
+
       await fetchConfig(config.slug);
       setSaved(true);
+      setLogoFile(null);
+      setHeroImageFile(null);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       console.error("Error saving theme:", err);
@@ -256,27 +284,73 @@ export default function AdminSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Logo URL</label>
-            <input
-              type="text"
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border"
-              placeholder="https://..."
-            />
+            <label className="block text-sm font-bold mb-2">
+              Logo URL or Upload Image
+            </label>
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+              />
+              <input
+                type="text"
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+                placeholder="Or paste an image URL here..."
+              />
+            </div>
+            {logoUrl && !logoFile && (
+              <img
+                src={logoUrl}
+                alt="Logo preview"
+                className="h-16 mt-2 object-contain"
+              />
+            )}
+            {logoFile && (
+              <img
+                src={logoPreviewUrl || ""}
+                alt="Logo preview"
+                className="h-16 mt-2 object-contain"
+              />
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-bold mb-2">
-              Hero Image URL
+              Hero Image URL or Upload Image
             </label>
-            <input
-              type="text"
-              value={heroImageUrl}
-              onChange={(e) => setHeroImageUrl(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border"
-              placeholder="https://..."
-            />
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setHeroImageFile(e.target.files?.[0] || null)}
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+              />
+              <input
+                type="text"
+                value={heroImageUrl}
+                onChange={(e) => setHeroImageUrl(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+                placeholder="Or paste an image URL here..."
+              />
+            </div>
+            {heroImageUrl && !heroImageFile && (
+              <img
+                src={heroImageUrl}
+                alt="Hero preview"
+                className="h-32 mt-2 object-cover rounded-lg w-full max-w-md"
+              />
+            )}
+            {heroImageFile && (
+              <img
+                src={heroPreviewUrl || ""}
+                alt="Hero preview"
+                className="h-32 mt-2 object-cover rounded-lg w-full max-w-md"
+              />
+            )}
           </div>
 
           <div>

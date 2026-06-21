@@ -15,15 +15,17 @@ const sanitizeHtml = (str) => {
 
 export const getAllReviews = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit: rawLimit = 20 } = req.query;
+    const limit = Math.min(Number(rawLimit) || 20, 100);
     const skip = (page - 1) * limit;
 
-    const reviews = await Review.find({ tenantId: req.tenant._id })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    const total = await Review.countDocuments({ tenantId: req.tenant._id });
+    const [reviews, total] = await Promise.all([
+      Review.find({ tenantId: req.tenant._id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Review.countDocuments({ tenantId: req.tenant._id }),
+    ]);
 
     res.status(200).json({
       info: {
@@ -47,11 +49,9 @@ export const createReview = async (req, res) => {
     if (req.files && req.files.image) {
       const file = req.files.image;
       if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-        return res
-          .status(400)
-          .json({
-            message: `Invalid file type. Allowed: ${ALLOWED_IMAGE_TYPES.join(", ")}`,
-          });
+        return res.status(400).json({
+          message: `Invalid file type. Allowed: ${ALLOWED_IMAGE_TYPES.join(", ")}`,
+        });
       }
       const result = await cloudinary.uploader.upload(file.tempFilePath, {
         resource_type: "image",

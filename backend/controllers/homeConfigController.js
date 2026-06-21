@@ -11,7 +11,21 @@ export const getHomeConfig = async (req, res) => {
       homeConfig: tenant.homeConfig || {},
       translations: tenant.translations || {},
       theme: tenant.theme || {},
-      settings: tenant.settings || {},
+      settings: {
+        currency: tenant.settings.currency,
+        language: tenant.settings.language,
+        whatsappNumber: tenant.settings.whatsappNumber,
+        email: tenant.settings.email,
+        phone: tenant.settings.phone,
+        address: tenant.settings.address,
+        features: tenant.settings.features,
+        paymentMethods: (tenant.settings.paymentMethods || [])
+          .filter((m) => m.enabled)
+          .map((m) => ({ type: m.type, enabled: m.enabled })),
+        shippingMethods: (tenant.settings.shippingMethods || [])
+          .filter((m) => m.enabled)
+          .map((m) => ({ type: m.type, enabled: m.enabled, name: m.name })),
+      },
       name: tenant.name,
       slug: tenant.slug,
       categories: tenant.categories || [],
@@ -66,6 +80,13 @@ export const updateHeroSlides = async (req, res) => {
     }
 
     const { slides } = req.body;
+    if (!Array.isArray(slides)) {
+      return res.status(400).json({ message: "Slides must be an array" });
+    }
+    if (slides.length > 10) {
+      return res.status(400).json({ message: "Maximum 10 slides allowed" });
+    }
+
     tenant.homeConfig.heroSlides = slides;
     await tenant.save();
 
@@ -87,6 +108,13 @@ export const updateBanners = async (req, res) => {
     }
 
     const { banners } = req.body;
+    if (!Array.isArray(banners)) {
+      return res.status(400).json({ message: "Banners must be an array" });
+    }
+    if (banners.length > 20) {
+      return res.status(400).json({ message: "Maximum 20 banners allowed" });
+    }
+
     tenant.homeConfig.banners = banners;
     await tenant.save();
 
@@ -108,6 +136,17 @@ export const updateTrustSignals = async (req, res) => {
     }
 
     const { trustSignals } = req.body;
+    if (!Array.isArray(trustSignals)) {
+      return res
+        .status(400)
+        .json({ message: "Trust signals must be an array" });
+    }
+    if (trustSignals.length > 20) {
+      return res
+        .status(400)
+        .json({ message: "Maximum 20 trust signals allowed" });
+    }
+
     tenant.homeConfig.trustSignals = trustSignals;
     await tenant.save();
 
@@ -129,6 +168,13 @@ export const updateSections = async (req, res) => {
     }
 
     const { sections } = req.body;
+    if (!Array.isArray(sections)) {
+      return res.status(400).json({ message: "Sections must be an array" });
+    }
+    if (sections.length > 50) {
+      return res.status(400).json({ message: "Maximum 50 sections allowed" });
+    }
+
     tenant.homeConfig.sections = sections;
     await tenant.save();
 

@@ -6,12 +6,20 @@ import Tenant from "../models/Tenant.js";
 import WebhookEvent from "../models/WebhookEvent.js";
 import Coupon from "../models/Coupon.js";
 import Stripe from "stripe";
+import { sendOrderConfirmationEmail } from "../utils/emailService.js";
 
 export const createStripeSession = async (req, res) => {
   try {
-    const { products, shippingAddress, couponCode } = req.body;
+    const { products, shippingAddress, couponCode, shippingCost } = req.body;
     const userId = req.user.id;
     const tenant = req.tenant;
+
+    if (
+      shippingCost !== undefined &&
+      (typeof shippingCost !== "number" || shippingCost < 0)
+    ) {
+      return res.status(400).json({ message: "Invalid shipping cost." });
+    }
 
     const stripeConfig = tenant.settings.paymentMethods.find(
       (m) => m.type === "stripe" && m.enabled,
@@ -89,7 +97,9 @@ export const createStripeSession = async (req, res) => {
       ) {
         const user = await User.findById(userId);
         if (coupon.pointsRequired > 0 && user.points < coupon.pointsRequired) {
-          return res.status(400).json({ message: "Not enough points for this coupon." });
+          return res
+            .status(400)
+            .json({ message: "Not enough points for this coupon." });
         }
 
         discountApplied = totalAmount * (coupon.discountPercentage / 100);
@@ -107,6 +117,20 @@ export const createStripeSession = async (req, res) => {
       }
     }
 
+    if (shippingCost > 0) {
+      totalAmount += shippingCost;
+      lineItems.push({
+        price_data: {
+          currency: tenant.settings.currency === "ARS" ? "ars" : "usd",
+          product_data: {
+            name: "Shipping Cost",
+          },
+          unit_amount: Math.round(shippingCost * 100),
+        },
+        quantity: 1,
+      });
+    }
+
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const orderId = `temp_stripe_${Date.now()}_${userId}`;
 
@@ -121,6 +145,7 @@ export const createStripeSession = async (req, res) => {
         shippingAddress: JSON.stringify(shippingAddress),
         orderProducts: JSON.stringify(orderProducts),
         totalAmount,
+        shippingCost: shippingCost || 0,
         couponCode: finalCouponCode || "",
         discountApplied: discountApplied || 0,
         orderId,
@@ -208,7 +233,7 @@ export const handleStripeWebhook = async (req, res) => {
         for (let item of orderProducts) {
           const product = await Product.findOneAndUpdate(
             { _id: item.product, stock: { $gte: item.quantity } },
-            { $inc: { stock: -item.quantity } },
+            { $inc: { stock: -item.quantity, salesCount: item.quantity } },
           ).session(sessionDb);
 
           if (!product) {
@@ -217,14 +242,14 @@ export const handleStripeWebhook = async (req, res) => {
         }
 
         if (metadata.couponCode) {
-          const coupon = await Coupon.findOne({
-            code: metadata.couponCode,
-            tenantId: metadata.tenantId,
-          }).session(sessionDb);
-          if (coupon) {
-            coupon.usedCount += 1;
-            await coupon.save({ session: sessionDb });
-          }
+          const coupon = await Coupon.findOneAndUpdate(
+            {
+              code: metadata.couponCode,
+              tenantId: metadata.tenantId,
+            },
+            { $inc: { usedCount: 1 } },
+            { session: sessionDb, new: true }
+          );
         }
 
         const newOrder = new Order({
@@ -232,7 +257,7 @@ export const handleStripeWebhook = async (req, res) => {
           user: metadata.userId,
           products: orderProducts,
           shippingAddress,
-          shippingCost: 0,
+          shippingCost: metadata.shippingCost || 0,
           totalAmount: metadata.totalAmount,
           couponCode: metadata.couponCode || null,
           discountApplied: metadata.discountApplied || 0,
@@ -246,23 +271,34 @@ export const handleStripeWebhook = async (req, res) => {
         const userFound = await User.findById(metadata.userId);
         if (userFound) {
           let totalEarnedPoints = 0;
+          const productIds = orderProducts.map(i => i.product);
+          const productsInfo = await Product.find({ _id: { $in: productIds } }).session(sessionDb);
           for (let item of orderProducts) {
-            const product = await Product.findById(item.product);
+            const product = productsInfo.find(p => p._id.toString() === item.product.toString());
             totalEarnedPoints += (product?.earnedPoints || 0) * item.quantity;
           }
           let pointsToDeduct = 0;
           if (metadata.couponCode) {
-            const c = await Coupon.findOne({ code: metadata.couponCode, tenantId: metadata.tenantId }).session(sessionDb);
+            const c = await Coupon.findOne({
+              code: metadata.couponCode,
+              tenantId: metadata.tenantId,
+            }).session(sessionDb);
             if (c) pointsToDeduct = c.pointsRequired || 0;
           }
+          const pointsDelta = totalEarnedPoints - pointsToDeduct;
           await User.updateOne(
             { _id: metadata.userId },
-            { $inc: { points: totalEarnedPoints - pointsToDeduct } },
+            pointsDelta >= 0
+              ? { $inc: { points: pointsDelta } }
+              : [ { $set: { points: { $max: [0, { $add: ["$points", pointsDelta] }] } } } ]
           ).session(sessionDb);
         }
 
         await sessionDb.commitTransaction();
         console.log(`Order created from Stripe: ${savedOrder._id}`);
+        if (userFound) {
+          sendOrderConfirmationEmail(tenant, userFound, savedOrder);
+        }
       } catch (error) {
         await sessionDb.abortTransaction();
         throw error;

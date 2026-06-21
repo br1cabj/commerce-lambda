@@ -5,8 +5,16 @@ import Image from "next/image";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
-import { ShoppingCart, User, LogOut, Settings, Shield, Menu, X } from "lucide-react";
-import { useState } from "react";
+import {
+  ShoppingCart,
+  User,
+  LogOut,
+  Settings,
+  Shield,
+  Menu,
+  X,
+} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function Navbar() {
@@ -14,6 +22,21 @@ export default function Navbar() {
   const { user, logout, isAuthenticated, isAdmin, isSuperAdmin } = useAuth();
   const { totalItems } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target as Node)
+      ) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (!config) return null;
 
@@ -21,6 +44,8 @@ export default function Navbar() {
 
   return (
     <nav
+      id="global-navbar"
+      aria-label="Main navigation"
       className="sticky top-0 z-50 bg-white shadow-sm border-b"
       style={{ borderColor: config.theme.accentColor }}
     >
@@ -34,7 +59,6 @@ export default function Navbar() {
                 width={40}
                 height={40}
                 className="rounded-full object-cover"
-                unoptimized
               />
             )}
             <span
@@ -50,7 +74,10 @@ export default function Navbar() {
               <Link
                 key={cat._id}
                 href={`/catalog/${cat.slug}`}
-                className="text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors relative group"
+                className="text-sm font-medium text-gray-700 transition-colors relative group"
+                style={{
+                  color: undefined,
+                }}
               >
                 {cat.name}
                 <span
@@ -75,13 +102,15 @@ export default function Navbar() {
 
             <Link
               href="/cart"
-              className="relative p-2 text-gray-700 hover:text-orange-500 transition-colors"
+              className="relative p-2 text-gray-700 transition-colors"
+              aria-label={`Cart, ${totalItems} items`}
             >
               <ShoppingCart className="h-5 w-5" />
               {totalItems > 0 && (
                 <span
                   className="absolute -top-1 -right-1 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center text-white"
                   style={{ backgroundColor: config.theme.accentColor }}
+                  aria-hidden="true"
                 >
                   {totalItems}
                 </span>
@@ -89,41 +118,55 @@ export default function Navbar() {
             </Link>
 
             {isAuthenticated ? (
-              <div className="relative group">
-                <button className="flex items-center gap-1 p-2 text-gray-700 hover:text-orange-500 transition-colors">
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-1 p-2 text-gray-700 transition-colors"
+                  aria-haspopup="true"
+                  aria-expanded={userMenuOpen}
+                  aria-label="User menu"
+                >
                   <User className="h-5 w-5" />
                   <span className="text-sm font-medium hidden sm:block">
                     {user?.name}
                   </span>
                 </button>
-                <div className="absolute right-0 top-full w-52 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 before:content-[''] before:absolute before:-top-2 before:right-0 before:w-full before:h-2">
-                  <Link
-                    href="/profile"
-                    className="block px-4 py-2 text-sm hover:bg-gray-100 rounded-t-lg"
-                  >
-                    My Profile
-                  </Link>
-                  {isAdmin && (
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full w-52 bg-white rounded-lg shadow-lg border z-50">
                     <Link
-                      href="/admin"
-                      className="block px-4 py-2 text-sm text-orange-500 hover:bg-gray-100"
+                      href="/profile"
+                      className="block px-4 py-2 text-sm hover:bg-gray-100 rounded-t-lg"
+                      onClick={() => setUserMenuOpen(false)}
                     >
-                      <Settings className="h-4 w-4 inline mr-1" /> Admin Panel
+                      My Profile
                     </Link>
-                  )}
-                  <hr className="my-1" />
-                  <button
-                    onClick={logout}
-                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 rounded-b-lg"
-                  >
-                    <LogOut className="h-4 w-4 inline mr-1" /> Logout
-                  </button>
-                </div>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        className="block px-4 py-2 text-sm hover:bg-gray-100"
+                        style={{ color: config.theme.accentColor }}
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <Settings className="h-4 w-4 inline mr-1" /> Admin Panel
+                      </Link>
+                    )}
+                    <hr className="my-1" />
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 rounded-b-lg"
+                    >
+                      <LogOut className="h-4 w-4 inline mr-1" /> Logout
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link
                 href="/login"
-                className="text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors hidden sm:block"
+                className="text-sm font-medium text-gray-700 transition-colors hidden sm:block"
               >
                 Login
               </Link>
@@ -131,17 +174,26 @@ export default function Navbar() {
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-gray-700 hover:text-orange-500 transition-colors"
+              className="lg:hidden p-2 text-gray-700 transition-colors"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
+              aria-label="Toggle mobile menu"
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-gray-100 shadow-lg">
+        <div
+          id="mobile-menu"
+          className="lg:hidden bg-white border-t border-gray-100 shadow-lg"
+        >
           <div className="px-4 py-4 space-y-2">
             {categories.map((cat) => (
               <Link

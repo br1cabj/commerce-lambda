@@ -36,10 +36,9 @@ export default function CategoryPage() {
       if (!config) return;
       setLoading(true);
       try {
-        const categoriesData = (await api.get(
-          "/categories",
-          config.slug,
-        )) as { results: Array<{ _id: string; name: string; slug: string }> };
+        const categoriesData = (await api.get("/categories", config.slug)) as {
+          results: Array<{ _id: string; name: string; slug: string }>;
+        };
         const categories = categoriesData.results || [];
         const cat = categories.find((c) => c.slug === categorySlug);
         if (cat) {

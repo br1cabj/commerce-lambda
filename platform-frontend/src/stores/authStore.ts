@@ -27,6 +27,9 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         set({ token: null, user: null });
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("token");
+        }
       },
 
       isAuthenticated: () => !!get().token,
@@ -41,6 +44,6 @@ export const useAuthStore = create<AuthState>()(
         return user?.role === "super_admin";
       },
     }),
-    { name: "auth-storage" },
+    { name: "auth-storage", version: 1 },
   ),
 );

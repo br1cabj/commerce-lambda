@@ -1,12 +1,4 @@
-interface Product {
-  _id: string;
-  model: string;
-  brand: string;
-  price: number;
-  discount: number;
-  images: string[];
-  stock: number;
-}
+import type { Product } from "@/types";
 
 interface Config {
   name: string;
@@ -20,6 +12,7 @@ interface Config {
     email: string;
     phone: string;
     address: string;
+    currency?: string;
   };
 }
 
@@ -86,7 +79,7 @@ export function HomeStructuredData({
       offers: {
         "@type": "Offer",
         url: `${baseUrl}/${config.slug}/product/${product._id}`,
-        priceCurrency: "USD",
+        priceCurrency: config.settings.currency || "USD",
         price: finalPrice,
         availability:
           product.stock > 0

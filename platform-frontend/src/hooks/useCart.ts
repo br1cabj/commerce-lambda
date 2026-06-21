@@ -1,31 +1,59 @@
 "use client";
 
 import { useCartStore } from "@/stores/cartStore";
-import { useMemo, useState, useEffect } from "react";
+import type { CartItem } from "@/stores/cartStore";
+import { useCallback, useSyncExternalStore } from "react";
+import toast from "react-hot-toast";
+
+const emptySubscribe = () => () => {};
+
+function useIsHydrated() {
+  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+}
 
 export function useCart() {
-  const [isHydrated, setIsHydrated] = useState(false);
-  const store = useCartStore();
+  const isHydrated = useIsHydrated();
+  const items = useCartStore((s) => s.items);
+  const addItem = useCartStore((s) => s.addItem);
+  const removeItem = useCartStore((s) => s.removeItem);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const clearCart = useCartStore((s) => s.clearCart);
 
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+  const totalItems = isHydrated
+    ? items.reduce((acc, item) => acc + item.quantity, 0)
+    : 0;
+  const totalAmount = isHydrated
+    ? items.reduce((acc, item) => acc + item.price * item.quantity, 0)
+    : 0;
 
-  const computed = useMemo(
-    () => ({
-      totalItems: isHydrated ? store.totalItems() : 0,
-      totalAmount: isHydrated ? store.totalAmount() : 0,
-    }),
-    [store, isHydrated],
+  const addItemWithToast = useCallback(
+    (item: CartItem) => {
+      addItem(item);
+      toast.success(`${item.model} agregado al carrito!`, { icon: "🛒" });
+    },
+    [addItem],
   );
 
+  const removeItemWithToast = useCallback(
+    (index: number) => {
+      removeItem(index);
+      toast.error("Producto eliminado del carrito", { icon: "🗑️" });
+    },
+    [removeItem],
+  );
+
+  const clearCartWithToast = useCallback(() => {
+    clearCart();
+  }, [clearCart]);
+
   return {
-    items: isHydrated ? store.items : [],
-    addItem: store.addItem,
-    removeItem: store.removeItem,
-    updateQuantity: store.updateQuantity,
-    clearCart: store.clearCart,
-    ...computed,
+    items: isHydrated ? items : [],
+    addItem: addItemWithToast,
+    removeItem: removeItemWithToast,
+    updateQuantity,
+    clearCart: clearCartWithToast,
+    totalItems,
+    totalAmount,
     isHydrated,
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import { useTranslations } from "@/hooks/useTranslations";
 import type { Brand, Translation } from "@/stores/tenantStore";
@@ -24,9 +24,18 @@ export function BrandsSection({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
-  const enabledBrands = brands
-    .filter((b) => b.enabled)
-    .sort((a, b) => a.order - b.order);
+  const enabledBrands = useMemo(
+    () =>
+      brands
+        .filter((b) => b.enabled)
+        .sort((a, b) => a.order - b.order),
+    [brands],
+  );
+
+  const duplicatedBrands = useMemo(
+    () => [...enabledBrands, ...enabledBrands],
+    [enabledBrands],
+  );
 
   useEffect(() => {
     const scrollContainer = scrollRef.current;
@@ -51,8 +60,6 @@ export function BrandsSection({
   }, [isPaused, enabledBrands.length]);
 
   if (enabledBrands.length === 0) return null;
-
-  const duplicatedBrands = [...enabledBrands, ...enabledBrands];
 
   return (
     <section className="py-16 bg-white border-y border-gray-100">
@@ -92,7 +99,7 @@ export function BrandsSection({
                     width={120}
                     height={50}
                     className="object-contain max-w-[100px] max-h-[40px] opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-                    unoptimized
+
                   />
                 ) : (
                   <span

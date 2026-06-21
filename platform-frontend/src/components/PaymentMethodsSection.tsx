@@ -98,7 +98,10 @@ export function PaymentMethodsSection({
               <ShieldCheck className="h-6 w-6" style={{ color: accentColor }} />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-lg" style={{ color: primaryColor }}>
+              <h3
+                className="font-bold text-gray-900 text-lg"
+                style={{ color: primaryColor }}
+              >
                 {t(title)}
               </h3>
               <p className="text-gray-500 text-sm">{t(subtitle)}</p>

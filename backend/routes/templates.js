@@ -1,5 +1,9 @@
 import express from "express";
-import { getTemplates, getTemplate, applyTemplate } from "../controllers/templateController.js";
+import {
+  getTemplates,
+  getTemplate,
+  applyTemplate,
+} from "../controllers/templateController.js";
 import { identifyTenant } from "../middleware/identifyTenant.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdminForTenant } from "../middleware/tenantAuth.js";
