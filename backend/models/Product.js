@@ -29,11 +29,21 @@ const productSchema = new mongoose.Schema(
       {
         size: { type: String, required: true },
         stock: { type: Number, required: true, min: 0 },
+        price: { type: Number, min: 0 },
+        sku: { type: String, trim: true },
+        imageUrl: { type: String },
       },
     ],
 
     stock: { type: Number, default: 0, min: 0 },
     images: [{ type: String, required: true }],
+    status: {
+      type: String,
+      enum: ["draft", "published", "archived"],
+      default: "published",
+    },
+    seoTitle: { type: String, trim: true, default: "" },
+    seoDescription: { type: String, trim: true, default: "" },
     discount: { type: Number, default: 0, min: 0, max: 100 },
     earnedPoints: { type: Number, default: 0, min: 0 },
     isFeatured: { type: Boolean, default: false },

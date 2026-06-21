@@ -44,22 +44,37 @@ export default function ProductPage() {
     loadProduct();
   }, [config, productId]);
 
+  useEffect(() => {
+    if (product && selectedSize) {
+      const selectedSizeObj = product.sizes?.find((s) => s.size === selectedSize);
+      if (selectedSizeObj && selectedSizeObj.imageUrl) {
+        Promise.resolve().then(() => {
+          setMainImage(selectedSizeObj!.imageUrl!);
+        });
+      }
+    }
+  }, [selectedSize, product]);
+
   const handleAddToCart = () => {
     if (!product || !selectedSize) return;
 
     const sizeData = product.sizes?.find((s) => s.size === selectedSize);
     if (!sizeData || sizeData.stock < 1) return;
 
-    const finalPrice =
+    const activePriceVal = (sizeData && typeof sizeData.price === "number")
+      ? sizeData.price
+      : product.price;
+
+    const finalPriceVal =
       product.discount > 0
-        ? product.price - product.price * (product.discount / 100)
-        : product.price;
+        ? activePriceVal - activePriceVal * (product.discount / 100)
+        : activePriceVal;
 
     addItem({
       id: product._id,
       model: product.model,
       brand: product.brand,
-      price: finalPrice,
+      price: finalPriceVal,
       image: mainImage,
       quantity: 1,
       size: selectedSize,
@@ -86,10 +101,20 @@ export default function ProductPage() {
 
   if (!product || !config) return null;
 
+  const selectedSizeObj = product.sizes?.find((s) => s.size === selectedSize);
+  const activePrice = (selectedSizeObj && typeof selectedSizeObj.price === "number")
+    ? selectedSizeObj.price
+    : product.price;
+
   const finalPrice =
     product.discount > 0
-      ? product.price - product.price * (product.discount / 100)
-      : product.price;
+      ? activePrice - activePrice * (product.discount / 100)
+      : activePrice;
+
+  const activeSku = (selectedSizeObj && selectedSizeObj.sku)
+    ? selectedSizeObj.sku
+    : product.sku;
+
   const images = product.images?.length ? product.images : [];
 
   return (
@@ -126,20 +151,22 @@ export default function ProductPage() {
                   width={80}
                   height={80}
                   className="w-full h-full object-cover rounded-lg"
-
                 />
               </button>
             ))}
           </div>
           <div className="flex-1 bg-gray-50 rounded-3xl flex items-center justify-center p-8 min-h-[500px] relative overflow-hidden group border border-gray-100">
-            <Image
-              src={mainImage}
-              alt={product.model}
-              width={500}
-              height={400}
-              className="max-h-[400px] max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
-
-            />
+            {mainImage ? (
+              <Image
+                src={mainImage}
+                alt={product.model}
+                width={500}
+                height={400}
+                className="max-h-[400px] max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+              />
+            ) : (
+              <div className="text-gray-400 text-sm">No image available</div>
+            )}
           </div>
         </div>
 
@@ -151,14 +178,15 @@ export default function ProductPage() {
             {product.model}
           </h1>
 
-          {product.sku && (
-            <p className="text-sm text-gray-400 mt-1 font-medium">SKU: {product.sku}</p>
+          {activeSku && (
+            <p className="text-sm text-gray-400 mt-1 font-medium">SKU: {activeSku}</p>
           )}
 
           {product.description && (
-            <div className="mt-6 prose prose-sm text-gray-600 max-w-none whitespace-pre-line">
-              {product.description}
-            </div>
+            <div 
+              className="mt-6 prose prose-sm text-gray-600 max-w-none"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
           )}
 
           <div className="mt-6">
@@ -166,7 +194,7 @@ export default function ProductPage() {
               <div className="flex items-center gap-4">
                 <div className="flex flex-col">
                   <span className="text-gray-400 line-through text-lg font-medium">
-                    ${product.price.toLocaleString()}
+                    ${activePrice.toLocaleString()}
                   </span>
                   <span className="text-emerald-600 font-extrabold text-4xl">
                     ${finalPrice.toLocaleString()}
@@ -178,7 +206,7 @@ export default function ProductPage() {
               </div>
             ) : (
               <span className="font-extrabold text-gray-900 text-4xl">
-                ${product.price.toLocaleString()}
+                ${activePrice.toLocaleString()}
               </span>
             )}
           </div>

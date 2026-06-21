@@ -14,6 +14,27 @@ const validateImageFile = (file) => {
   return { valid: true };
 };
 
+const extractPublicId = (url) => {
+  try {
+    if (!url || !url.includes("res.cloudinary.com")) return null;
+    const parts = url.split("/upload/");
+    if (parts.length < 2) return null;
+    // Skip version (v1234567) and take folder/public_id
+    const partsAfterUpload = parts[1].split("/");
+    let publicIdWithExtension;
+    if (partsAfterUpload[0].startsWith("v") && !isNaN(partsAfterUpload[0].substring(1))) {
+      publicIdWithExtension = partsAfterUpload.slice(1).join("/");
+    } else {
+      publicIdWithExtension = partsAfterUpload.join("/");
+    }
+    const dotIndex = publicIdWithExtension.lastIndexOf(".");
+    const publicId = dotIndex !== -1 ? publicIdWithExtension.substring(0, dotIndex) : publicIdWithExtension;
+    return publicId;
+  } catch (e) {
+    return null;
+  }
+};
+
 export const getAllProducts = async (req, res) => {
   try {
     const {
@@ -28,6 +49,7 @@ export const getAllProducts = async (req, res) => {
       minDiscount,
       minPrice,
       maxPrice,
+      status,
     } = req.query;
     const limitNumber = Math.min(Math.max(1, Number(rawLimit) || 10), 100);
     const pageNumber = Math.max(1, Number(page) || 1);
@@ -45,6 +67,16 @@ export const getAllProducts = async (req, res) => {
       queryFilters.price = {};
       if (minPrice) queryFilters.price.$gte = Number(minPrice);
       if (maxPrice) queryFilters.price.$lte = Number(maxPrice);
+    }
+
+    // Handle status filtering
+    if (status) {
+      if (status !== "all") {
+        queryFilters.status = status;
+      }
+    } else {
+      // Default to returning published or undef/null for compatibility
+      queryFilters.status = { $in: ["published", null, undefined] };
     }
 
     const skip = (pageNumber - 1) * limitNumber;
@@ -135,6 +167,9 @@ export const createProduct = async (req, res) => {
       packageLength,
       packageWidth,
       packageHeight,
+      status,
+      seoTitle,
+      seoDescription,
     } = req.body;
 
     const baseSlug = `${brand}-${model}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
@@ -160,6 +195,9 @@ export const createProduct = async (req, res) => {
       isFeatured: isFeatured || false,
       isNew: isNew || false,
       isBestSeller: isBestSeller || false,
+      status: status || "published",
+      seoTitle: seoTitle || "",
+      seoDescription: seoDescription || "",
     };
 
     if (sizes) {
@@ -273,34 +311,44 @@ export const updateProduct = async (req, res) => {
       earnedPoints,
       isFeatured,
       isNew,
-      isNew,
       isBestSeller,
       sku,
       packageWeight,
       packageLength,
       packageWidth,
       packageHeight,
+      status,
+      seoTitle,
+      seoDescription,
     } = req.body;
+
+    const product = await Product.findOne({ _id: id, tenantId: req.tenant._id });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found." });
+    }
 
     const productData = {};
     if (model !== undefined) productData.model = model;
     if (brand !== undefined) productData.brand = brand;
-    if (price !== undefined) productData.price = price;
-    if (discount !== undefined) productData.discount = discount;
+    if (price !== undefined) productData.price = Number(price);
+    if (discount !== undefined) productData.discount = Number(discount);
     if (category !== undefined) productData.category = category;
     if (description !== undefined) productData.description = description;
     if (sku !== undefined) productData.sku = sku;
-    if (earnedPoints !== undefined) productData.earnedPoints = earnedPoints;
-    if (isFeatured !== undefined) productData.isFeatured = isFeatured;
-    if (isNew !== undefined) productData.isNew = isNew;
-    if (isBestSeller !== undefined) productData.isBestSeller = isBestSeller;
+    if (earnedPoints !== undefined) productData.earnedPoints = Number(earnedPoints);
+    if (isFeatured !== undefined) productData.isFeatured = isFeatured === "true" || isFeatured === true;
+    if (isNew !== undefined) productData.isNew = isNew === "true" || isNew === true;
+    if (isBestSeller !== undefined) productData.isBestSeller = isBestSeller === "true" || isBestSeller === true;
+    if (status !== undefined) productData.status = status;
+    if (seoTitle !== undefined) productData.seoTitle = seoTitle;
+    if (seoDescription !== undefined) productData.seoDescription = seoDescription;
     
     if (packageWeight !== undefined || packageLength !== undefined || packageWidth !== undefined || packageHeight !== undefined) {
       productData.packageData = {
-        weight: packageWeight !== undefined ? Number(packageWeight) : 0,
-        length: packageLength !== undefined ? Number(packageLength) : 0,
-        width: packageWidth !== undefined ? Number(packageWidth) : 0,
-        height: packageHeight !== undefined ? Number(packageHeight) : 0,
+        weight: packageWeight !== undefined ? Number(packageWeight) : (product.packageData?.weight || 0),
+        length: packageLength !== undefined ? Number(packageLength) : (product.packageData?.length || 0),
+        width: packageWidth !== undefined ? Number(packageWidth) : (product.packageData?.width || 0),
+        height: packageHeight !== undefined ? Number(packageHeight) : (product.packageData?.height || 0),
       };
     }
 
@@ -318,12 +366,24 @@ export const updateProduct = async (req, res) => {
       );
     }
 
+    // Advanced Image management
+    let keptImages = product.images || [];
+    if (req.body.existingImages !== undefined) {
+      try {
+        keptImages = typeof req.body.existingImages === "string"
+          ? JSON.parse(req.body.existingImages)
+          : req.body.existingImages;
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid existingImages format." });
+      }
+    }
+
+    let uploadedUrls = [];
     if (req.files && req.files.images) {
-      let imagesArray = [];
       let files = req.files.images;
       if (!Array.isArray(files)) files = [files];
 
-      // Validar todos los archivos primero
+      // Validate all files first
       for (let file of files) {
         const validation = validateImageFile(file);
         if (!validation.valid) {
@@ -336,7 +396,7 @@ export const updateProduct = async (req, res) => {
         }
       }
 
-      // Subir todas las imagenes en paralelo
+      // Upload all in parallel
       const uploadPromises = files.map(async (file) => {
         const result = await cloudinary.uploader.upload(file.tempFilePath, {
           resource_type: "image",
@@ -348,8 +408,30 @@ export const updateProduct = async (req, res) => {
         return result.secure_url;
       });
 
-      imagesArray = await Promise.all(uploadPromises);
-      productData.images = imagesArray;
+      uploadedUrls = await Promise.all(uploadPromises);
+    }
+
+    const newImages = [...keptImages, ...uploadedUrls];
+    if (newImages.length > 0) {
+      productData.images = newImages;
+
+      // Clean up deleted images from Cloudinary
+      const imagesToRemove = product.images.filter(img => !newImages.includes(img));
+      for (let img of imagesToRemove) {
+        const publicId = extractPublicId(img);
+        if (publicId) {
+          try {
+            await cloudinary.uploader.destroy(publicId);
+          } catch (cloudinaryError) {
+            console.error("Failed to delete image from Cloudinary:", cloudinaryError.message);
+          }
+        }
+      }
+    } else if (req.body.existingImages !== undefined) {
+      // If we explicitly kept zero images and uploaded nothing
+      productData.images = [
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop",
+      ];
     }
 
     const updatedProduct = await Product.findOneAndUpdate(
@@ -357,8 +439,6 @@ export const updateProduct = async (req, res) => {
       productData,
       { returnDocument: "after" },
     );
-    if (!updatedProduct)
-      return res.status(404).json({ message: "Product not found." });
 
     res.json({
       message: "Product updated successfully!",

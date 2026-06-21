@@ -1,6 +1,9 @@
 export interface ProductSize {
   size: string;
   stock: number;
+  price?: number;
+  sku?: string;
+  imageUrl?: string;
 }
 
 export interface Product {
@@ -21,6 +24,9 @@ export interface Product {
   description?: string;
   sku?: string;
   slug?: string;
+  status?: string;
+  seoTitle?: string;
+  seoDescription?: string;
 }
 
 export interface Review {

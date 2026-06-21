@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext } from "react";
+import { useEffect, useState, createContext, useContext, useRef } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import type { TenantConfig } from "@/stores/tenantStore";
 
@@ -17,11 +17,13 @@ const TenantContext = createContext<{ tenantSlug: string | null }>({
 export function TenantProvider({ children, initialSlug, initialConfig }: TenantProviderProps) {
   const { config, loading, error, fetchConfig, setConfig } = useTenant();
   const [hasInitialized, setHasInitialized] = useState(false);
+  const initializedRef = useRef(false);
 
   // Synchronously initialize the store with pre-fetched server-side config
   if (initialConfig && !config && !hasInitialized) {
     setHasInitialized(true);
     setConfig(initialConfig);
+    initializedRef.current = true;
   }
 
   useEffect(() => {
