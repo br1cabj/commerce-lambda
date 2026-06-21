@@ -24,6 +24,11 @@ const adminLinks = [
     icon: <Tag className="h-4 w-4" />,
   },
   {
+    href: "/admin/categories",
+    label: "Categories",
+    icon: <Package className="h-4 w-4" />,
+  },
+  {
     href: "/admin/reviews",
     label: "Reviews",
     icon: <Star className="h-4 w-4" />,
