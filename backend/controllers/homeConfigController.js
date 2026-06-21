@@ -1,4 +1,5 @@
 import Tenant from "../models/Tenant.js";
+import Category from "../models/Category.js";
 
 export const getHomeConfig = async (req, res) => {
   try {
@@ -6,6 +7,11 @@ export const getHomeConfig = async (req, res) => {
     if (!tenant) {
       return res.status(404).json({ message: "Tenant not found" });
     }
+
+    const categories = await Category.find({
+      tenantId: tenant._id,
+      isActive: true,
+    }).sort({ order: 1 });
 
     res.json({
       homeConfig: tenant.homeConfig || {},
@@ -28,7 +34,7 @@ export const getHomeConfig = async (req, res) => {
       },
       name: tenant.name,
       slug: tenant.slug,
-      categories: tenant.categories || [],
+      categories: categories || [],
     });
   } catch (error) {
     console.error("Error fetching home config:", error);

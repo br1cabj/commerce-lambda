@@ -1,5 +1,5 @@
 "use client";
-
+ 
 import { useEffect, useState, useCallback } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Plus, Trash, ToggleLeft, ToggleRight, Edit } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
+import Image from "next/image";
 
 interface Category {
   _id: string;
@@ -43,6 +44,7 @@ export default function AdminCategoriesPage() {
   const [showOnHome, setShowOnHome] = useState(true);
   const [order, setOrder] = useState("0");
   const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const loadCategories = useCallback(async () => {
     if (!config) return [];
@@ -93,6 +95,7 @@ export default function AdminCategoriesPage() {
     setShowOnHome(true);
     setOrder("0");
     setImageUrl("");
+    setImageFile(null);
     setShowForm(false);
     setError("");
   };
@@ -108,6 +111,7 @@ export default function AdminCategoriesPage() {
     setShowOnHome(cat.showOnHome);
     setOrder(String(cat.order || 0));
     setImageUrl(cat.imageUrl || "");
+    setImageFile(null);
     setShowForm(true);
     setError("");
   };
@@ -117,23 +121,25 @@ export default function AdminCategoriesPage() {
     setError("");
     if (!config) return;
     
-    const payload = {
-      name,
-      slug,
-      description,
-      icon,
-      backgroundColor,
-      displayStyle,
-      showOnHome,
-      order: Number(order),
-      imageUrl
-    };
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("slug", slug);
+    formData.append("description", description);
+    formData.append("icon", icon);
+    formData.append("backgroundColor", backgroundColor);
+    formData.append("displayStyle", displayStyle);
+    formData.append("showOnHome", String(showOnHome));
+    formData.append("order", order);
+    formData.append("imageUrl", imageUrl);
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
 
     try {
       if (editingId) {
-        await api.put(`/categories/${editingId}`, payload, config.slug);
+        await api.put(`/categories/${editingId}`, formData, config.slug);
       } else {
-        await api.post("/categories", payload, config.slug);
+        await api.post("/categories", formData, config.slug);
       }
       resetForm();
       refreshCategories();
@@ -279,15 +285,40 @@ export default function AdminCategoriesPage() {
             </div>
 
             {displayStyle === "image" && (
-              <div>
-                <label className="block text-sm font-medium mb-1">Image URL</label>
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="https://example.com/image.jpg"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Upload Background Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                    className="w-full px-3 py-2 border rounded bg-white text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Or Paste Image URL</label>
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    className="w-full px-3 py-2 border rounded text-sm"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+                {(imageUrl || imageFile) && (
+                  <div className="md:col-span-2 mt-2">
+                    <p className="text-xs text-gray-500 font-semibold mb-1">Image Preview:</p>
+                    <div className="relative w-28 h-20 border rounded-xl overflow-hidden bg-gray-50">
+                      <Image
+                        src={imageFile ? URL.createObjectURL(imageFile) : imageUrl}
+                        alt="Category Background"
+                        fill
+                        sizes="112px"
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
