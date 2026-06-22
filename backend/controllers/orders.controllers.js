@@ -194,6 +194,7 @@ export const getMyOrders = async (req, res) => {
         tenantId: req.tenant._id,
         user: req.user.id,
       })
+        .populate("products.product", "model brand images")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNumber),
@@ -232,6 +233,7 @@ export const getAllOrders = async (req, res) => {
     const [orders, total] = await Promise.all([
       Order.find(query)
         .populate("user", "name email")
+        .populate("products.product", "model brand images")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNumber),
