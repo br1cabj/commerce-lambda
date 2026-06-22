@@ -59,11 +59,14 @@ export const createMercadoPagoPreference = async (req, res) => {
 
       const unitPrice =
         productFound.discount > 0
-          ? productFound.price -
-            productFound.price * (productFound.discount / 100)
+          ? Math.round(
+              (productFound.price -
+                productFound.price * (productFound.discount / 100)) *
+                100,
+            ) / 100
           : productFound.price;
 
-      totalAmount += unitPrice * item.quantity;
+      totalAmount = Math.round((totalAmount + unitPrice * item.quantity) * 100) / 100;
 
       items.push({
         id: productFound._id.toString(),
@@ -101,7 +104,7 @@ export const createMercadoPagoPreference = async (req, res) => {
             .json({ message: "Not enough points for this coupon." });
         }
 
-        discountApplied = totalAmount * (coupon.discountPercentage / 100);
+        discountApplied = Math.round((totalAmount * (coupon.discountPercentage / 100)) * 100) / 100;
 
         const discountFactor = 1 - coupon.discountPercentage / 100;
 
@@ -111,7 +114,7 @@ export const createMercadoPagoPreference = async (req, res) => {
           );
         });
 
-        totalAmount -= discountApplied;
+        totalAmount = Math.round((totalAmount - discountApplied) * 100) / 100;
         finalCouponCode = coupon.code;
       }
     }

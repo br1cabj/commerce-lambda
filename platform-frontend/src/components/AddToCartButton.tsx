@@ -25,10 +25,11 @@ export function AddToCartButton({
   }, []);
 
   const handleAddToCart = () => {
-    const finalPrice =
+    const finalPrice = Math.round((
       product.discount > 0
         ? product.price - product.price * (product.discount / 100)
-        : product.price;
+        : product.price
+    ) * 100) / 100;
     const mainImg = product.images?.[0] || "";
     const size = product.sizes?.[0]?.size || "One Size";
 

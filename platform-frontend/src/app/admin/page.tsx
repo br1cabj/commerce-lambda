@@ -765,8 +765,7 @@ export default function AdminPage() {
                       </span>
                       <p className="font-bold text-green-600">
                         $
-                        {product.price -
-                          product.price * (product.discount / 100)}
+                        {(Math.round((product.price - product.price * (product.discount / 100)) * 100) / 100).toFixed(2)}
                       </p>
                     </div>
                   ) : (

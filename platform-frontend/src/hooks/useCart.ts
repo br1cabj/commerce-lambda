@@ -23,7 +23,9 @@ export function useCart() {
     ? items.reduce((acc, item) => acc + item.quantity, 0)
     : 0;
   const totalAmount = isHydrated
-    ? items.reduce((acc, item) => acc + item.price * item.quantity, 0)
+    ? Math.round(
+        items.reduce((acc, item) => acc + item.price * item.quantity, 0) * 100
+      ) / 100
     : 0;
 
   const addItemWithToast = useCallback(

@@ -57,11 +57,14 @@ export const createOrder = async (req, res) => {
 
       const unitPrice =
         productFound.discount > 0
-          ? productFound.price -
-            productFound.price * (productFound.discount / 100)
+          ? Math.round(
+              (productFound.price -
+                productFound.price * (productFound.discount / 100)) *
+                100,
+            ) / 100
           : productFound.price;
 
-      totalAmount += unitPrice * item.quantity;
+      totalAmount = Math.round((totalAmount + unitPrice * item.quantity) * 100) / 100;
       totalEarnedPoints += (productFound.earnedPoints || 0) * item.quantity;
 
       const updated = await Product.findOneAndUpdate(
@@ -120,8 +123,8 @@ export const createOrder = async (req, res) => {
         }
         pointsToDeduct = coupon.pointsRequired || 0;
 
-        discountApplied = totalAmount * (coupon.discountPercentage / 100);
-        totalAmount -= discountApplied;
+        discountApplied = Math.round((totalAmount * (coupon.discountPercentage / 100)) * 100) / 100;
+        totalAmount = Math.round((totalAmount - discountApplied) * 100) / 100;
         finalCouponCode = coupon.code;
       }
     }

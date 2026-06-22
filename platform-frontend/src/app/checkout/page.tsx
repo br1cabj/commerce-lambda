@@ -87,8 +87,8 @@ export default function CheckoutPage() {
     }
   }, [zipCode, items, config]);
 
-  const discountAmount = totalAmount * (discountPercent / 100);
-  const finalTotal = totalAmount - discountAmount + shippingCost;
+  const discountAmount = Math.round((totalAmount * (discountPercent / 100)) * 100) / 100;
+  const finalTotal = Math.round((totalAmount - discountAmount + shippingCost) * 100) / 100;
 
   const availableMethods: PaymentMethod[] = useMemo(() => {
     const methods = (config?.settings.paymentMethods || [])

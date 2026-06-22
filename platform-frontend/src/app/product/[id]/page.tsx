@@ -65,10 +65,11 @@ export default function ProductPage() {
       ? sizeData.price
       : product.price;
 
-    const finalPriceVal =
+    const finalPriceVal = Math.round((
       product.discount > 0
         ? activePriceVal - activePriceVal * (product.discount / 100)
-        : activePriceVal;
+        : activePriceVal
+    ) * 100) / 100;
 
     addItem({
       id: product._id,
@@ -106,10 +107,11 @@ export default function ProductPage() {
     ? selectedSizeObj.price
     : product.price;
 
-  const finalPrice =
+  const finalPrice = Math.round((
     product.discount > 0
       ? activePrice - activePrice * (product.discount / 100)
-      : activePrice;
+      : activePrice
+  ) * 100) / 100;
 
   const activeSku = (selectedSizeObj && selectedSizeObj.sku)
     ? selectedSizeObj.sku

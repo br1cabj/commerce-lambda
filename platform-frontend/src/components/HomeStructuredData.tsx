@@ -61,10 +61,11 @@ export function HomeStructuredData({
   };
 
   const productSchemas = products.slice(0, 8).map((product) => {
-    const finalPrice =
+    const finalPrice = Math.round((
       product.discount > 0
         ? product.price - product.price * (product.discount / 100)
-        : product.price;
+        : product.price
+    ) * 100) / 100;
 
     return {
       "@context": "https://schema.org",

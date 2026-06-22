@@ -19,10 +19,12 @@ export function ProductCard({ product, accentColor }: ProductCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const finalPrice = useMemo(
-    () =>
-      product.discount > 0
+    () => {
+      const rawPrice = product.discount > 0
         ? product.price - product.price * (product.discount / 100)
-        : product.price,
+        : product.price;
+      return Math.round(rawPrice * 100) / 100;
+    },
     [product.discount, product.price],
   );
   const mainImg = product.images?.[0] || "";
