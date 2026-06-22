@@ -23,9 +23,8 @@ services:
       - PORT=3001
       - MONGODB_URI=mongodb://mongodb:27017/ecommerce
       - FRONTEND_URL=http://localhost:3000
-      # Agrega aquí tus otras variables de entorno (.env) como:
-      # - STRIPE_SECRET_KEY=tu_clave
-      # - JWT_SECRET=tu_secreto
+      - JWT_SECRET=development_default_jwt_secret_key
+      # Add other credentials here as needed (Stripe, Cloudinary, etc.)
     depends_on:
       - mongodb
     networks:
