@@ -53,7 +53,7 @@ export function OrderSummary({
 }: OrderSummaryProps) {
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6 h-fit sticky top-24">
-      <h3 className="font-bold text-lg mb-4">Order Summary</h3>
+      <h3 className="font-bold text-lg mb-4">Resumen del Pedido</h3>
       <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
@@ -68,7 +68,7 @@ export function OrderSummary({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate">{item.model}</p>
               <p className="text-xs text-gray-500">
-                Size: {item.size} | Qty: {item.quantity}
+                Talle: {item.size} | Cant: {item.quantity}
               </p>
             </div>
             <span className="font-bold text-sm">
@@ -80,7 +80,7 @@ export function OrderSummary({
 
       {config.settings.features.coupons && (
         <div className="mb-4 bg-gray-50 rounded-lg p-3 border">
-          <label className="text-xs font-bold mb-2 block">Discount Code</label>
+          <label className="text-xs font-bold mb-2 block">Código de Descuento</label>
           <div className="flex gap-2">
             <input
               type="text"
@@ -89,7 +89,7 @@ export function OrderSummary({
                 setCouponCode(e.target.value.toUpperCase());
                 setCouponMessage("");
               }}
-              placeholder="e.g., SAVE10"
+              placeholder="Ej: DESCUENTO10"
               className="flex-1 px-3 py-2 rounded border text-sm uppercase"
               disabled={couponApplied}
             />
@@ -98,7 +98,7 @@ export function OrderSummary({
                 onClick={removeCoupon}
                 className="px-3 py-2 rounded font-semibold text-sm text-white bg-red-500 hover:bg-red-600"
               >
-                Remove
+                Quitar
               </button>
             ) : (
               <button
@@ -128,24 +128,24 @@ export function OrderSummary({
       </div>
       {discountPercent > 0 && (
         <div className="flex justify-between mb-2 text-red-500 text-sm">
-          <span>Discount ({discountPercent}%)</span>
+          <span>Descuento ({discountPercent}%)</span>
           <span className="font-bold">-${discountAmount.toLocaleString()}</span>
         </div>
       )}
       <div className="flex justify-between mb-4 text-gray-500 text-sm pb-4 border-b">
-        <span>Shipping {shippingName ? `(${shippingName})` : ''}</span>
+        <span>Envío {shippingName ? `(${shippingName})` : ''}</span>
         <span className="font-bold text-gray-800 text-right">
           {shippingLoading ? (
-            <span className="animate-pulse">Calculating...</span>
+            <span className="animate-pulse">Calculando...</span>
           ) : shippingCost > 0 ? (
             `$${shippingCost.toLocaleString()}`
           ) : config.settings.shippingMethods.find(
             (m: { type: string; enabled: boolean }) =>
               m.type === "free" && m.enabled,
           ) ? (
-            <span className="text-emerald-600">Free Shipping</span>
+            <span className="text-emerald-600">Envío Gratis</span>
           ) : (
-            "Enter zip code to calculate"
+            "Ingrese C.P. para calcular"
           )}
         </span>
       </div>

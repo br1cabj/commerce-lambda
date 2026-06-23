@@ -63,12 +63,12 @@ export function AddToCartButton({
       {added ? (
         <>
           <Check className="h-4 w-4" />
-          {t(translations?.common?.added) || "Added!"}
+          {t(translations?.common?.added) || "¡Agregado!"}
         </>
       ) : (
         <>
           <ShoppingCart className="h-4 w-4" />
-          {t(translations?.common?.addToCart) || "Add to Cart"}
+          {t(translations?.common?.addToCart) || "Agregar al Carrito"}
         </>
       )}
     </button>

@@ -103,13 +103,13 @@ export default function CheckoutPage() {
   if (!config || !isAuthenticated || items.length === 0) return null;
 
   const validateForm = (): string | null => {
-    if (!fullName.trim()) return "Full name is required.";
-    if (!dni.trim()) return "ID number is required.";
-    if (!street.trim()) return "Street is required.";
-    if (!number.trim()) return "Street number is required.";
-    if (!city.trim()) return "City is required.";
-    if (!province.trim()) return "Province is required.";
-    if (!zipCode.trim()) return "Postal code is required.";
+    if (!fullName.trim()) return "El nombre completo es requerido.";
+    if (!dni.trim()) return "El número de documento (DNI) es requerido.";
+    if (!street.trim()) return "La calle es requerida.";
+    if (!number.trim()) return "El número/altura es requerido.";
+    if (!city.trim()) return "La ciudad es requerida.";
+    if (!province.trim()) return "La provincia es requerida.";
+    if (!zipCode.trim()) return "El código postal es requerido.";
     return null;
   };
 
@@ -129,17 +129,17 @@ export default function CheckoutPage() {
       };
 
       if (data.pointsRequired > 0) {
-        setCouponMessage(`This coupon requires ${data.pointsRequired} points.`);
+        setCouponMessage(`Este cupón requiere ${data.pointsRequired} puntos.`);
         setApplyingCoupon(false);
         return;
       }
 
       setDiscountPercent(data.discountPercentage);
       setCouponApplied(true);
-      setCouponMessage(`${data.discountPercentage}% discount applied!`);
-      toast.success(`${data.discountPercentage}% discount applied!`, { icon: '🎟️' });
+      setCouponMessage(`¡Descuento del ${data.discountPercentage}% aplicado!`);
+      toast.success(`¡Descuento del ${data.discountPercentage}% aplicado!`, { icon: '🎟️' });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Invalid coupon";
+      const msg = err instanceof Error ? err.message : "Cupón inválido";
       setCouponMessage(msg);
       toast.error(msg);
     } finally {
@@ -179,27 +179,27 @@ export default function CheckoutPage() {
       };
 
       const phoneNumber = config.settings.whatsappNumber || "";
-      let wspText = `*Hello ${config.name}! I just placed an order.*\n`;
-      wspText += `Order ID: #${data.orderId || Math.floor(Math.random() * 10000)}\n\n`;
-      wspText += `*Customer:* ${fullName}\n`;
-      wspText += `*ID:* ${dni}\n\n`;
-      wspText += `*Order Details:*\n`;
+      let wspText = `*¡Hola ${config.name}! Acabo de realizar un pedido.*\n`;
+      wspText += `ID del pedido: #${data.orderId || Math.floor(Math.random() * 10000)}\n\n`;
+      wspText += `*Cliente:* ${fullName}\n`;
+      wspText += `*DNI:* ${dni}\n\n`;
+      wspText += `*Detalles del pedido:* \n`;
       items.forEach((item) => {
-        wspText += `- ${item.model} (Option: ${item.size}) x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}\n`;
+        wspText += `- ${item.model} (Talle: ${item.size}) x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}\n`;
       });
-      wspText += `\n*Shipping Address:*\n${street} ${number}, ${city}, ${province} (${zipCode})\n\n`;
+      wspText += `\n*Dirección de envío:* \n${street} ${number}, ${city}, ${province} (${zipCode})\n\n`;
       if (shippingCost > 0) {
-        wspText += `*Shipping (${shippingName}):* $${shippingCost.toLocaleString()}\n`;
+        wspText += `*Envío (${shippingName}):* $${shippingCost.toLocaleString()}\n`;
       }
       if (discountPercent > 0) {
-        wspText += `*Discount:* -${discountPercent}% (-$${discountAmount.toLocaleString()})\n`;
+        wspText += `*Descuento:* -${discountPercent}% (-$${discountAmount.toLocaleString()})\n`;
       }
       wspText += `*TOTAL: $${finalTotal.toLocaleString()}*\n\n`;
-      wspText += `_Looking forward to coordinating shipping and payment. Thank you!_`;
+      wspText += `_Espero tu confirmación para coordinar el envío y pago. ¡Muchas gracias!_`;
 
       clearCart();
 
-      toast.success("Order placed successfully! Redirecting to WhatsApp...");
+      toast.success("¡Pedido realizado con éxito! Redirigiendo a WhatsApp...");
 
       if (phoneNumber) {
         window.open(
@@ -210,7 +210,7 @@ export default function CheckoutPage() {
 
       router.push("/");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error processing order";
+      const msg = err instanceof Error ? err.message : "Error al procesar el pedido";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
       clearCart();
       window.location.href = data.initPoint;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error creating payment";
+      const msg = err instanceof Error ? err.message : "Error al crear el pago";
       setError(msg);
       toast.error(msg);
       setLoading(false);
@@ -281,7 +281,7 @@ export default function CheckoutPage() {
       clearCart();
       window.location.href = data.url;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error creating payment";
+      const msg = err instanceof Error ? err.message : "Error al crear el pago";
       setError(msg);
       toast.error(msg);
       setLoading(false);
@@ -315,16 +315,16 @@ export default function CheckoutPage() {
   };
 
   const paymentLabels: Record<PaymentMethod, string> = {
-    whatsapp: "WhatsApp + Transfer",
+    whatsapp: "WhatsApp + Transferencia Bancaria",
     mercadopago: "MercadoPago",
-    stripe: "Credit Card (Stripe)",
+    stripe: "Tarjeta de Crédito / Débito (Stripe)",
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="text-xl font-bold mb-6">Shipping Address</h2>
+          <h2 className="text-xl font-bold mb-6">Dirección de Envío</h2>
 
           {error && (
             <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">
@@ -336,7 +336,7 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold mb-1">
-                  Full Name
+                  Nombre Completo
                 </label>
                 <input
                   type="text"
@@ -348,7 +348,7 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <label className="block text-sm font-bold mb-1">
-                  ID Number
+                  DNI / Nro Documento
                 </label>
                 <input
                   type="text"
@@ -362,7 +362,7 @@ export default function CheckoutPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
-                <label className="block text-sm font-bold mb-1">Street</label>
+                <label className="block text-sm font-bold mb-1">Calle</label>
                 <input
                   type="text"
                   value={street}
@@ -372,7 +372,7 @@ export default function CheckoutPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold mb-1">Number</label>
+                <label className="block text-sm font-bold mb-1">Número / Altura</label>
                 <input
                   type="text"
                   value={number}
@@ -385,7 +385,7 @@ export default function CheckoutPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-bold mb-1">City</label>
+                <label className="block text-sm font-bold mb-1">Ciudad</label>
                 <input
                   type="text"
                   value={city}
@@ -395,7 +395,7 @@ export default function CheckoutPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold mb-1">Province</label>
+                <label className="block text-sm font-bold mb-1">Provincia</label>
                 <input
                   type="text"
                   value={province}
@@ -406,7 +406,7 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <label className="block text-sm font-bold mb-1">
-                  Postal Code
+                  Código Postal
                 </label>
                 <input
                   type="text"
@@ -420,7 +420,7 @@ export default function CheckoutPage() {
 
             <hr className="my-6" />
 
-            <h3 className="font-bold text-lg mb-4">Payment Method</h3>
+            <h3 className="font-bold text-lg mb-4">Método de Pago</h3>
             <div className="space-y-3">
               {availableMethods.map((method) => (
                 <label
@@ -447,17 +447,17 @@ export default function CheckoutPage() {
                       </p>
                       {method === "whatsapp" && (
                         <p className="text-xs text-gray-500">
-                          Coordinate shipping and payment via WhatsApp
+                          Coordina el envío y el pago directamente por WhatsApp
                         </p>
                       )}
                       {method === "mercadopago" && (
                         <p className="text-xs text-gray-500">
-                          Pay securely with MercadoPago
+                          Paga de forma segura con MercadoPago
                         </p>
                       )}
                       {method === "stripe" && (
                         <p className="text-xs text-gray-500">
-                          Pay with credit or debit card
+                          Paga con tarjeta de crédito o débito
                         </p>
                       )}
                     </div>
@@ -473,8 +473,8 @@ export default function CheckoutPage() {
               style={{ backgroundColor: config.theme.primaryColor }}
             >
               {loading
-                ? "Processing..."
-                : `Pay $${finalTotal.toLocaleString()} with ${paymentLabels[selectedPayment]}`}
+                ? "Procesando..."
+                : `Pagar $${finalTotal.toLocaleString()} con ${paymentLabels[selectedPayment]}`}
             </button>
           </form>
         </div>

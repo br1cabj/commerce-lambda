@@ -278,7 +278,7 @@ export default function ProductPage() {
             style={product.stock > 0 ? { backgroundColor: config.theme.primaryColor } : {}}
           >
             <ShoppingCart className="h-5 w-5 inline mr-2" /> 
-            {product.stock === 0 ? "Sold Out / Agotado" : "Add to Cart"}
+            {product.stock === 0 ? "Agotado" : "Agregar al Carrito"}
           </button>
 
           <div className="mt-8 border border-gray-100 rounded-2xl p-5 bg-white shadow-sm flex flex-col gap-4">
@@ -297,15 +297,15 @@ export default function ProductPage() {
                     <div>
                       <h4 className="font-bold text-sm text-gray-800 uppercase tracking-wide">
                         {method.type === "free"
-                          ? "Free Shipping"
+                          ? "Envío Gratis"
                           : method.type === "flat"
-                            ? "Flat Rate Shipping"
-                            : "Delivery Available"}
+                            ? "Envío con Tarifa Plana"
+                            : "Envíos Disponibles"}
                       </h4>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {method.type === "free"
-                          ? "Delivered directly to your door at no extra cost."
-                          : "Calculated at checkout based on your location."}
+                          ? "Entregado directamente en tu puerta sin costo adicional."
+                          : "Calculado al finalizar la compra según tu ubicación."}
                       </p>
                     </div>
                   </div>
@@ -319,10 +319,10 @@ export default function ProductPage() {
                 />
                 <div>
                   <h4 className="font-bold text-sm text-gray-800 uppercase tracking-wide">
-                    Shipping Options
+                    Opciones de Envío
                   </h4>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Contact us via WhatsApp for shipping arrangements.
+                    Contáctanos por WhatsApp para coordinar el envío de tus productos.
                   </p>
                 </div>
               </div>
