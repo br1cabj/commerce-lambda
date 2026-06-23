@@ -16,6 +16,7 @@ import { NewsletterSection } from "@/components/NewsletterSection";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { PromotionalBanners } from "@/components/PromotionalBanners";
 import { useTranslations } from "@/hooks/useTranslations";
+import { ScrollReveal } from "@/hooks/useScrollAnimation";
 import type { TenantConfig } from "@/stores/tenantStore";
 import type { Product, Review } from "@/types";
 
@@ -112,299 +113,327 @@ export function HomeClient({
 
       {/* Trust Signals */}
       {isSectionEnabled("trust") && (
-        <TrustSignals
-          accentColor={config.theme.accentColor}
-          customSignals={trustSignals}
-        />
+        <ScrollReveal delay={100}>
+          <TrustSignals
+            accentColor={config.theme.accentColor}
+            customSignals={trustSignals}
+          />
+        </ScrollReveal>
       )}
 
       {/* Promotional Banners */}
       {isSectionEnabled("banners") &&
         banners.length > 0 &&
         banners.some((b) => b.enabled) && (
-          <PromotionalBanners
-            banners={banners}
-            accentColor={config.theme.accentColor}
-          />
+          <ScrollReveal delay={150}>
+            <PromotionalBanners
+              banners={banners}
+              accentColor={config.theme.accentColor}
+            />
+          </ScrollReveal>
         )}
 
       {/* Categories Section */}
       {isSectionEnabled("categories") && categories.length > 0 && (
-        <CategoriesSection
-          categories={categories}
-          accentColor={config.theme.accentColor}
-          primaryColor={config.theme.primaryColor}
-          config={categoriesConfig}
-        />
+        <ScrollReveal delay={150}>
+          <CategoriesSection
+            categories={categories}
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+            config={categoriesConfig}
+          />
+        </ScrollReveal>
       )}
 
       {/* Special Offers */}
       {isSectionEnabled("flash") && offerProducts.length > 0 && (
-        <SpecialOffers
-          title={
-            tr?.specialOffers?.title || {
-              en: "Special Offers",
-              es: "Ofertas Especiales",
+        <ScrollReveal delay={150}>
+          <SpecialOffers
+            title={
+              tr?.specialOffers?.title || {
+                en: "Special Offers",
+                es: "Ofertas Especiales",
+              }
             }
-          }
-          subtitle={
-            tr?.specialOffers?.subtitle || {
-              en: "Limited time deals",
-              es: "Ofertas por tiempo limitado",
+            subtitle={
+              tr?.specialOffers?.subtitle || {
+                en: "Limited time deals",
+                es: "Ofertas por tiempo limitado",
+              }
             }
-          }
-          viewAllText={
-            tr?.specialOffers?.viewAll || {
-              en: "View All Offers",
-              es: "Ver Todas las Ofertas",
+            viewAllText={
+              tr?.specialOffers?.viewAll || {
+                en: "View All Offers",
+                es: "Ver Todas las Ofertas",
+              }
             }
-          }
-          endsIn={
-            tr?.specialOffers?.endsIn || { en: "Ends in", es: "Termina en" }
-          }
-          products={offerProducts}
-          accentColor={config.theme.accentColor}
-          primaryColor={config.theme.primaryColor}
-        />
+            endsIn={
+              tr?.specialOffers?.endsIn || { en: "Ends in", es: "Termina en" }
+            }
+            products={offerProducts}
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+          />
+        </ScrollReveal>
       )}
 
       {/* Featured Products */}
       {isSectionEnabled("featured") && featuredProducts.length > 0 && (
-        <ProductSection
-          title={
-            tr?.featured?.title || {
-              en: "Featured Products",
-              es: "Productos Destacados",
+        <ScrollReveal delay={150}>
+          <ProductSection
+            title={
+              tr?.featured?.title || {
+                en: "Featured Products",
+                es: "Productos Destacados",
+              }
             }
-          }
-          subtitle={
-            tr?.featured?.subtitle || {
-              en: "Handpicked items just for you",
-              es: "Artículos seleccionados para ti",
+            subtitle={
+              tr?.featured?.subtitle || {
+                en: "Handpicked items just for you",
+                es: "Artículos seleccionados para ti",
+              }
             }
-          }
-          viewAllText={
-            tr?.featured?.viewAll || { en: "View All", es: "Ver Todos" }
-          }
-          products={featuredProducts}
-          accentColor={config.theme.accentColor}
-          primaryColor={config.theme.primaryColor}
-        />
+            viewAllText={
+              tr?.featured?.viewAll || { en: "View All", es: "Ver Todos" }
+            }
+            products={featuredProducts}
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+          />
+        </ScrollReveal>
       )}
 
       {/* New Products */}
       {isSectionEnabled("new") && newProducts.length > 0 && (
-        <ProductSection
-          title={
-            tr?.newProducts?.title || {
-              en: "New Arrivals",
-              es: "Nuevos Ingresos",
+        <ScrollReveal delay={150}>
+          <ProductSection
+            title={
+              tr?.newProducts?.title || {
+                en: "New Arrivals",
+                es: "Nuevos Ingresos",
+              }
             }
-          }
-          subtitle={
-            tr?.newProducts?.subtitle || {
-              en: "Just landed in our store",
-              es: "Recién llegados a nuestra tienda",
+            subtitle={
+              tr?.newProducts?.subtitle || {
+                en: "Just landed in our store",
+                es: "Recién llegados a nuestra tienda",
+              }
             }
-          }
-          viewAllText={
-            tr?.newProducts?.viewAll || {
-              en: "View All New",
-              es: "Ver Todos los Nuevos",
+            viewAllText={
+              tr?.newProducts?.viewAll || {
+                en: "View All New",
+                es: "Ver Todos los Nuevos",
+              }
             }
-          }
-          viewAllLink="/catalog?sort=newest"
-          products={newProducts}
-          accentColor={config.theme.accentColor}
-          primaryColor={config.theme.primaryColor}
-          badge="new"
-        />
+            viewAllLink="/catalog?sort=newest"
+            products={newProducts}
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+            badge="new"
+          />
+        </ScrollReveal>
       )}
 
       {/* Best Sellers */}
       {isSectionEnabled("bestseller") && bestSellers.length > 0 && (
-        <ProductSection
-          title={
-            tr?.bestSellers?.title || { en: "Best Sellers", es: "Más Vendidos" }
-          }
-          subtitle={
-            tr?.bestSellers?.subtitle || {
-              en: "Our customers' favorites",
-              es: "Los favoritos de nuestros clientes",
+        <ScrollReveal delay={150}>
+          <ProductSection
+            title={
+              tr?.bestSellers?.title || { en: "Best Sellers", es: "Más Vendidos" }
             }
-          }
-          viewAllText={
-            tr?.bestSellers?.viewAll || {
-              en: "View All Best Sellers",
-              es: "Ver Todos los Más Vendidos",
+            subtitle={
+              tr?.bestSellers?.subtitle || {
+                en: "Our customers' favorites",
+                es: "Los favoritos de nuestros clientes",
+              }
             }
-          }
-          viewAllLink="/catalog?sort=bestselling"
-          products={bestSellers}
-          accentColor={config.theme.accentColor}
-          primaryColor={config.theme.primaryColor}
-          badge="bestseller"
-        />
+            viewAllText={
+              tr?.bestSellers?.viewAll || {
+                en: "View All Best Sellers",
+                es: "Ver Todos los Más Vendidos",
+              }
+            }
+            viewAllLink="/catalog?sort=bestselling"
+            products={bestSellers}
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+            badge="bestseller"
+          />
+        </ScrollReveal>
       )}
 
       {/* Brands Section */}
       {isSectionEnabled("brands") &&
         brands.length > 0 &&
         brands.some((b) => b.enabled) && (
-          <BrandsSection
-            title={
-              tr?.brands?.title || { en: "Our Brands", es: "Nuestras Marcas" }
-            }
-            subtitle={
-              tr?.brands?.subtitle || {
-                en: "Trusted by the best",
-                es: "Confianza de las mejores marcas",
+          <ScrollReveal delay={150}>
+            <BrandsSection
+              title={
+                tr?.brands?.title || { en: "Our Brands", es: "Nuestras Marcas" }
               }
-            }
-            brands={brands}
-            accentColor={config.theme.accentColor}
-            primaryColor={config.theme.primaryColor}
-          />
+              subtitle={
+                tr?.brands?.subtitle || {
+                  en: "Trusted by the best",
+                  es: "Confianza de las mejores marcas",
+                }
+              }
+              brands={brands}
+              accentColor={config.theme.accentColor}
+              primaryColor={config.theme.primaryColor}
+            />
+          </ScrollReveal>
         )}
 
       {/* Why Choose Us */}
       {isSectionEnabled("why-choose-us") && (
-        <WhyChooseUs
-          title={
-            tr?.whyChooseUs?.title || {
-              en: "Why Choose Us",
-              es: "Por Qué Elegirnos",
+        <ScrollReveal delay={150}>
+          <WhyChooseUs
+            title={
+              tr?.whyChooseUs?.title || {
+                en: "Why Choose Us",
+                es: "Por Qué Elegirnos",
+              }
             }
-          }
-          subtitle={
-            tr?.whyChooseUs?.subtitle || {
-              en: "What makes us different",
-              es: "Lo que nos hace diferentes",
+            subtitle={
+              tr?.whyChooseUs?.subtitle || {
+                en: "What makes us different",
+                es: "Lo que nos hace diferentes",
+              }
             }
-          }
-          benefits={benefits}
-          accentColor={config.theme.accentColor}
-          primaryColor={config.theme.primaryColor}
-        />
+            benefits={benefits}
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+          />
+        </ScrollReveal>
       )}
 
       {/* How It Works */}
       {isSectionEnabled("how-it-works") && (
-        <HowItWorks
-          title={
-            tr?.howItWorks?.title || { en: "How It Works", es: "Cómo Funciona" }
-          }
-          subtitle={
-            tr?.howItWorks?.subtitle || {
-              en: "Simple steps to get your order",
-              es: "Pasos simples para recibir tu pedido",
+        <ScrollReveal delay={150}>
+          <HowItWorks
+            title={
+              tr?.howItWorks?.title || { en: "How It Works", es: "Cómo Funciona" }
             }
-          }
-          step1Title={
-            tr?.howItWorks?.step1Title || {
-              en: "Choose Products",
-              es: "Elige Productos",
+            subtitle={
+              tr?.howItWorks?.subtitle || {
+                en: "Simple steps to get your order",
+                es: "Pasos simples para recibir tu pedido",
+              }
             }
-          }
-          step1Desc={
-            tr?.howItWorks?.step1Desc || {
-              en: "Browse our catalog and add items to cart",
-              es: "Explora nuestro catálogo y agrega al carrito",
+            step1Title={
+              tr?.howItWorks?.step1Title || {
+                en: "Choose Products",
+                es: "Elige Productos",
+              }
             }
-          }
-          step2Title={
-            tr?.howItWorks?.step2Title || {
-              en: "Secure Checkout",
-              es: "Pago Seguro",
+            step1Desc={
+              tr?.howItWorks?.step1Desc || {
+                en: "Browse our catalog and add items to cart",
+                es: "Explora nuestro catálogo y agrega al carrito",
+              }
             }
-          }
-          step2Desc={
-            tr?.howItWorks?.step2Desc || {
-              en: "Complete your purchase safely",
-              es: "Completa tu compra de forma segura",
+            step2Title={
+              tr?.howItWorks?.step2Title || {
+                en: "Secure Checkout",
+                es: "Pago Seguro",
+              }
             }
-          }
-          step3Title={
-            tr?.howItWorks?.step3Title || {
-              en: "Fast Delivery",
-              es: "Entrega Rápida",
+            step2Desc={
+              tr?.howItWorks?.step2Desc || {
+                en: "Complete your purchase safely",
+                es: "Completa tu compra de forma segura",
+              }
             }
-          }
-          step3Desc={
-            tr?.howItWorks?.step3Desc || {
-              en: "Receive your order at your door",
-              es: "Recibe tu pedido en tu puerta",
+            step3Title={
+              tr?.howItWorks?.step3Title || {
+                en: "Fast Delivery",
+                es: "Entrega Rápida",
+              }
             }
-          }
-          accentColor={config.theme.accentColor}
-          primaryColor={config.theme.primaryColor}
-        />
+            step3Desc={
+              tr?.howItWorks?.step3Desc || {
+                en: "Receive your order at your door",
+                es: "Recibe tu pedido en tu puerta",
+              }
+            }
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+          />
+        </ScrollReveal>
       )}
 
       {/* Reviews Section */}
       {isSectionEnabled("reviews") &&
         config?.settings.features.reviews &&
         reviews.length > 0 && (
-          <ReviewsSection
-            reviews={reviews}
-            accentColor={config.theme.accentColor}
-            translations={tr}
-          />
+          <ScrollReveal delay={150}>
+            <ReviewsSection
+              reviews={reviews}
+              accentColor={config.theme.accentColor}
+              translations={tr}
+            />
+          </ScrollReveal>
         )}
 
       {/* Payment Methods */}
       {isSectionEnabled("payment-methods") && (
-        <PaymentMethodsSection
-          title={
-            tr?.paymentMethods?.title || {
-              en: "Secure Payment",
-              es: "Pago Seguro",
+        <ScrollReveal delay={150}>
+          <PaymentMethodsSection
+            title={
+              tr?.paymentMethods?.title || {
+                en: "Secure Payment",
+                es: "Pago Seguro",
+              }
             }
-          }
-          subtitle={
-            tr?.paymentMethods?.subtitle || { en: "We accept", es: "Aceptamos" }
-          }
-          accentColor={config.theme.accentColor}
-          primaryColor={config.theme.primaryColor}
-          paymentMethods={config.settings.paymentMethods}
-        />
+            subtitle={
+              tr?.paymentMethods?.subtitle || { en: "We accept", es: "Aceptamos" }
+            }
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+            paymentMethods={config.settings.paymentMethods}
+          />
+        </ScrollReveal>
       )}
 
       {/* FAQ Section */}
       {isSectionEnabled("faq") &&
         faqItems.length > 0 &&
         faqItems.some((f) => f.enabled) && (
-          <FaqSection
-            title={
-              tr?.faq?.title || {
-                en: "Frequently Asked Questions",
-                es: "Preguntas Frecuentes",
+          <ScrollReveal delay={150}>
+            <FaqSection
+              title={
+                tr?.faq?.title || {
+                  en: "Frequently Asked Questions",
+                  es: "Preguntas Frecuentes",
+                }
               }
-            }
-            subtitle={
-              tr?.faq?.subtitle || {
-                en: "Find answers to common questions",
-                es: "Encuentra respuestas a preguntas comunes",
+              subtitle={
+                tr?.faq?.subtitle || {
+                  en: "Find answers to common questions",
+                  es: "Encuentra respuestas a preguntas comunes",
+                }
               }
-            }
-            viewAllText={
-              tr?.faq?.viewAll || {
-                en: "View All FAQs",
-                es: "Ver Todas las Preguntas",
+              viewAllText={
+                tr?.faq?.viewAll || {
+                  en: "View All FAQs",
+                  es: "Ver Todas las Preguntas",
+                }
               }
-            }
-            faqItems={faqItems}
-            accentColor={config.theme.accentColor}
-            primaryColor={config.theme.primaryColor}
-          />
+              faqItems={faqItems}
+              accentColor={config.theme.accentColor}
+              primaryColor={config.theme.primaryColor}
+            />
+          </ScrollReveal>
         )}
 
       {/* Newsletter Section */}
       {isSectionEnabled("newsletter") && (
-        <NewsletterSection
-          accentColor={config.theme.accentColor}
-          primaryColor={config.theme.primaryColor}
-        />
+        <ScrollReveal delay={150}>
+          <NewsletterSection
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+          />
+        </ScrollReveal>
       )}
     </div>
   );

@@ -50,10 +50,22 @@ export const getAllProducts = async (req, res) => {
       minPrice,
       maxPrice,
       status,
+      q,
+      tag,
     } = req.query;
     const limitNumber = Math.min(Math.max(1, Number(rawLimit) || 10), 100);
     const pageNumber = Math.max(1, Number(page) || 1);
     let queryFilters = { tenantId: req.tenant._id, isDeleted: false };
+
+    if (q && q.trim().length >= 2) {
+      const escapedQ = q.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const qRegex = { $regex: escapedQ, $options: "i" };
+      queryFilters.$or = [
+        { brand: qRegex },
+        { model: qRegex },
+        { category: qRegex }
+      ];
+    }
 
     if (brand) {
       const escapedBrand = brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -62,6 +74,9 @@ export const getAllProducts = async (req, res) => {
     if (size) queryFilters["sizes.size"] = { $in: [String(size)] };
     if (isFeatured === "true") queryFilters.isFeatured = true;
     if (category) queryFilters.category = category;
+    if (tag) {
+      queryFilters.tags = { $regex: new RegExp(`^${tag.trim()}$`, "i") };
+    }
     if (minDiscount) queryFilters.discount = { $gte: Number(minDiscount) };
     if (minPrice || maxPrice) {
       queryFilters.price = {};
@@ -170,6 +185,7 @@ export const createProduct = async (req, res) => {
       status,
       seoTitle,
       seoDescription,
+      tags,
     } = req.body;
 
     const baseSlug = `${brand}-${model}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
@@ -199,6 +215,18 @@ export const createProduct = async (req, res) => {
       seoTitle: seoTitle || "",
       seoDescription: seoDescription || "",
     };
+
+    if (tags !== undefined) {
+      if (typeof tags === "string") {
+        try {
+          productData.tags = JSON.parse(tags);
+        } catch {
+          productData.tags = tags.split(",").map(t => t.trim()).filter(Boolean);
+        }
+      } else if (Array.isArray(tags)) {
+        productData.tags = tags;
+      }
+    }
 
     if (sizes) {
       try {
@@ -320,6 +348,7 @@ export const updateProduct = async (req, res) => {
       status,
       seoTitle,
       seoDescription,
+      tags,
     } = req.body;
 
     const product = await Product.findOne({ _id: id, tenantId: req.tenant._id });
@@ -342,6 +371,18 @@ export const updateProduct = async (req, res) => {
     if (status !== undefined) productData.status = status;
     if (seoTitle !== undefined) productData.seoTitle = seoTitle;
     if (seoDescription !== undefined) productData.seoDescription = seoDescription;
+    
+    if (tags !== undefined) {
+      if (typeof tags === "string") {
+        try {
+          productData.tags = JSON.parse(tags);
+        } catch {
+          productData.tags = tags.split(",").map(t => t.trim()).filter(Boolean);
+        }
+      } else if (Array.isArray(tags)) {
+        productData.tags = tags;
+      }
+    }
     
     if (packageWeight !== undefined || packageLength !== undefined || packageWidth !== undefined || packageHeight !== undefined) {
       productData.packageData = {

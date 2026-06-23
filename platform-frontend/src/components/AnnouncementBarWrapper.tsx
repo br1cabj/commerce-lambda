@@ -10,7 +10,7 @@ export function AnnouncementBarWrapper() {
 
   return (
     <div id="global-announcement">
-      <AnnouncementBar accentColor={config.theme.accentColor} />
+      <AnnouncementBar accentColor={config.theme.accentColor} config={config} />
     </div>
   );
 }

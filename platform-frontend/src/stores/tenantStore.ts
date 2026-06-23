@@ -86,6 +86,14 @@ export interface FaqItem {
   order: number;
 }
 
+export interface AnnouncementItem {
+  id: string;
+  text: string;
+  icon: string;
+  enabled: boolean;
+  order: number;
+}
+
 export interface HomeConfig {
   heroSlides: HeroSlide[];
   banners: Banner[];
@@ -93,6 +101,7 @@ export interface HomeConfig {
   brands: Brand[];
   benefits: Benefit[];
   faqItems: FaqItem[];
+  announcements?: AnnouncementItem[];
   categoriesConfig: CategoriesConfig;
   sections: SectionConfig[];
   defaultLanguage: "en" | "es";
@@ -232,6 +241,34 @@ export interface CategoriesConfig {
   maxHeight: string;
 }
 
+export interface FooterLink {
+  id: string;
+  label: Translation;
+  url: string;
+  order: number;
+}
+
+export interface FooterConfig {
+  preset: "classic" | "minimalist" | "modern" | "newsletter";
+  bgColorMode: "dark" | "light" | "brand";
+  description: Translation;
+  showSocials: boolean;
+  showPaymentMethods: boolean;
+  showContactInfo: boolean;
+  showNewsletter: boolean;
+  socialLinks: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    tiktok?: string;
+    youtube?: string;
+  };
+  customLinks?: FooterLink[];
+  termsOfService?: Translation;
+  privacyPolicy?: Translation;
+  featuredCategories?: string[];
+}
+
 export interface TenantConfig {
   name: string;
   slug: string;
@@ -245,6 +282,7 @@ export interface TenantConfig {
     email: string;
     phone: string;
     address: string;
+    openingHours?: string;
     paymentMethods: {
       type: string;
       enabled: boolean;
@@ -261,6 +299,7 @@ export interface TenantConfig {
       reviews: boolean;
       emailMarketing: boolean;
     };
+    footer?: FooterConfig;
   };
   categories: TenantCategory[];
 }
@@ -276,19 +315,6 @@ interface TenantState {
   setLanguage: (lang: "en" | "es") => void;
 }
 
-const LANGUAGE_STORAGE_KEY = "ecommerce-language";
-
-function getStoredLanguage(): "en" | "es" | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (stored === "en" || stored === "es") return stored;
-  } catch {
-    // Ignore access errors
-  }
-  return null;
-}
-
 export const useTenantStore = create<TenantState>()((set) => ({
   config: null,
   loading: false,
@@ -296,19 +322,15 @@ export const useTenantStore = create<TenantState>()((set) => ({
   currentLanguage: "en", // Default to "en" to prevent hydration mismatch
 
   setConfig: (config) => {
-    const storedLang = getStoredLanguage();
     set({
       config,
       error: null,
-      currentLanguage: storedLang || config.homeConfig?.defaultLanguage || "en",
+      currentLanguage: config.homeConfig?.defaultLanguage || "en",
     });
   },
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
   setLanguage: (lang) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
-    }
     set({ currentLanguage: lang });
   },
 }));

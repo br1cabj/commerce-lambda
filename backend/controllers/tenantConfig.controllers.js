@@ -1,5 +1,6 @@
 import Tenant from "../models/Tenant.js";
 import Category from "../models/Category.js";
+import jwt from "jsonwebtoken";
 
 export const getStoreConfig = async (req, res) => {
   try {
@@ -10,10 +11,30 @@ export const getStoreConfig = async (req, res) => {
       isActive: true,
     }).sort({ order: 1 });
 
+    // Check if the request is from an authenticated admin of this tenant
+    let isAdminUser = false;
+    const token = req.header("auth-token");
+    if (token && process.env.JWT_SECRET) {
+      try {
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Match user's tenant or check super_admin
+        const isUserAdminRole = verified.role === "admin" || verified.role === "administrador";
+        const isSuperAdmin = verified.role === "super_admin";
+        
+        if (isSuperAdmin || (isUserAdminRole && verified.tenantId && verified.tenantId.toString() === tenant._id.toString())) {
+          isAdminUser = true;
+        }
+      } catch (err) {
+        // Silent catch: if invalid token, treat as public storefront request
+      }
+    }
+
     res.json({
       name: tenant.name,
       slug: tenant.slug,
       theme: tenant.theme,
+      homeConfig: tenant.homeConfig || {},
       settings: {
         currency: tenant.settings.currency,
         language: tenant.settings.language,
@@ -21,13 +42,25 @@ export const getStoreConfig = async (req, res) => {
         email: tenant.settings.email,
         phone: tenant.settings.phone,
         address: tenant.settings.address,
+        openingHours: tenant.settings.openingHours,
         paymentMethods: (tenant.settings.paymentMethods || [])
-          .filter((m) => m.enabled)
-          .map((m) => ({ type: m.type, enabled: m.enabled })),
+          .filter((m) => isAdminUser || m.enabled)
+          .map((m) => {
+            if (isAdminUser) {
+              return { type: m.type, enabled: m.enabled, config: m.config || {} };
+            }
+            return { type: m.type, enabled: m.enabled };
+          }),
         shippingMethods: (tenant.settings.shippingMethods || [])
-          .filter((m) => m.enabled)
-          .map((m) => ({ type: m.type, enabled: m.enabled, name: m.name })),
+          .filter((m) => isAdminUser || m.enabled)
+          .map((m) => {
+            if (isAdminUser) {
+              return { type: m.type, enabled: m.enabled, name: m.name, config: m.config || {} };
+            }
+            return { type: m.type, enabled: m.enabled, name: m.name };
+          }),
         features: tenant.settings.features,
+        footer: tenant.settings.footer || {},
       },
       categories,
     });
@@ -39,7 +72,7 @@ export const getStoreConfig = async (req, res) => {
 
 export const updateStoreConfig = async (req, res) => {
   try {
-    const { settings } = req.body;
+    const { settings, homeConfig } = req.body;
 
     const tenant = await Tenant.findById(req.tenant._id);
     if (!tenant) return res.status(404).json({ message: "Store not found." });
@@ -53,6 +86,8 @@ export const updateStoreConfig = async (req, res) => {
       if (settings.phone !== undefined) tenant.settings.phone = settings.phone;
       if (settings.address !== undefined)
         tenant.settings.address = settings.address;
+      if (settings.openingHours !== undefined)
+        tenant.settings.openingHours = settings.openingHours;
       if (settings.paymentMethods)
         tenant.settings.paymentMethods = settings.paymentMethods;
       if (settings.shippingMethods)
@@ -62,6 +97,31 @@ export const updateStoreConfig = async (req, res) => {
           ...tenant.settings.features,
           ...settings.features,
         };
+      if (settings.footer) {
+        if (settings.footer.preset !== undefined) tenant.settings.footer.preset = settings.footer.preset;
+        if (settings.footer.bgColorMode !== undefined) tenant.settings.footer.bgColorMode = settings.footer.bgColorMode;
+        if (settings.footer.description !== undefined) tenant.settings.footer.description = settings.footer.description;
+        if (settings.footer.showSocials !== undefined) tenant.settings.footer.showSocials = settings.footer.showSocials;
+        if (settings.footer.showPaymentMethods !== undefined) tenant.settings.footer.showPaymentMethods = settings.footer.showPaymentMethods;
+        if (settings.footer.showContactInfo !== undefined) tenant.settings.footer.showContactInfo = settings.footer.showContactInfo;
+        if (settings.footer.showNewsletter !== undefined) tenant.settings.footer.showNewsletter = settings.footer.showNewsletter;
+        if (settings.footer.socialLinks !== undefined) tenant.settings.footer.socialLinks = settings.footer.socialLinks;
+        if (settings.footer.customLinks !== undefined) tenant.settings.footer.customLinks = settings.footer.customLinks;
+        if (settings.footer.termsOfService !== undefined) tenant.settings.footer.termsOfService = settings.footer.termsOfService;
+        if (settings.footer.privacyPolicy !== undefined) tenant.settings.footer.privacyPolicy = settings.footer.privacyPolicy;
+        if (settings.footer.featuredCategories !== undefined) tenant.settings.footer.featuredCategories = settings.footer.featuredCategories;
+      }
+    }
+
+    if (homeConfig) {
+      if (homeConfig.defaultLanguage)
+        tenant.homeConfig.defaultLanguage = homeConfig.defaultLanguage;
+      if (homeConfig.supportedLanguages)
+        tenant.homeConfig.supportedLanguages = homeConfig.supportedLanguages;
+      if (homeConfig.faqItems !== undefined)
+        tenant.homeConfig.faqItems = homeConfig.faqItems;
+      if (homeConfig.announcements !== undefined)
+        tenant.homeConfig.announcements = homeConfig.announcements;
     }
 
     await tenant.save();

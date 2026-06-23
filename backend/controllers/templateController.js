@@ -667,9 +667,17 @@ export const applyTemplate = async (req, res) => {
       return res.status(404).json({ message: "Template not found" });
     }
 
+    const defaultLang = tenant.settings?.language || "en";
+
     tenant.theme = {
       ...tenant.theme,
       ...template.theme,
+      heroTitle: typeof template.theme.heroTitle === "object"
+        ? (template.theme.heroTitle[defaultLang] || template.theme.heroTitle["en"])
+        : template.theme.heroTitle,
+      heroSubtitle: typeof template.theme.heroSubtitle === "object"
+        ? (template.theme.heroSubtitle[defaultLang] || template.theme.heroSubtitle["en"])
+        : template.theme.heroSubtitle,
     };
 
     tenant.translations = {

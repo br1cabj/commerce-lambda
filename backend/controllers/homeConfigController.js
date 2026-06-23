@@ -217,3 +217,31 @@ export const updateTranslations = async (req, res) => {
     res.status(500).json({ message: "Error updating translations" });
   }
 };
+
+export const updateAnnouncements = async (req, res) => {
+  try {
+    const tenant = req.tenant;
+    if (!tenant) {
+      return res.status(404).json({ message: "Tenant not found" });
+    }
+
+    const { announcements } = req.body;
+    if (!Array.isArray(announcements)) {
+      return res.status(400).json({ message: "Announcements must be an array" });
+    }
+    if (announcements.length > 10) {
+      return res.status(400).json({ message: "Maximum 10 announcements allowed" });
+    }
+
+    tenant.homeConfig.announcements = announcements;
+    await tenant.save();
+
+    res.json({
+      message: "Announcements updated successfully",
+      announcements: tenant.homeConfig.announcements,
+    });
+  } catch (error) {
+    console.error("Error updating announcements:", error);
+    res.status(500).json({ message: "Error updating announcements" });
+  }
+};

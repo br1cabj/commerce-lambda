@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Palette, Check, Eye } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { useTranslations } from "@/hooks/useTranslations";
 
 interface Template {
   id: string;
@@ -34,6 +35,7 @@ interface TemplateDetail extends Template {
 export default function AdminTemplatesPage() {
   const { config, fetchConfig } = useTenant();
   const { isAuthenticated, isAdmin, isHydrated } = useAuth();
+  const { adminT } = useTranslations();
   const router = useRouter();
 
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -84,7 +86,7 @@ export default function AdminTemplatesPage() {
       setSelectedTemplate(data);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Error loading template details",
+          err instanceof Error ? err.message : "Error loading template details",
       );
     }
   };
@@ -94,7 +96,7 @@ export default function AdminTemplatesPage() {
 
     if (
       !confirm(
-        "This will overwrite your current theme and translations. Continue?",
+        adminT("confirmOverwrite")
       )
     ) {
       return;
@@ -134,7 +136,7 @@ export default function AdminTemplatesPage() {
       <AdminNav />
 
       <div className="mb-6">
-        <h2 className="text-2xl font-bold">Templates</h2>
+        <h2 className="text-2xl font-bold">{adminT("templates")}</h2>
         <p className="text-gray-500 text-sm mt-1">
           Choose a pre-designed template for your industry
         </p>
@@ -143,7 +145,7 @@ export default function AdminTemplatesPage() {
       {applied && (
         <div className="bg-green-50 text-green-700 text-sm p-3 rounded-lg mb-6 font-semibold flex items-center gap-2">
           <Check className="h-4 w-4" />
-          Template applied successfully!
+          {adminT("templateApplied")}
         </div>
       )}
 
@@ -175,7 +177,7 @@ export default function AdminTemplatesPage() {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold hover:bg-gray-50 transition-colors"
               >
                 <Eye className="h-4 w-4" />
-                Preview
+                {adminT("preview")}
               </button>
               <button
                 onClick={() => applyTemplate(template.id)}
@@ -183,7 +185,7 @@ export default function AdminTemplatesPage() {
                 className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50 transition-colors"
                 style={{ backgroundColor: config?.theme.accentColor }}
               >
-                {applying ? "Applying..." : "Apply"}
+                {applying ? adminT("applying") : adminT("applyTemplate")}
               </button>
             </div>
           </div>
@@ -213,7 +215,7 @@ export default function AdminTemplatesPage() {
 
               <div className="space-y-6">
                 <div>
-                  <h4 className="font-bold mb-3">Color Scheme</h4>
+                  <h4 className="font-bold mb-3">{adminT("colorScheme")}</h4>
                   <div className="flex gap-3">
                     <div className="flex items-center gap-2">
                       <div
@@ -247,7 +249,7 @@ export default function AdminTemplatesPage() {
                 </div>
 
                 <div>
-                  <h4 className="font-bold mb-3">Hero Slides</h4>
+                  <h4 className="font-bold mb-3">{adminT("heroSlides")}</h4>
                   <div className="space-y-3">
                     {selectedTemplate.heroSlides.map((slide, index) => (
                       <div key={index} className="bg-gray-50 rounded-lg p-4">
@@ -271,7 +273,7 @@ export default function AdminTemplatesPage() {
                 </div>
 
                 <div>
-                  <h4 className="font-bold mb-3">Suggested Categories</h4>
+                  <h4 className="font-bold mb-3">{adminT("suggestedCategories")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedTemplate.categories.map((category, index) => (
                       <span
@@ -289,7 +291,7 @@ export default function AdminTemplatesPage() {
                     onClick={() => setSelectedTemplate(null)}
                     className="flex-1 px-4 py-2 rounded-lg border border-gray-300 font-semibold hover:bg-gray-50 transition-colors"
                   >
-                    Close
+                    {adminT("close")}
                   </button>
                   <button
                     onClick={() => {
@@ -300,7 +302,7 @@ export default function AdminTemplatesPage() {
                     className="flex-1 px-4 py-2 rounded-lg font-semibold text-white disabled:opacity-50 transition-colors"
                     style={{ backgroundColor: config?.theme.accentColor }}
                   >
-                    {applying ? "Applying..." : "Apply Template"}
+                    {applying ? adminT("applying") : adminT("applyTemplate")}
                   </button>
                 </div>
               </div>

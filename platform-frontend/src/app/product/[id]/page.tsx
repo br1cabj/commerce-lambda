@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ShoppingCart, Truck } from "lucide-react";
 import Image from "next/image";
 import { api } from "@/lib/api";
+import { ProductSection } from "@/components/ProductSection";
 
 import type { Product } from "@/types";
 
@@ -21,6 +22,16 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState("");
   const [mainImage, setMainImage] = useState("");
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [fade, setFade] = useState(true);
+
+  const changeMainImage = (img: string) => {
+    setFade(false);
+    setTimeout(() => {
+      setMainImage(img);
+      setFade(true);
+    }, 150);
+  };
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -35,6 +46,22 @@ export default function ProductPage() {
           setMainImage(data.images[0]);
         }
         if (data.sizes?.[0]) setSelectedSize(data.sizes[0].size);
+
+        // Fetch related products
+        if (data.category) {
+          try {
+            const relatedData = (await api.get(
+              `/products?category=${encodeURIComponent(data.category)}&limit=5`,
+              config.slug,
+            )) as { results: Product[] };
+            const filtered = (relatedData.results || []).filter(
+              (p: Product) => p._id !== data._id
+            );
+            setRelatedProducts(filtered.slice(0, 4));
+          } catch (err) {
+            console.error("Error loading related products:", err);
+          }
+        }
       } catch (err) {
         console.error("Error loading product:", err);
       } finally {
@@ -49,7 +76,7 @@ export default function ProductPage() {
       const selectedSizeObj = product.sizes?.find((s) => s.size === selectedSize);
       if (selectedSizeObj && selectedSizeObj.imageUrl) {
         Promise.resolve().then(() => {
-          setMainImage(selectedSizeObj!.imageUrl!);
+          changeMainImage(selectedSizeObj!.imageUrl!);
         });
       }
     }
@@ -139,7 +166,7 @@ export default function ProductPage() {
             {images.map((img, i) => (
               <button
                 key={i}
-                onClick={() => setMainImage(img)}
+                onClick={() => changeMainImage(img)}
                 className={`border-2 rounded-xl p-1 w-20 h-20 flex-shrink-0 transition-all duration-200 ${mainImage === img ? "scale-105 shadow-md" : "border-transparent hover:border-gray-300 opacity-70 hover:opacity-100"}`}
                 style={
                   mainImage === img
@@ -164,7 +191,9 @@ export default function ProductPage() {
                 alt={product.model}
                 width={500}
                 height={400}
-                className="max-h-[400px] max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                className={`max-h-[400px] max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-all duration-300 ease-in-out ${
+                  fade ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
               />
             ) : (
               <div className="text-gray-400 text-sm">No image available</div>
@@ -222,12 +251,17 @@ export default function ProductPage() {
                     key={s.size}
                     onClick={() => s.stock > 0 && setSelectedSize(s.size)}
                     disabled={s.stock < 1}
-                    className={`py-3 rounded-lg text-sm font-bold border transition-colors ${
+                    style={
+                      selectedSize === s.size
+                        ? { backgroundColor: config.theme.primaryColor, color: "#fff", borderColor: config.theme.primaryColor }
+                        : {}
+                    }
+                    className={`py-3 rounded-lg text-sm font-bold border transition-all duration-300 ${
                       s.stock < 1
                         ? "opacity-40 cursor-not-allowed line-through"
                         : selectedSize === s.size
-                          ? "bg-gray-900 text-white"
-                          : "hover:bg-gray-100"
+                          ? "shadow-md scale-105"
+                          : "hover:bg-gray-50 border-gray-200 hover:border-gray-400"
                     }`}
                   >
                     {s.size}
@@ -296,6 +330,19 @@ export default function ProductPage() {
           </div>
         </div>
       </div>
+
+      {relatedProducts.length > 0 && (
+        <div className="mt-16 border-t border-gray-100 pt-16">
+          <ProductSection
+            title={{ en: "Related Products", es: "Productos Relacionados" }}
+            subtitle={{ en: "Customers also viewed these items", es: "Clientes también vieron estos artículos" }}
+            viewAllText={{ en: "View All", es: "Ver Todos" }}
+            products={relatedProducts}
+            accentColor={config.theme.accentColor}
+            primaryColor={config.theme.primaryColor}
+          />
+        </div>
+      )}
     </div>
   );
 }

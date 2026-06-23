@@ -103,6 +103,7 @@ app.use("/api/templates", templateRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/super", superAdminRoutes);
 app.use("/api/emails", emailsRoutes);
+app.use("/api/payments", paymentsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

@@ -2,13 +2,16 @@
 
 import { useCartStore } from "@/stores/cartStore";
 import type { CartItem } from "@/stores/cartStore";
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
-const emptySubscribe = () => () => {};
-
 function useIsHydrated() {
-  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHydrated(true);
+  }, []);
+  return hydrated;
 }
 
 export function useCart() {

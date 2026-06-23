@@ -2,12 +2,15 @@
 
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
-import { useSyncExternalStore, useCallback } from "react";
-
-const emptySubscribe = () => () => {};
+import { useCallback, useState, useEffect } from "react";
 
 function useIsHydrated() {
-  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHydrated(true);
+  }, []);
+  return hydrated;
 }
 
 export function useAuth() {

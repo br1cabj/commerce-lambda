@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { Plus, Trash, ToggleLeft, ToggleRight, Edit } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
 import Image from "next/image";
+import { useTranslations } from "@/hooks/useTranslations";
 
 interface Category {
   _id: string;
@@ -26,6 +27,7 @@ interface Category {
 export default function AdminCategoriesPage() {
   const { config } = useTenant();
   const { isAuthenticated, isAdmin, isHydrated } = useAuth();
+  const { adminT } = useTranslations();
   const router = useRouter();
   
   const [categories, setCategories] = useState<Category[]>([]);
@@ -159,7 +161,7 @@ export default function AdminCategoriesPage() {
   };
 
   const deleteCategory = async (id: string) => {
-    if (!config || !confirm("Delete this category?")) return;
+    if (!config || !confirm(adminT("confirmDeleteCategory"))) return;
     try {
       await api.delete(`/categories/${id}`, config.slug);
       refreshCategories();
@@ -169,7 +171,7 @@ export default function AdminCategoriesPage() {
   };
 
   if (!isHydrated || loading) {
-    return <div className="p-8 text-center">Cargando...</div>;
+    return <div className="p-8 text-center">{adminT("loading")}</div>;
   }
 
   return (
@@ -177,17 +179,17 @@ export default function AdminCategoriesPage() {
       <AdminNav />
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Categories Management</h2>
-          <p className="text-gray-500 text-sm">Manage dynamic categories for your storefront</p>
+          <h2 className="text-2xl font-bold">{adminT("categoriesManagement")}</h2>
+          <p className="text-gray-500 text-sm">{adminT("manageDynamicCategories")}</p>
         </div>
         <button
           onClick={() => {
             resetForm();
             setShowForm(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800 text-sm font-semibold"
         >
-          <Plus className="h-4 w-4" /> Add Category
+          <Plus className="h-4 w-4" /> {adminT("addCategory")}
         </button>
       </div>
 
@@ -197,11 +199,11 @@ export default function AdminCategoriesPage() {
 
       {showForm && (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-8">
-          <h3 className="text-xl font-bold mb-4">{editingId ? "Edit Category" : "New Category"}</h3>
+          <h3 className="text-xl font-bold mb-4">{editingId ? adminT("editCategory") : adminT("newCategory")}</h3>
           <form onSubmit={saveCategory} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Name *</label>
+                <label className="block text-sm font-medium mb-1">{adminT("name")} *</label>
                 <input
                   type="text"
                   required
@@ -217,7 +219,7 @@ export default function AdminCategoriesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Slug *</label>
+                <label className="block text-sm font-medium mb-1">{adminT("slug")} *</label>
                 <input
                   type="text"
                   required
@@ -230,7 +232,7 @@ export default function AdminCategoriesPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
+              <label className="block text-sm font-medium mb-1">{adminT("description")}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -241,44 +243,44 @@ export default function AdminCategoriesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Display Style</label>
+                <label className="block text-sm font-medium mb-1">{adminT("displayStyle")}</label>
                 <select
                   value={displayStyle}
                   onChange={(e) => setDisplayStyle(e.target.value as "image" | "icon" | "gradient")}
-                  className="w-full px-3 py-2 border rounded bg-white"
+                  className="w-full px-3 py-2 border rounded bg-white text-sm"
                 >
-                  <option value="image">Image Background</option>
-                  <option value="icon">Icon/Emoji</option>
-                  <option value="gradient">Gradient Background</option>
+                  <option value="image">{adminT("imageBackground")}</option>
+                  <option value="icon">{adminT("iconEmoji")}</option>
+                  <option value="gradient">{adminT("gradientBackground")}</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-1">Background Color (Hex)</label>
+                <label className="block text-sm font-medium mb-1">{adminT("backgroundColorHex")}</label>
                 <div className="flex gap-2">
                   <input
                     type="color"
                     value={backgroundColor || "#f3f4f6"}
                     onChange={(e) => setBackgroundColor(e.target.value)}
-                    className="h-10 w-10 p-1 border rounded"
+                    className="h-10 w-10 p-1 border rounded cursor-pointer"
                   />
                   <input
                     type="text"
                     value={backgroundColor}
                     onChange={(e) => setBackgroundColor(e.target.value)}
-                    className="flex-1 px-3 py-2 border rounded uppercase"
+                    className="flex-1 px-3 py-2 border rounded uppercase text-sm"
                     placeholder="#F3F4F6"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Icon/Emoji (e.g. 💻 or Shirt)</label>
+                <label className="block text-sm font-medium mb-1">Icon/Emoji</label>
                 <input
                   type="text"
                   value={icon}
                   onChange={(e) => setIcon(e.target.value)}
-                  className="w-full px-3 py-2 border rounded"
+                  className="w-full px-3 py-2 border rounded text-sm"
                   placeholder="e.g. 💻"
                 />
               </div>
@@ -287,7 +289,7 @@ export default function AdminCategoriesPage() {
             {displayStyle === "image" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Upload Background Image</label>
+                  <label className="block text-sm font-medium mb-1">{adminT("uploadBgImage")}</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -296,7 +298,7 @@ export default function AdminCategoriesPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Or Paste Image URL</label>
+                  <label className="block text-sm font-medium mb-1">{adminT("orPasteImageUrl")}</label>
                   <input
                     type="url"
                     value={imageUrl}
@@ -324,12 +326,12 @@ export default function AdminCategoriesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Order (Sorting)</label>
+                <label className="block text-sm font-medium mb-1">{adminT("orderSorting")}</label>
                 <input
                   type="number"
                   value={order}
                   onChange={(e) => setOrder(e.target.value)}
-                  className="w-full px-3 py-2 border rounded"
+                  className="w-full px-3 py-2 border rounded text-sm"
                   min="0"
                 />
               </div>
@@ -342,7 +344,7 @@ export default function AdminCategoriesPage() {
                     onChange={(e) => setShowOnHome(e.target.checked)}
                     className="w-5 h-5 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
                   />
-                  <span className="text-sm font-medium text-gray-900">Show on Home Page</span>
+                  <span className="text-sm font-medium text-gray-900">{adminT("showOnHome")}</span>
                 </label>
               </div>
             </div>
@@ -351,15 +353,15 @@ export default function AdminCategoriesPage() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 border rounded hover:bg-gray-50"
+                className="px-4 py-2 border rounded hover:bg-gray-50 text-sm font-semibold"
               >
-                Cancel
+                {adminT("cancel")}
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
+                className="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800 text-sm font-semibold"
               >
-                {editingId ? "Update Category" : "Save Category"}
+                {editingId ? adminT("updateCategory") : adminT("saveCategory")}
               </button>
             </div>
           </form>
@@ -370,9 +372,9 @@ export default function AdminCategoriesPage() {
         <table className="w-full text-left">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th className="px-6 py-3 text-sm font-semibold text-gray-600">Category</th>
-              <th className="px-6 py-3 text-sm font-semibold text-gray-600">Style</th>
-              <th className="px-6 py-3 text-sm font-semibold text-gray-600">Home</th>
+              <th className="px-6 py-3 text-sm font-semibold text-gray-600">{adminT("categories")}</th>
+              <th className="px-6 py-3 text-sm font-semibold text-gray-600">{adminT("displayStyle")}</th>
+              <th className="px-6 py-3 text-sm font-semibold text-gray-600">{adminT("homeBuilder")}</th>
               <th className="px-6 py-3 text-sm font-semibold text-gray-600">Status</th>
               <th className="px-6 py-3 text-sm font-semibold text-gray-600 text-right">Actions</th>
             </tr>
@@ -404,7 +406,7 @@ export default function AdminCategoriesPage() {
                     }`}
                   >
                     {cat.isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
-                    {cat.isActive ? "Active" : "Inactive"}
+                    {cat.isActive ? adminT("active") : adminT("inactive")}
                   </button>
                 </td>
                 <td className="px-6 py-4 text-right">

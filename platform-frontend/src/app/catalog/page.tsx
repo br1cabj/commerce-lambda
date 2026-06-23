@@ -1,15 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useTenant } from "@/hooks/useTenant";
+import { useTranslations } from "@/hooks/useTranslations";
 import { ProductCard } from "@/components/ProductCard";
 import { api } from "@/lib/api";
-import { SlidersHorizontal } from "lucide-react";
-
+import { SlidersHorizontal, Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import type { Product } from "@/types";
 
 export default function CatalogPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
+        </div>
+      }
+    >
+      <CatalogContent />
+    </Suspense>
+  );
+}
+
+function CatalogContent() {
   const { config } = useTenant();
+  const { currentLanguage } = useTranslations();
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") || "";
+  const tag = searchParams.get("tag") || "";
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState("");
@@ -26,6 +47,8 @@ export default function CatalogPage() {
         const params = new URLSearchParams({ limit: "100" });
         if (selectedBrand) params.set("brand", selectedBrand);
         if (selectedSize) params.set("size", selectedSize);
+        if (q) params.set("q", q);
+        if (tag) params.set("tag", tag);
         
         // Map frontend sorting options to backend contract
         if (sortBy === "price_asc") {
@@ -63,7 +86,7 @@ export default function CatalogPage() {
       }
     };
     loadProducts();
-  }, [config, selectedBrand, selectedSize, sortBy, priceRange]);
+  }, [config, selectedBrand, selectedSize, sortBy, priceRange, q, tag]);
 
   if (!config) return null;
 
@@ -74,10 +97,27 @@ export default function CatalogPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Catalog Header */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b">
-        <h1 className="text-2xl font-bold uppercase tracking-tight">
-          All Products
-        </h1>
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold uppercase tracking-tight">
+            {q ? (
+              currentLanguage === "es" ? (
+                <>Resultados para: <span className="text-gray-500 font-semibold italic">&quot;{q}&quot;</span></>
+              ) : (
+                <>Results for: <span className="text-gray-500 font-semibold italic">&quot;{q}&quot;</span></>
+              )
+            ) : tag ? (
+              currentLanguage === "es" ? (
+                <>Colección: <span className="text-gray-900 font-extrabold uppercase tracking-tight">{tag}</span></>
+              ) : (
+                <>Collection: <span className="text-gray-900 font-extrabold uppercase tracking-tight">{tag}</span></>
+              )
+            ) : (
+              currentLanguage === "es" ? "Todos los Productos" : "All Products"
+            )}
+          </h1>
+        </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
@@ -86,16 +126,54 @@ export default function CatalogPage() {
             <SlidersHorizontal className="h-4 w-4" />
             Filters {mobileFiltersOpen ? "✕" : ""}
           </button>
-          <span className="text-gray-500 text-sm font-medium">
-            {products.length} Products
+          <span className="text-gray-500 text-sm font-bold">
+            {products.length} {currentLanguage === "es" ? "Productos" : "Products"}
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className={`bg-white rounded-xl shadow-sm border p-6 h-fit sticky top-24 ${mobileFiltersOpen ? "block" : "hidden lg:block"}`}>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-sm uppercase">Filters</h3>
+        {/* Filters Sidebar */}
+        <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 p-6 h-fit sticky top-24 space-y-6 ${mobileFiltersOpen ? "block" : "hidden lg:block"}`}>
+          {/* Active Search Param Clear Tag */}
+          {q && (
+            <div className="flex items-center justify-between bg-gray-50/50 border border-gray-150 rounded-xl p-3 gap-2">
+              <div className="flex items-center gap-2 truncate flex-1">
+                <Search className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                <span className="text-xs text-gray-500 font-bold truncate">
+                  &quot;{q}&quot;
+                </span>
+              </div>
+              <Link
+                href="/catalog"
+                className="text-[10px] font-extrabold text-gray-500 bg-white border border-gray-200 hover:bg-gray-100 hover:text-gray-800 px-2 py-1 rounded-lg transition-colors flex-shrink-0"
+              >
+                {currentLanguage === "es" ? "Quitar" : "Clear"}
+              </Link>
+            </div>
+          )}
+
+          {tag && (
+            <div className="flex items-center justify-between bg-gray-50/50 border border-gray-150 rounded-xl p-3 gap-2">
+              <div className="flex items-center gap-2 truncate flex-1">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                <span className="text-xs text-gray-500 font-bold truncate">
+                  Tag: #{tag}
+                </span>
+              </div>
+              <Link
+                href="/catalog"
+                className="text-[10px] font-extrabold text-gray-500 bg-white border border-gray-200 hover:bg-gray-100 hover:text-gray-800 px-2 py-1 rounded-lg transition-colors flex-shrink-0"
+              >
+                {currentLanguage === "es" ? "Quitar" : "Clear"}
+              </Link>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center pb-2 border-b border-gray-50">
+            <h3 className="font-extrabold text-sm uppercase text-gray-800">
+              {currentLanguage === "es" ? "Filtros" : "Filters"}
+            </h3>
             <button
               onClick={() => {
                 setSelectedBrand("");
@@ -103,31 +181,39 @@ export default function CatalogPage() {
                 setSortBy("newest");
                 setPriceRange({ min: 0, max: 1000 });
               }}
-              className="text-xs text-gray-500 hover:underline"
+              className="text-xs text-gray-500 hover:underline font-bold"
             >
-              Clear
+              {currentLanguage === "es" ? "Limpiar Todo" : "Clear All"}
             </button>
           </div>
 
-          <div className="mb-6">
-            <h4 className="font-bold text-xs mb-3">SORT BY</h4>
+          <div>
+            <h4 className="font-bold text-xs mb-3 text-gray-400 uppercase tracking-wider">
+              {currentLanguage === "es" ? "Ordenar por" : "Sort By"}
+            </h4>
             <select 
               value={sortBy} 
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full text-sm border-gray-200 rounded-lg focus:ring-gray-900 focus:border-gray-900"
+              className="w-full text-sm border-gray-200 rounded-xl focus:ring-gray-900 focus:border-gray-900 font-semibold text-gray-700 bg-white"
             >
-              <option value="newest">Newest Arrivals</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
+              <option value="newest">
+                {currentLanguage === "es" ? "Novedades" : "Newest Arrivals"}
+              </option>
+              <option value="price_asc">
+                {currentLanguage === "es" ? "Precio: Menor a Mayor" : "Price: Low to High"}
+              </option>
+              <option value="price_desc">
+                {currentLanguage === "es" ? "Precio: Mayor a Menor" : "Price: High to Low"}
+              </option>
             </select>
           </div>
 
-          <hr className="border-gray-200 mb-6" />
+          <hr className="border-gray-100" />
 
-          <div className="mb-6">
-            <h4 className="font-bold text-xs mb-3 flex justify-between">
-              <span>MAX PRICE</span>
-              <span>${priceRange.max}</span>
+          <div>
+            <h4 className="font-bold text-xs mb-3 flex justify-between text-gray-400 uppercase tracking-wider">
+              <span>{currentLanguage === "es" ? "Precio Máximo" : "Max Price"}</span>
+              <span className="text-gray-950 font-bold">${priceRange.max}</span>
             </h4>
             <input 
               type="range" 
@@ -140,55 +226,67 @@ export default function CatalogPage() {
             />
           </div>
 
-          <hr className="border-gray-200 mb-6" />
+          <hr className="border-gray-100" />
 
-          <div className="mb-6">
-            <h4 className="font-bold text-xs mb-3">BRAND</h4>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer">
+          <div>
+            <h4 className="font-bold text-xs mb-3 text-gray-400 uppercase tracking-wider">
+              {currentLanguage === "es" ? "Marcas" : "Brands"}
+            </h4>
+            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+              <label className="flex items-center gap-2.5 cursor-pointer text-sm font-semibold text-gray-600 hover:text-gray-900">
                 <input
                   type="radio"
                   name="brand"
                   checked={selectedBrand === ""}
                   onChange={() => setSelectedBrand("")}
-                  className="accent-gray-900"
+                  className="accent-gray-900 h-4 w-4"
                 />
-                <span className="text-sm">All</span>
+                <span>{currentLanguage === "es" ? "Todas" : "All"}</span>
               </label>
               {brands.map((brand) => (
                 <label
                   key={brand}
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="flex items-center gap-2.5 cursor-pointer text-sm font-semibold text-gray-600 hover:text-gray-900"
                 >
                   <input
                     type="radio"
                     name="brand"
                     checked={selectedBrand === brand}
                     onChange={() => setSelectedBrand(brand)}
-                    className="accent-gray-900"
+                    className="accent-gray-900 h-4 w-4"
                   />
-                  <span className="text-sm">{brand}</span>
+                  <span>{brand}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          <hr className="border-gray-200 mb-6" />
+          <hr className="border-gray-100" />
 
           <div>
-            <h4 className="font-bold text-xs mb-3">OPTION</h4>
+            <h4 className="font-bold text-xs mb-3 text-gray-400 uppercase tracking-wider">
+              {currentLanguage === "es" ? "Tallas" : "Sizes"}
+            </h4>
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => setSelectedSize("")}
-                className={`py-2 rounded-lg text-xs font-bold border ${selectedSize === "" ? "bg-gray-900 text-white" : "hover:bg-gray-100"}`}
+                className={`py-2 rounded-xl text-xs font-bold border transition-all ${
+                  selectedSize === ""
+                    ? "bg-gray-900 border-gray-900 text-white shadow-sm"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
               >
-                All
+                {currentLanguage === "es" ? "Todas" : "All"}
               </button>
               {sizes.map((size) => (
                 <button
                   key={size}
                   onClick={() => setSelectedSize(size)}
-                  className={`py-2 rounded-lg text-xs font-bold border ${selectedSize === size ? "bg-gray-900 text-white" : "hover:bg-gray-100"}`}
+                  className={`py-2 rounded-xl text-xs font-bold border transition-all ${
+                    selectedSize === size
+                      ? "bg-gray-900 border-gray-900 text-white shadow-sm"
+                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
                 >
                   {size}
                 </button>
@@ -197,16 +295,21 @@ export default function CatalogPage() {
           </div>
         </div>
 
+        {/* Catalog Product Grid */}
         <div className="lg:col-span-3">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center py-24">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
             </div>
           ) : products.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl shadow-sm">
-              <p className="font-bold text-gray-700">No results found</p>
-              <p className="text-gray-500 text-sm mt-1">
-                Try removing some filters.
+            <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <p className="font-bold text-gray-800">
+                {currentLanguage === "es" ? "No se encontraron productos" : "No products found"}
+              </p>
+              <p className="text-gray-400 text-xs mt-1 font-medium">
+                {currentLanguage === "es"
+                  ? "Prueba eliminando algunos filtros o buscando otra palabra clave."
+                  : "Try removing some filters or searching for another keyword."}
               </p>
             </div>
           ) : (

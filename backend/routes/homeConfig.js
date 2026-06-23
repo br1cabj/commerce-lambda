@@ -7,6 +7,7 @@ import {
   updateTrustSignals,
   updateSections,
   updateTranslations,
+  updateAnnouncements,
 } from "../controllers/homeConfigController.js";
 import { identifyTenant } from "../middleware/identifyTenant.js";
 import { verifyToken } from "../middleware/verifyToken.js";
@@ -24,5 +25,6 @@ router.put("/banners", verifyToken, isAdminForTenant, updateBanners);
 router.put("/trust-signals", verifyToken, isAdminForTenant, updateTrustSignals);
 router.put("/sections", verifyToken, isAdminForTenant, updateSections);
 router.put("/translations", verifyToken, isAdminForTenant, updateTranslations);
+router.put("/announcements", verifyToken, isAdminForTenant, updateAnnouncements);
 
 export default router;

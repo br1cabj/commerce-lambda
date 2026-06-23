@@ -1,12 +1,16 @@
 "use client";
 
 import { useTenantStore, type Translation } from "@/stores/tenantStore";
-import { useCallback, useSyncExternalStore } from "react";
-
-const emptySubscribe = () => () => {};
+import { useCallback, useState, useEffect } from "react";
+import { adminTranslations } from "@/locales/admin";
 
 function useIsHydrated() {
-  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHydrated(true);
+  }, []);
+  return hydrated;
 }
 
 export function useTranslations() {
@@ -22,10 +26,20 @@ export function useTranslations() {
     [currentLanguage, isHydrated],
   );
 
+  const adminT = useCallback(
+    (key: keyof typeof adminTranslations.en): string => {
+      const lang = isHydrated ? currentLanguage : "en";
+      const dict = adminTranslations[lang] || adminTranslations.en;
+      return dict[key] || adminTranslations.en[key] || "";
+    },
+    [currentLanguage, isHydrated],
+  );
+
   const translations = config?.translations;
 
   return {
     t,
+    adminT,
     currentLanguage: isHydrated ? currentLanguage : "en",
     setLanguage,
     supportedLanguages: config?.homeConfig?.supportedLanguages || ["en", "es"],

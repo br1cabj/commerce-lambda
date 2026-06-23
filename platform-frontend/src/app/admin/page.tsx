@@ -31,6 +31,7 @@ interface Product {
   status?: string;
   seoTitle?: string;
   seoDescription?: string;
+  tags?: string[];
 }
 
 export default function AdminPage() {
@@ -60,6 +61,7 @@ export default function AdminPage() {
   const [status, setStatus] = useState("published");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
+  const [tags, setTags] = useState("");
   const [categoriesList, setCategoriesList] = useState<{name: string, slug: string}[]>([]);
   const [error, setError] = useState("");
 
@@ -138,6 +140,7 @@ export default function AdminPage() {
     setStatus(product.status || "published");
     setSeoTitle(product.seoTitle || "");
     setSeoDescription(product.seoDescription || "");
+    setTags(product.tags?.join(", ") || "");
     setShowForm(true);
   };
 
@@ -240,6 +243,7 @@ export default function AdminPage() {
     formData.append("status", status);
     formData.append("seoTitle", seoTitle);
     formData.append("seoDescription", seoDescription);
+    formData.append("tags", tags);
 
     if (editingProduct) {
       formData.append("existingImages", JSON.stringify(existingImages));
@@ -280,6 +284,7 @@ export default function AdminPage() {
     setStatus("published");
     setSeoTitle("");
     setSeoDescription("");
+    setTags("");
   };
   const addSizeRow = () => setSizes([...sizes, { size: "", stock: "", price: "", sku: "", imageUrl: "" }]);
   const removeSizeRow = (i: number) =>
@@ -373,6 +378,18 @@ export default function AdminPage() {
                   <option value="archived">Archived</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Tags (Comma-separated)</label>
+              <input
+                type="text"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm"
+                placeholder="e.g. dia-del-padre, summer, sales"
+              />
+              <p className="text-[10px] text-gray-400 mt-1">Separate tags with commas. E.g. dia-del-padre, ofertas, nuevo</p>
             </div>
 
             <div>

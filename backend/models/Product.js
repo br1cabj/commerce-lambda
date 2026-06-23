@@ -53,6 +53,7 @@ const productSchema = new mongoose.Schema(
     salesCount: { type: Number, default: 0, min: 0 },
     rating: { type: Number, default: 0, min: 0, max: 5 },
     numReviews: { type: Number, default: 0, min: 0 },
+    tags: { type: [String], default: [] },
   },
   {
     timestamps: true,
@@ -63,7 +64,8 @@ productSchema.index({ tenantId: 1, isDeleted: 1 });
 productSchema.index({ tenantId: 1, category: 1 });
 productSchema.index({ tenantId: 1, isFeatured: 1 });
 productSchema.index({ tenantId: 1, slug: 1 });
+productSchema.index({ tenantId: 1, tags: 1 });
 productSchema.index({ tenantId: 1, brand: 1, model: 1 });
-productSchema.index({ tenantId: 1, brand: "text", model: "text", category: "text", description: "text" });
+productSchema.index({ tenantId: 1, brand: "text", model: "text", category: "text", description: "text", tags: "text" });
 
 export default mongoose.model("Product", productSchema);

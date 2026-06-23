@@ -81,6 +81,8 @@ export const useCartStore = create<CartState>()(
     {
       name: "cart-storage",
       version: 1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+      migrate: (persistedState: any, version: number) => persistedState,
       partialize: (state) => ({ items: state.items }),
     },
   ),

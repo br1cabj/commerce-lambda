@@ -145,6 +145,21 @@ const faqItemSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const announcementSchema = new mongoose.Schema(
+  {
+    id: {
+      type: String,
+      required: true,
+      default: () => new mongoose.Types.ObjectId().toString(),
+    },
+    text: { type: String, required: true },
+    icon: { type: String, default: "Info" },
+    enabled: { type: Boolean, default: true },
+    order: { type: Number, default: 0 },
+  },
+  { _id: false },
+);
+
 const categoriesConfigSchema = new mongoose.Schema(
   {
     layout: {
@@ -174,6 +189,70 @@ const categoriesConfigSchema = new mongoose.Schema(
     },
     borderRadius: { type: String, default: "2xl" },
     maxHeight: { type: String, default: "256px" },
+  },
+  { _id: false },
+);
+
+const footerLinkSchema = new mongoose.Schema(
+  {
+    id: {
+      type: String,
+      required: true,
+      default: () => new mongoose.Types.ObjectId().toString(),
+    },
+    label: { type: translationSchema, default: () => ({ en: "", es: "" }) },
+    url: { type: String, default: "" },
+    order: { type: Number, default: 0 },
+  },
+  { _id: false },
+);
+
+const footerConfigSchema = new mongoose.Schema(
+  {
+    preset: {
+      type: String,
+      enum: ["classic", "minimalist", "modern", "newsletter"],
+      default: "classic",
+    },
+    bgColorMode: {
+      type: String,
+      enum: ["dark", "light", "brand"],
+      default: "dark",
+    },
+    description: {
+      type: translationSchema,
+      default: () => ({
+        en: "Your specialized online store. The best brands, the latest launches, and passion for quality in one place.",
+        es: "Tu tienda online especializada. Las mejores marcas, los últimos lanzamientos y pasión por la calidad en un solo lugar.",
+      }),
+    },
+    showSocials: { type: Boolean, default: true },
+    showPaymentMethods: { type: Boolean, default: true },
+    showContactInfo: { type: Boolean, default: true },
+    showNewsletter: { type: Boolean, default: false },
+    socialLinks: {
+      facebook: { type: String, default: "" },
+      instagram: { type: String, default: "" },
+      twitter: { type: String, default: "" },
+      tiktok: { type: String, default: "" },
+      youtube: { type: String, default: "" },
+    },
+    customLinks: {
+      type: [footerLinkSchema],
+      default: () => [],
+    },
+    termsOfService: {
+      type: translationSchema,
+      default: () => ({ en: "", es: "" }),
+    },
+    privacyPolicy: {
+      type: translationSchema,
+      default: () => ({ en: "", es: "" }),
+    },
+    featuredCategories: {
+      type: [String],
+      default: () => [],
+    },
   },
   { _id: false },
 );
@@ -556,6 +635,7 @@ const tenantSchema = new mongoose.Schema(
       brands: [brandSchema],
       benefits: [benefitSchema],
       faqItems: [faqItemSchema],
+      announcements: [announcementSchema],
       categoriesConfig: { type: categoriesConfigSchema, default: () => ({}) },
       sections: [sectionConfigSchema],
       defaultLanguage: { type: String, enum: ["en", "es"], default: "en" },
@@ -572,6 +652,7 @@ const tenantSchema = new mongoose.Schema(
       email: { type: String, default: "" },
       phone: { type: String, default: "" },
       address: { type: String, default: "" },
+      openingHours: { type: String, default: "" },
       paymentMethods: [
         {
           type: {
@@ -599,6 +680,10 @@ const tenantSchema = new mongoose.Schema(
         coupons: { type: Boolean, default: true },
         reviews: { type: Boolean, default: true },
         emailMarketing: { type: Boolean, default: false },
+      },
+      footer: {
+        type: footerConfigSchema,
+        default: () => ({}),
       },
     },
     isActive: {

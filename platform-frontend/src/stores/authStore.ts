@@ -44,6 +44,11 @@ export const useAuthStore = create<AuthState>()(
         return user?.role === "super_admin";
       },
     }),
-    { name: "auth-storage", version: 1 },
+    {
+      name: "auth-storage",
+      version: 1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+      migrate: (persistedState: any, version: number) => persistedState,
+    },
   ),
 );

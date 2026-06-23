@@ -27,6 +27,7 @@ export interface Product {
   status?: string;
   seoTitle?: string;
   seoDescription?: string;
+  tags?: string[];
 }
 
 export interface Review {

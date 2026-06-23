@@ -167,7 +167,15 @@ export const createStripeSession = async (req, res) => {
 export const handleStripeWebhook = async (req, res) => {
   try {
     const sig = req.headers["stripe-signature"];
-    const tenantId = req.body?.metadata?.tenantId || req.tenant?._id;
+    let tenantId = req.tenant?._id;
+    if (!tenantId && req.body) {
+      try {
+        const payload = JSON.parse(req.body.toString());
+        tenantId = payload?.data?.object?.metadata?.tenantId || payload?.metadata?.tenantId;
+      } catch (e) {
+        // Safe fallback if JSON parsing fails
+      }
+    }
 
     let tenant;
     if (tenantId) {
