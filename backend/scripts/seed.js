@@ -14,7 +14,7 @@ dotenv.config();
 const seed = async () => {
   try {
     await mongoose.connect(
-      process.env.MONGODB_URI || "mongodb://localhost:27017/ecommerce-platform",
+      process.env.MONGODB_URI || "mongodb://localhost:27017/ecommerce",
     );
     console.log("🔗 Connected to MongoDB\n");
 
