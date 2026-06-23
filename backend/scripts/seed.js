@@ -18,94 +18,105 @@ const seed = async () => {
     );
     console.log("🔗 Connected to MongoDB\n");
 
+    // ── 0. Clear Database for a fresh start ──
+    console.log("🧹 Clearing existing database collections...");
+    await User.deleteMany({});
+    await Tenant.deleteMany({});
+    await Product.deleteMany({});
+    await Category.deleteMany({});
+    await Coupon.deleteMany({});
+    await Review.deleteMany({});
+    await Order.deleteMany({});
+    console.log("🗑️  All old data deleted.\n");
+
     // ── 1. Super Admin ──
     const superAdminEmail = "admin@platform.com";
-    let superAdmin = await User.findOne({ email: superAdminEmail });
-    if (!superAdmin) {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash("admin123", salt);
-      superAdmin = await User.create({
-        name: "Super Admin",
-        email: superAdminEmail,
-        password: hashedPassword,
-        role: "super_admin",
-        tenantId: null,
-      });
-      console.log("✅ Super Admin created:", superAdminEmail, "/ admin123");
-    } else {
-      console.log("⏭️  Super Admin already exists:", superAdminEmail);
-    }
+    const salt = await bcrypt.genSalt(10);
+    const superAdminPassword = await bcrypt.hash("admin123", salt);
+    
+    const superAdmin = await User.create({
+      name: "Super Admin",
+      email: superAdminEmail,
+      password: superAdminPassword,
+      role: "super_admin",
+      tenantId: null,
+    });
+    console.log("✅ Super Admin created:", superAdminEmail, "/ admin123");
 
     // ── 2. Tenant ──
     const tenantSlug = "default-store";
-    let tenant = await Tenant.findOne({ slug: tenantSlug });
-    if (!tenant) {
-      tenant = await Tenant.create({
-        name: "Mi Tienda",
-        slug: tenantSlug,
-        owner: superAdmin._id,
-        theme: {
-          primaryColor: "#1a1a2e",
-          secondaryColor: "#16213e",
-          accentColor: "#f28c28",
-          logoUrl: "",
-          heroImageUrl:
-            "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop",
-          heroTitle: "Welcome to Mi Tienda",
-          heroSubtitle: "The best products at the best price",
-          fontFamily: "Poppins",
+    const tenant = await Tenant.create({
+      name: "Mi Tienda",
+      slug: tenantSlug,
+      owner: superAdmin._id,
+      theme: {
+        primaryColor: "#1a1a2e",
+        secondaryColor: "#16213e",
+        accentColor: "#f28c28",
+        logoUrl: "",
+        heroImageUrl:
+          "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop",
+        heroTitle: "Welcome to Mi Tienda",
+        heroSubtitle: "The best products at the best price",
+        fontFamily: "Poppins",
+      },
+      settings: {
+        currency: "USD",
+        language: "es",
+        whatsappNumber: "5491112345678",
+        email: "contact@mitienda.com",
+        phone: "+54 11 1234-5678",
+        address: "Av. Principal 123, Buenos Aires",
+        paymentMethods: [
+          { type: "whatsapp", enabled: true, config: {} },
+          { type: "mercadopago", enabled: false, config: {} },
+          { type: "stripe", enabled: false, config: {} },
+        ],
+        shippingMethods: [
+          { type: "flat", enabled: true, config: { cost: 5 } },
+          { type: "free", enabled: false, config: {} },
+        ],
+        features: {
+          loyaltyPoints: true,
+          coupons: true,
+          reviews: true,
+          emailMarketing: false,
         },
-        settings: {
-          currency: "USD",
-          language: "en",
-          whatsappNumber: "5491112345678",
-          email: "contact@mitienda.com",
-          phone: "+54 11 1234-5678",
-          address: "Av. Principal 123, Buenos Aires",
-          paymentMethods: [
-            { type: "whatsapp", enabled: true, config: {} },
-            { type: "mercadopago", enabled: false, config: {} },
-            { type: "stripe", enabled: false, config: {} },
-          ],
-          shippingMethods: [
-            { type: "flat", enabled: true, config: { cost: 5 } },
-            { type: "free", enabled: false, config: {} },
-          ],
-          features: {
-            loyaltyPoints: true,
-            coupons: true,
-            reviews: true,
-            emailMarketing: false,
-          },
-        },
-        isActive: true,
-        plan: "premium",
-      });
-      console.log("✅ Tenant created:", tenant.name, `(${tenant.slug})`);
-    } else {
-      console.log("⏭️  Tenant already exists:", tenant.name);
-    }
+      },
+      homeConfig: {
+        defaultLanguage: "es",
+        supportedLanguages: ["es", "en"],
+        faqItems: [
+          {
+            id: "faq-1",
+            question: { en: "Do you ship worldwide?", es: "¿Hacen envíos a todo el país?" },
+            answer: { en: "Yes, we ship to all provinces.", es: "Sí, realizamos envíos a todo el país." },
+            enabled: true,
+            order: 0
+          }
+        ],
+        announcements: [
+          { id: "ann-1", text: "¡Envío gratis en compras mayores a $50!", icon: "Truck", enabled: true, order: 0 },
+          { id: "ann-2", text: "Especial Día del Padre: ¡20% de descuento con el cupón SAVE20!", icon: "Gift", enabled: true, order: 1 },
+          { id: "ann-3", text: "Nuevas colecciones de invierno ya disponibles", icon: "Sparkles", enabled: true, order: 2 }
+        ]
+      },
+      isActive: true,
+      plan: "premium",
+    });
+    console.log("✅ Tenant created:", tenant.name, `(${tenant.slug})`);
 
     // ── 3. Admin User for Tenant ──
     const adminEmail = "admin@mitienda.com";
-    let adminUser = await User.findOne({
-      email: adminEmail,
+    const adminPassword = await bcrypt.hash("admin123", salt);
+    await User.create({
       tenantId: tenant._id,
+      name: "Store Admin",
+      email: adminEmail,
+      password: adminPassword,
+      role: "admin",
     });
-    if (!adminUser) {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash("admin123", salt);
-      adminUser = await User.create({
-        tenantId: tenant._id,
-        name: "Store Admin",
-        email: adminEmail,
-        password: hashedPassword,
-        role: "admin",
-      });
-      console.log("✅ Admin user created:", adminEmail, "/ admin123");
-    } else {
-      console.log("⏭️  Admin user already exists:", adminEmail);
-    }
+    console.log("✅ Admin user created:", adminEmail, "/ admin123");
 
     // ── 4. Sample Client Users ──
     const clients = [
@@ -127,24 +138,17 @@ const seed = async () => {
     ];
 
     for (const c of clients) {
-      const existing = await User.findOne({
-        email: c.email,
+      const clientPassword = await bcrypt.hash("client123", salt);
+      await User.create({
         tenantId: tenant._id,
+        name: c.name,
+        email: c.email,
+        password: clientPassword,
+        role: "client",
+        phone: c.phone,
+        points: Math.floor(Math.random() * 100),
       });
-      if (!existing) {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash("client123", salt);
-        await User.create({
-          tenantId: tenant._id,
-          name: c.name,
-          email: c.email,
-          password: hashedPassword,
-          role: "client",
-          phone: c.phone,
-          points: Math.floor(Math.random() * 100),
-        });
-        console.log(`✅ Client created: ${c.email} / client123`);
-      }
+      console.log(`✅ Client created: ${c.email} / client123`);
     }
 
     // ── 5. Categories ──
@@ -180,17 +184,11 @@ const seed = async () => {
     ];
 
     for (const cat of categories) {
-      const existing = await Category.findOne({
-        tenantId: tenant._id,
-        slug: cat.slug,
-      });
-      if (!existing) {
-        await Category.create({ ...cat, tenantId: tenant._id, isActive: true });
-        console.log(`✅ Category created: ${cat.name}`);
-      }
+      await Category.create({ ...cat, tenantId: tenant._id, isActive: true });
+      console.log(`✅ Category created: ${cat.name}`);
     }
 
-    // ── 6. Products ──
+    // ── 6. Products with Tags (testing tags filter!) ──
     const products = [
       {
         model: "Air Max 90",
@@ -211,6 +209,7 @@ const seed = async () => {
         images: [
           "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop",
         ],
+        tags: ["dia-del-padre", "nike", "running", "deporte", "premium"]
       },
       {
         model: "Ultraboost 22",
@@ -230,6 +229,7 @@ const seed = async () => {
         images: [
           "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=500&auto=format&fit=crop",
         ],
+        tags: ["dia-del-padre", "adidas", "running", "deporte"]
       },
       {
         model: "Classic Leather",
@@ -249,6 +249,7 @@ const seed = async () => {
         images: [
           "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&auto=format&fit=crop",
         ],
+        tags: ["casual", "reebok", "retro"]
       },
       {
         model: "Old Skool",
@@ -269,6 +270,7 @@ const seed = async () => {
         images: [
           "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=500&auto=format&fit=crop",
         ],
+        tags: ["casual", "vans", "skate", "retro"]
       },
       {
         model: "Gel-Kayano 29",
@@ -287,6 +289,7 @@ const seed = async () => {
         images: [
           "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=500&auto=format&fit=crop",
         ],
+        tags: ["running", "asics", "deporte"]
       },
       {
         model: "Timberland 6-Inch",
@@ -306,6 +309,7 @@ const seed = async () => {
         images: [
           "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=500&auto=format&fit=crop",
         ],
+        tags: ["dia-del-padre", "boots", "timberland", "cuero", "premium"]
       },
       {
         model: "Chuck Taylor All Star",
@@ -328,6 +332,7 @@ const seed = async () => {
         images: [
           "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=500&auto=format&fit=crop",
         ],
+        tags: ["casual", "converse", "retro"]
       },
       {
         model: "New Balance 574",
@@ -347,20 +352,14 @@ const seed = async () => {
         images: [
           "https://images.unsplash.com/photo-1539185441755-769473a23570?w=500&auto=format&fit=crop",
         ],
+        tags: ["dia-del-padre", "new-balance", "sneakers", "casual"]
       },
     ];
 
     for (const p of products) {
-      const existing = await Product.findOne({
-        tenantId: tenant._id,
-        model: p.model,
-        brand: p.brand,
-      });
-      if (!existing) {
-        const stock = p.sizes.reduce((acc, s) => acc + s.stock, 0);
-        await Product.create({ ...p, tenantId: tenant._id, stock });
-        console.log(`✅ Product created: ${p.brand} ${p.model}`);
-      }
+      const stock = p.sizes.reduce((acc, s) => acc + s.stock, 0);
+      await Product.create({ ...p, tenantId: tenant._id, stock });
+      console.log(`✅ Product created: ${p.brand} ${p.model}`);
     }
 
     // ── 7. Coupons ──
@@ -387,16 +386,10 @@ const seed = async () => {
     ];
 
     for (const c of coupons) {
-      const existing = await Coupon.findOne({
-        tenantId: tenant._id,
-        code: c.code,
-      });
-      if (!existing) {
-        await Coupon.create({ ...c, tenantId: tenant._id });
-        console.log(
-          `✅ Coupon created: ${c.code} (${c.discountPercentage}% off)`,
-        );
-      }
+      await Coupon.create({ ...c, tenantId: tenant._id });
+      console.log(
+        `✅ Coupon created: ${c.code} (${c.discountPercentage}% off)`,
+      );
     }
 
     // ── 8. Reviews ──
@@ -428,14 +421,8 @@ const seed = async () => {
     ];
 
     for (const r of reviews) {
-      const existing = await Review.findOne({
-        tenantId: tenant._id,
-        clientName: r.clientName,
-      });
-      if (!existing) {
-        await Review.create({ ...r, tenantId: tenant._id });
-        console.log(`✅ Review created: ${r.clientName}`);
-      }
+      await Review.create({ ...r, tenantId: tenant._id });
+      console.log(`✅ Review created: ${r.clientName}`);
     }
 
     // ── Summary ──
