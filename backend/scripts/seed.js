@@ -44,7 +44,7 @@ const seed = async () => {
     console.log("✅ Super Admin created:", superAdminEmail, "/ admin123");
 
     // ── 2. Tenant ──
-    const tenantSlug = "default-store";
+    const tenantSlug = "demo";
     const tenant = await Tenant.create({
       name: "Mi Tienda",
       slug: tenantSlug,

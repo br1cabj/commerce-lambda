@@ -1,13 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
+function useIsHydrated() {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHydrated(true);
+  }, []);
+  return hydrated;
+}
+
 export default function RegisterPage() {
+  const isHydrated = useIsHydrated();
   const { config } = useTenant();
   const { register } = useAuth();
   const router = useRouter();
@@ -42,7 +52,7 @@ export default function RegisterPage() {
     }
   };
 
-  if (!config) return null;
+  if (!isHydrated || !config) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-700 px-4">
