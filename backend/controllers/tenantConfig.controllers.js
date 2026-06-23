@@ -90,8 +90,30 @@ export const updateStoreConfig = async (req, res) => {
         tenant.settings.openingHours = settings.openingHours;
       if (settings.paymentMethods)
         tenant.settings.paymentMethods = settings.paymentMethods;
-      if (settings.shippingMethods)
-        tenant.settings.shippingMethods = settings.shippingMethods;
+      if (settings.shippingMethods) {
+        const incomingMethods = settings.shippingMethods;
+        const existingMethods = tenant.settings.shippingMethods || [];
+        const mergedMethods = [...incomingMethods];
+
+        for (const existing of existingMethods) {
+          if (existing.type !== "local_carrier" && !mergedMethods.some(m => m.type === existing.type)) {
+            mergedMethods.push(existing.toObject ? existing.toObject() : existing);
+          }
+        }
+
+        if (!mergedMethods.some(m => m.type === "flat")) {
+          mergedMethods.push({
+            type: "flat",
+            enabled: true,
+            config: { cost: tenant.settings.currency === "USD" ? 5 : 1500 }
+          });
+        }
+        if (!mergedMethods.some(m => m.type === "free")) {
+          mergedMethods.push({ type: "free", enabled: false, config: {} });
+        }
+
+        tenant.settings.shippingMethods = mergedMethods;
+      }
       if (settings.features)
         tenant.settings.features = {
           ...tenant.settings.features,

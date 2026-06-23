@@ -17,6 +17,18 @@ export const calculateShipping = async (req, res) => {
     const provider = localCarrierConfig?.config?.provider || "correo_argentino";
     const postalCodeOrigin = localCarrierConfig?.config?.originZipCode || "1000";
 
+    const defaultPrice = tenant.settings?.currency === "USD" ? 5 : 1500;
+
+    // Custom flat rate carrier doesn't need an API key
+    if (provider === "custom") {
+      return res.status(200).json({
+        price: defaultPrice,
+        productName: "Standard Shipping (Flat Rate)",
+        deliveryTimeMin: 3,
+        deliveryTimeMax: 7,
+      });
+    }
+
     if (!apiKey) {
       // Check if flat rate or free shipping is enabled since we can't calculate API rates
       const flatShipping = tenant.settings.shippingMethods.find(
@@ -35,15 +47,20 @@ export const calculateShipping = async (req, res) => {
         });
       } else if (flatShipping) {
         return res.status(200).json({
-          price: flatShipping.config?.price || 1500,
+          price: flatShipping.config?.price || flatShipping.config?.cost || defaultPrice,
           productName: "Standard Shipping",
           deliveryTimeMin: 3,
           deliveryTimeMax: 7,
         });
       }
-      return res
-        .status(400)
-        .json({ message: "Shipping carrier is not configured." });
+
+      // Default fallback if no methods are enabled
+      return res.status(200).json({
+        price: defaultPrice,
+        productName: "Standard Shipping",
+        deliveryTimeMin: 3,
+        deliveryTimeMax: 7,
+      });
     }
 
     // Mock API integration based on Provider and Package Data

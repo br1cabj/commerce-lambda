@@ -277,13 +277,14 @@ export default function AdminSettingsPage() {
             shippingMethods: [
               {
                 type: "local_carrier",
-                enabled: !!shippingApiKey,
+                enabled: shippingProvider === "custom" || !!shippingApiKey,
                 config: {
                   provider: shippingProvider,
                   apiKey: shippingApiKey,
                   originZipCode: shippingOriginZip
                 }
-              }
+              },
+              ...(config.settings.shippingMethods?.filter((m) => m.type !== "local_carrier") || [])
             ],
             paymentMethods: [
               {
