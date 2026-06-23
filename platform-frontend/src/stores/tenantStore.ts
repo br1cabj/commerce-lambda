@@ -319,13 +319,13 @@ export const useTenantStore = create<TenantState>()((set) => ({
   config: null,
   loading: false,
   error: null,
-  currentLanguage: "en", // Default to "en" to prevent hydration mismatch
+  currentLanguage: "es", // Default to "es" to prevent hydration mismatch
 
   setConfig: (config) => {
     set({
       config,
       error: null,
-      currentLanguage: config.homeConfig?.defaultLanguage || "en",
+      currentLanguage: config.homeConfig?.defaultLanguage || "es",
     });
   },
   setLoading: (loading) => set({ loading }),

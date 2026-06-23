@@ -85,7 +85,7 @@ const seed = async () => {
       },
       homeConfig: {
         defaultLanguage: "es",
-        supportedLanguages: ["es", "en"],
+        supportedLanguages: ["es"],
         faqItems: [
           {
             id: "faq-1",
