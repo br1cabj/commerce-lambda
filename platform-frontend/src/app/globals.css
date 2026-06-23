@@ -23,3 +23,23 @@ body {
   color: var(--foreground);
   font-family: var(--font-family), sans-serif;
 }
+
+/* Ensure all interactive/clickable elements have a pointer cursor */
+button,
+select,
+summary,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+/* Also support disabled state where it should show 'not-allowed' cursor */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
