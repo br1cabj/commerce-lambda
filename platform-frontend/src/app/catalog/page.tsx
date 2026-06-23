@@ -5,8 +5,8 @@ import { useTenant } from "@/hooks/useTenant";
 import { useTranslations } from "@/hooks/useTranslations";
 import { ProductCard } from "@/components/ProductCard";
 import { api } from "@/lib/api";
-import { SlidersHorizontal, Search } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { SlidersHorizontal, Search, Folder } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Product } from "@/types";
 
@@ -28,8 +28,20 @@ function CatalogContent() {
   const { config } = useTenant();
   const { currentLanguage } = useTranslations();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const q = searchParams.get("q") || "";
   const tag = searchParams.get("tag") || "";
+  const category = searchParams.get("category") || "";
+
+  const buildCategoryUrl = (catName: string) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (catName) {
+      nextParams.set("category", catName);
+    } else {
+      nextParams.delete("category");
+    }
+    return `/catalog?${nextParams.toString()}`;
+  };
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +61,7 @@ function CatalogContent() {
         if (selectedSize) params.set("size", selectedSize);
         if (q) params.set("q", q);
         if (tag) params.set("tag", tag);
+        if (category) params.set("category", category);
         
         // Map frontend sorting options to backend contract
         if (sortBy === "price_asc") {
@@ -86,7 +99,7 @@ function CatalogContent() {
       }
     };
     loadProducts();
-  }, [config, selectedBrand, selectedSize, sortBy, priceRange, q, tag]);
+  }, [config, selectedBrand, selectedSize, sortBy, priceRange, q, tag, category]);
 
   if (!config) return null;
 
@@ -112,6 +125,12 @@ function CatalogContent() {
                 <>Colección: <span className="text-gray-900 font-extrabold uppercase tracking-tight">{tag}</span></>
               ) : (
                 <>Collection: <span className="text-gray-900 font-extrabold uppercase tracking-tight">{tag}</span></>
+              )
+            ) : category ? (
+              currentLanguage === "es" ? (
+                <>Categoría: <span className="text-gray-900 font-extrabold uppercase tracking-tight">{category}</span></>
+              ) : (
+                <>Category: <span className="text-gray-900 font-extrabold uppercase tracking-tight">{category}</span></>
               )
             ) : (
               currentLanguage === "es" ? "Todos los Productos" : "All Products"
@@ -170,6 +189,23 @@ function CatalogContent() {
             </div>
           )}
 
+          {category && (
+            <div className="flex items-center justify-between bg-gray-50/50 border border-gray-150 rounded-xl p-3 gap-2">
+              <div className="flex items-center gap-2 truncate flex-1">
+                <Folder className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                <span className="text-xs text-gray-500 font-bold truncate">
+                  {currentLanguage === "es" ? "Categoría" : "Category"}: {category}
+                </span>
+              </div>
+              <Link
+                href={buildCategoryUrl("")}
+                className="text-[10px] font-extrabold text-gray-500 bg-white border border-gray-200 hover:bg-gray-100 hover:text-gray-800 px-2 py-1 rounded-lg transition-colors flex-shrink-0"
+              >
+                {currentLanguage === "es" ? "Quitar" : "Clear"}
+              </Link>
+            </div>
+          )}
+
           <div className="flex justify-between items-center pb-2 border-b border-gray-50">
             <h3 className="font-extrabold text-sm uppercase text-gray-800">
               {currentLanguage === "es" ? "Filtros" : "Filters"}
@@ -180,6 +216,7 @@ function CatalogContent() {
                 setSelectedSize("");
                 setSortBy("newest");
                 setPriceRange({ min: 0, max: 1000 });
+                router.push("/catalog");
               }}
               className="text-xs text-gray-500 hover:underline font-bold"
             >
@@ -206,6 +243,35 @@ function CatalogContent() {
                 {currentLanguage === "es" ? "Precio: Mayor a Menor" : "Price: High to Low"}
               </option>
             </select>
+          </div>
+
+          <hr className="border-gray-100" />
+
+          <div>
+            <h4 className="font-bold text-xs mb-3 text-gray-400 uppercase tracking-wider">
+              {currentLanguage === "es" ? "Categorías" : "Categories"}
+            </h4>
+            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+              <Link
+                href={buildCategoryUrl("")}
+                className={`flex items-center gap-2 text-sm font-semibold hover:text-gray-900 transition-colors ${
+                  !category ? "text-gray-950 font-bold" : "text-gray-600 font-medium"
+                }`}
+              >
+                <span>{currentLanguage === "es" ? "Todas" : "All"}</span>
+              </Link>
+              {config.categories?.map((cat) => (
+                <Link
+                  key={cat._id}
+                  href={buildCategoryUrl(cat.name)}
+                  className={`flex items-center gap-2 text-sm font-semibold hover:text-gray-900 transition-colors ${
+                    category === cat.name ? "text-gray-950 font-bold" : "text-gray-600 font-medium"
+                  }`}
+                >
+                  <span>{cat.name}</span>
+                </Link>
+              ))}
+            </div>
           </div>
 
           <hr className="border-gray-100" />
