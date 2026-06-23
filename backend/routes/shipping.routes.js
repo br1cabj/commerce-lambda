@@ -7,6 +7,6 @@ const router = Router();
 
 router.use(identifyTenant);
 
-router.post("/calculate", verifyToken, calculateShipping);
+router.post("/calculate", calculateShipping);
 
 export default router;

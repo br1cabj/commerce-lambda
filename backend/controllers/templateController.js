@@ -670,7 +670,7 @@ export const applyTemplate = async (req, res) => {
     const defaultLang = tenant.settings?.language || "en";
 
     tenant.theme = {
-      ...tenant.theme,
+      ...(tenant.theme ? tenant.theme.toObject() : {}),
       ...template.theme,
       heroTitle: typeof template.theme.heroTitle === "object"
         ? (template.theme.heroTitle[defaultLang] || template.theme.heroTitle["en"])
@@ -681,7 +681,7 @@ export const applyTemplate = async (req, res) => {
     };
 
     tenant.translations = {
-      ...tenant.translations,
+      ...(tenant.translations ? tenant.translations.toObject() : {}),
       ...template.translations,
     };
 
